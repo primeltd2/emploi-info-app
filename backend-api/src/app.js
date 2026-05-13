@@ -11,6 +11,15 @@ export function createApp() {
   app.use(express.urlencoded({ extended: false, limit: "1mb" }));
   app.use(securityMiddleware());
 
+  app.get("/", (req, res) => {
+    res.json({
+      status: "success",
+      service: "emploi-info-api",
+      health: "/api/v1/health",
+      api: "/api/v1"
+    });
+  });
+
   app.use("/api/v1", router);
   app.use(notFoundHandler);
   app.use(errorHandler);

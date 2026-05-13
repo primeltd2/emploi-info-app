@@ -56,7 +56,11 @@ Fichiers ajoutes :
 - `docs/DEPLOYMENT.md`
 - `.env.example`
 
-Le deploiement reel necessite la creation du compte Render ou Railway au nom du proprietaire.
+Service Render cree :
+
+- Service ID : `srv-d81t3cf7f7vs73eflp6g`
+- URL : `https://emploi-info-api.onrender.com`
+- Endpoint attendu : `https://emploi-info-api.onrender.com/api/v1/health`
 
 ### Etape 4 - Preparation migration donnees
 

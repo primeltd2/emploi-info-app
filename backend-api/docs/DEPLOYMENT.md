@@ -2,6 +2,12 @@
 
 Le backend est pret pour Render ou Railway, mais le compte doit etre cree au nom du proprietaire du projet.
 
+## Service Render actuel
+
+- Service ID : `srv-d81t3cf7f7vs73eflp6g`
+- URL : `https://emploi-info-api.onrender.com`
+- Health check : `https://emploi-info-api.onrender.com/api/v1/health`
+
 ## Variables d'environnement
 
 ```text

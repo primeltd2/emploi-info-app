@@ -24,6 +24,17 @@ test("health endpoint responds", async () => {
   });
 });
 
+test("root endpoint helps Render checks", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.status, "success");
+    assert.equal(body.health, "/api/v1/health");
+  });
+});
+
 test("offers endpoint returns public offers", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/api/v1/offers?limit=2`);
