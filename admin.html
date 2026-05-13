@@ -1,0 +1,4191 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | EMPLOI INFO</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<script>
+(function(){
+  const ua = navigator.userAgent || "";
+  const isAndroid = /Android/i.test(ua);
+  const isAdminApp = ua.includes("AdminEmploiInfoAndroid");
+  const isPublicApp = ua.includes("EmploiInfoAndroid") && !isAdminApp;
+  const target = new URL(location.pathname + location.search + location.hash, location.origin);
+  const adminGateUrl = new URL("open-admin-app.html", location.href);
+  adminGateUrl.searchParams.set("url", target.href);
+  if(isPublicApp){
+    location.replace(adminGateUrl.href);
+    return;
+  }
+  if(isAndroid && !isAdminApp){
+    location.replace(adminGateUrl.href);
+  }
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#0c0f14;
+  --bg-soft:#171b22;
+  --panel:rgba(12,15,20,.82);
+  --panel-2:rgba(255,255,255,.04);
+  --line:rgba(255,215,0,.18);
+  --gold:#f3c64b;
+  --gold-2:#ffd86b;
+  --text:#f8f3e8;
+  --muted:#cfc3a0;
+  --danger:#ef5959;
+  --success:#2fbf71;
+  --radius:18px;
+  --shadow:0 18px 40px rgba(0,0,0,.28);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{
+  min-height:100vh;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top right, rgba(255,215,0,.10), transparent 26%),
+    linear-gradient(135deg,#0f1115,#1b1507,#b68d1b);
+  padding:14px;
+}
+input,textarea,select,button{
+  width:100%;
+  padding:12px 14px;
+  margin-bottom:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  font-size:14px;
+}
+input,textarea,select{
+  background:rgba(255,255,255,.96);
+  color:#131313;
+  outline:none;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:rgba(255,215,0,.45);
+  box-shadow:0 0 0 3px rgba(255,215,0,.12);
+}
+button{
+  border:none;
+  background:linear-gradient(180deg,#ffdf7a,#d8a414);
+  color:#121212;
+  font-weight:800;
+  cursor:pointer;
+  transition:.22s ease;
+}
+button:hover{transform:translateY(-1px);filter:brightness(1.02)}
+button.delete{background:linear-gradient(180deg,#ff8383,#d74646);color:#fff}
+button.validate{background:linear-gradient(180deg,#54d889,#219752);color:#fff}
+
+#loginBox{
+  max-width:430px;
+  margin:110px auto;
+  background:rgba(8,10,14,.92);
+  border:1px solid rgba(255,215,0,.22);
+  border-radius:24px;
+  padding:30px;
+  box-shadow:0 24px 55px rgba(0,0,0,.38);
+  display:none;
+}
+#loginBox h2{
+  text-align:center;
+  color:var(--gold-2);
+  margin-bottom:24px;
+  font-size:26px;
+}
+#loginBox p{color:#ff9898;text-align:center}
+#loginBox input{
+  background:#232834;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+#usernameModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  z-index:10000;
+  align-items:center;
+  justify-content:center;
+}
+#usernameModal .inner{
+  width:min(92vw,420px);
+  background:#1b1f27;
+  border:1px solid rgba(255,215,0,.18);
+  border-radius:20px;
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+#usernameModal h3{color:var(--gold-2);margin-bottom:12px}
+
+#adminPanel,#dashboard,#annonces,#categories,#entreprises,#publicites,#blogAdmin,#resourcesAdmin,#servicesAdmin,#formationsAdmin,#actualitesAdmin,#partnersAdmin,#usersAdmin,#commentaires,#assistance,#adminMessages,#reunionsAdmin,#parametres{display:none}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  flex-wrap:wrap;
+  margin-bottom:22px;
+  padding:16px 18px;
+  border-radius:22px;
+  background:rgba(8,10,14,.78);
+  border:1px solid var(--line);
+  backdrop-filter:blur(10px);
+  box-shadow:var(--shadow);
+}
+.brand-block strong{
+  display:block;
+  font-size:22px;
+  color:var(--gold-2);
+  letter-spacing:.3px;
+}
+.brand-block{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand-block img{
+  width:48px;
+  height:48px;
+  border-radius:12px;
+  object-fit:cover;
+  background:#111;
+  border:1px solid rgba(255,215,0,.28);
+}
+.brand-copy span,
+.brand-copy strong{display:block}
+.brand-block span{
+  display:block;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+}
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.user-pill{
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,215,0,.08);
+  border:1px solid rgba(255,215,0,.14);
+  color:var(--gold);
+  font-size:14px;
+}
+.nav-link{position:relative}
+.nav-badge{
+  display:none;
+  position:absolute;
+  top:-7px;
+  right:-7px;
+  min-width:20px;
+  height:20px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#ef5959;
+  color:white;
+  font-size:12px;
+  line-height:20px;
+  text-align:center;
+}
+nav{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+nav a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+  cursor:pointer;
+  padding:10px 14px;
+  border-radius:999px;
+  transition:.22s ease;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.06);
+}
+nav a:hover{
+  background:rgba(255,215,0,.18);
+  color:var(--gold-2);
+  transform:translateY(-1px);
+}
+
+.page-title{
+  font-size:30px;
+  color:var(--gold-2);
+  margin-bottom:16px;
+}
+.section-title{
+  margin:22px 0 12px;
+  color:var(--gold-2);
+  font-size:18px;
+  font-weight:800;
+}
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:22px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  margin-bottom:22px;
+}
+.stat-card{
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+  border:1px solid rgba(255,215,0,.14);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+.stat-card.clickable{
+  cursor:pointer;
+  transition:.22s ease;
+}
+.stat-card.clickable:hover{
+  transform:translateY(-2px);
+  border-color:rgba(255,215,0,.34);
+  background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,255,255,.04));
+}
+.stat-card h3{
+  color:var(--gold);
+  font-size:15px;
+  margin-bottom:10px;
+}
+.stat-card p{
+  font-size:32px;
+  font-weight:900;
+}
+.chart-shell{
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(255,215,0,.12);
+  border-radius:20px;
+  padding:16px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.form-grid .full{grid-column:1/-1}
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.toolbar button,.toolbar select{
+  width:auto;
+  min-width:unset;
+  margin:0;
+}
+.preview-box{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,215,0,.12);
+  border-left:5px solid var(--gold);
+  border-radius:14px;
+  padding:16px;
+}
+.admin-filters{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.comment-admin-item,.report-item{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,215,0,.14);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+}
+.comment-admin-item.pending{border-left:5px solid #f3c64b}
+.comment-admin-item.rejected{border-left:5px solid #ef5959;opacity:.8}
+.comment-admin-item.approved{border-left:5px solid #2fbf71}
+.comment-admin-meta{
+  color:var(--gold);
+  font-size:13px;
+  margin-bottom:8px;
+}
+.comment-admin-actions{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+.comment-admin-actions button{margin:0}
+.comment-reply-box{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.comment-reply-box .full{grid-column:1/-1}
+.comment-reply-box textarea{min-height:90px}
+.admin-media{
+  max-width:180px;
+  max-height:120px;
+  object-fit:cover;
+  border-radius:10px;
+  display:block;
+  margin-top:8px;
+}
+.annonce-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:16px;
+  align-items:stretch;
+}
+.annonce-item{
+  background:linear-gradient(180deg,rgba(18,22,30,.94),rgba(8,10,14,.88));
+  border:1px solid rgba(255,215,0,.16);
+  border-radius:18px;
+  padding:0;
+  min-width:0;
+  min-height:100%;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.annonce-cover{
+  width:100%;
+  aspect-ratio:16/9;
+  object-fit:cover;
+  background:#050505;
+  border-bottom:1px solid rgba(255,215,0,.12);
+}
+.annonce-content{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:16px;
+  flex:1;
+}
+.annonce-item b{
+  display:block;
+  color:var(--gold-2);
+  font-size:18px;
+  line-height:1.28;
+}
+.annonce-item p{margin:0;line-height:1.5;overflow-wrap:anywhere}
+.annonce-item .date{font-size:12px;opacity:.75}
+.annonce-meta-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:8px;
+}
+.annonce-meta{
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.06);
+  color:var(--muted);
+  font-size:13px;
+}
+.annonce-badges{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.annonce-badge{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  padding:6px 9px;
+  border-radius:999px;
+  background:rgba(255,215,0,.12);
+  color:var(--gold-2);
+  border:1px solid rgba(255,215,0,.18);
+  font-size:12px;
+  font-weight:800;
+}
+.annonce-badge.pending{background:rgba(239,89,89,.14);border-color:rgba(239,89,89,.28);color:#ffb3b3}
+.annonce-badge.ok{background:rgba(47,191,113,.14);border-color:rgba(47,191,113,.28);color:#9ff0bf}
+.annonce-text-preview{
+  color:#f4eddc;
+  display:-webkit-box;
+  -webkit-line-clamp:5;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.annonce-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:auto;
+  padding-top:12px;
+}
+.annonce-actions button{
+  width:auto;
+  min-width:150px;
+  margin:0;
+}
+ul{list-style:none}
+.list-stack{
+  display:grid;
+  gap:10px;
+}
+li{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  margin-bottom:10px;
+  border-radius:12px;
+  background:rgba(255,215,0,.08);
+  border:1px solid rgba(255,215,0,.08);
+}
+li button{
+  width:auto;
+  min-width:96px;
+  margin:0;
+  padding:9px 12px;
+}
+.section-admin-item{
+  align-items:flex-start;
+  min-width:0;
+}
+.section-admin-body{
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.section-admin-body strong,
+.section-admin-body span,
+.section-admin-body p{
+  display:block;
+}
+.section-admin-body p{
+  margin:6px 0;
+  color:var(--muted);
+  line-height:1.45;
+}
+.section-admin-media{
+  margin-top:10px;
+  max-width:320px;
+}
+.section-admin-media img,
+.section-admin-media video,
+.section-admin-media iframe{
+  width:100%;
+  max-height:220px;
+  border:0;
+  border-radius:10px;
+  object-fit:cover;
+  background:#000;
+}
+.empty-state{
+  text-align:center;
+  color:var(--muted);
+  padding:16px;
+  border-radius:14px;
+  background:rgba(255,255,255,.04);
+  border:1px dashed rgba(255,215,0,.14);
+}
+.price-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:10px;
+}
+.price-note{
+  color:var(--muted);
+  font-size:13px;
+  margin:-2px 0 10px;
+}
+.admin-chat-layout{
+  display:grid;
+  grid-template-columns:minmax(260px,340px) minmax(0,1fr);
+  min-height:650px;
+  gap:0;
+  overflow:hidden;
+  border:1px solid rgba(134,150,160,.22);
+  border-radius:8px;
+  background:#111b21;
+  align-items:start;
+}
+.admin-chat-list,.admin-chat-thread,.meeting-grid{
+  display:grid;
+  gap:0;
+}
+.admin-chat-thread{
+  min-width:0;
+  min-height:410px;
+  max-height:calc(100vh - 320px);
+  overflow:auto;
+  overflow-x:hidden;
+  align-content:start;
+  padding:18px;
+  gap:8px;
+  border-radius:0;
+  background:
+    linear-gradient(rgba(11,20,26,.86),rgba(11,20,26,.86)),
+    radial-gradient(circle at 20% 30%, rgba(32,44,51,.75) 0 1px, transparent 1px) 0 0/24px 24px,
+    url("logo.png") center/160px auto repeat;
+  border:0;
+}
+.admin-chat-sidebar{
+  min-height:650px;
+  background:#111b21;
+  border-right:1px solid rgba(134,150,160,.22);
+}
+.admin-chat-sidebar .section-title{
+  margin:0;
+  padding:16px;
+  background:#202c33;
+  color:#e9edef;
+}
+.admin-chat-card,.meeting-card{
+  background:#111b21;
+  border:0;
+  border-bottom:1px solid rgba(134,150,160,.14);
+  border-radius:0;
+  padding:13px 14px;
+  color:#e9edef;
+}
+.admin-chat-card.active,.meeting-card.active{
+  border-color:transparent;
+  background:#2a3942;
+}
+.presence-dot{
+  display:inline-block;
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  margin-right:6px;
+  background:#777;
+}
+.presence-dot.online{background:var(--success)}
+.admin-chat-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.admin-chat-actions button,.meeting-card button{margin:0}
+.meeting-link-box{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  margin-top:12px;
+}
+.meeting-link-box input{
+  width:100%;
+  min-width:0;
+  margin:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.meeting-link-box button{margin:0}
+.meeting-copy-status{
+  color:var(--muted);
+  margin:8px 0 0;
+  font-size:13px;
+}
+.admin-conversation-card{
+  padding:0!important;
+  overflow:hidden;
+  background:#0b141a!important;
+  border:0!important;
+  border-radius:0!important;
+}
+.chat-topbar{
+  min-height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 14px;
+  background:#202c33;
+  color:#e9edef;
+}
+.chat-topbar-title{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.chat-topbar-title strong{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-topbar-title span{color:#8696a0;font-size:13px}
+.chat-icon-actions{display:flex;align-items:center;gap:6px}
+.chat-icon-actions button,.composer-icon,.send-fab,.voice-fab{
+  width:42px;
+  min-width:42px;
+  height:42px;
+  padding:0;
+  margin:0;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  color:#e9edef;
+  border:0;
+  font-weight:900;
+}
+.chat-icon-actions button:hover,.composer-icon:hover{background:rgba(233,237,239,.08)}
+.composer-icon svg,.send-fab svg{
+  width:21px;
+  height:21px;
+  display:block;
+}
+.voice-fab{
+  background:#00a884;
+  color:#06130f;
+  transition:transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.voice-fab:hover{background:#06cf9c}
+.voice-fab.recording{
+  background:#ef4444;
+  color:#fff;
+  transform:scale(1.06);
+  box-shadow:0 0 0 6px rgba(239,68,68,.16);
+}
+.voice-fab svg{
+  width:22px;
+  height:22px;
+  display:block;
+}
+.voice-fab.recording svg{width:18px;height:18px}
+.chat-bg-row{
+  display:none;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  padding:10px 14px;
+  background:#111b21;
+  border-bottom:1px solid rgba(134,150,160,.14);
+}
+.chat-bg-row.open{display:grid}
+.message-line{
+  width:fit-content;
+  max-width:min(76%,620px);
+  min-width:0;
+  box-sizing:border-box;
+  padding:7px 9px 6px;
+  border-radius:8px 8px 8px 0;
+  background:#202c33;
+  border:0;
+  justify-self:start;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  box-shadow:0 1px 1px rgba(0,0,0,.18);
+}
+.message-author{
+  display:inline-block;
+  color:#53bdeb;
+  font-weight:900;
+  margin-bottom:3px;
+  font-size:13px;
+}
+.message-date{
+  color:#8696a0;
+  font-size:11px;
+  float:right;
+  margin:6px 0 0 10px;
+}
+.message-text{
+  color:#e9edef;
+  line-height:1.38;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.message-line.mine{
+  justify-self:end;
+  border-radius:8px 8px 0 8px;
+  background:#005c4b;
+}
+.message-line.deleted{
+  opacity:.65;
+  font-style:italic;
+}
+.message-media{
+  display:block;
+  width:auto;
+  max-width:100%;
+  max-height:260px;
+  margin-top:8px;
+  border-radius:12px;
+  background:#050505;
+}
+audio.message-media{
+  width:min(320px,100%);
+  min-width:0;
+  max-height:none;
+}
+video.message-media,
+img.message-media{
+  height:auto;
+}
+.message-file{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:8px;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(0,0,0,.22);
+  color:var(--gold-2);
+  text-decoration:none;
+}
+.message-tools{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:5px;
+}
+.message-tools button{
+  width:auto;
+  min-width:unset;
+  padding:5px 8px;
+  margin:0;
+  border-radius:999px;
+  font-size:12px;
+  background:rgba(255,255,255,.08);
+  color:#e9edef;
+}
+.chat-composer{
+  position:relative;
+  display:flex;
+  align-items:end;
+  gap:8px;
+  padding:10px 12px;
+  margin-top:0;
+  background:#202c33;
+}
+.chat-composer textarea{
+  flex:1 1 260px;
+  width:100%;
+  min-width:180px;
+  min-height:44px;
+  max-height:130px;
+  resize:vertical;
+  border-radius:22px;
+  background:#2a3942;
+  border:0;
+  color:#e9edef;
+  padding:12px 14px;
+  margin:0;
+}
+.chat-composer textarea::placeholder{color:#8696a0}
+.chat-composer.has-text .voice-fab{display:none}
+.chat-composer:not(.has-text) .send-fab{display:none}
+.chat-upload-row{
+  position:fixed;
+  left:12px;
+  top:12px;
+  z-index:1200;
+  display:flex;
+  flex-direction:column-reverse;
+  gap:8px;
+  width:min(210px,calc(100vw - 86px));
+  padding:8px;
+  border-radius:18px;
+  background:#202c33;
+  box-shadow:0 18px 45px rgba(0,0,0,.42);
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(12px) scale(.96);
+  transform-origin:bottom left;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.chat-upload-row.open{
+  opacity:1;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+}
+.chat-upload-row input[type=file]{display:none}
+.chat-upload-action{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:14px;
+  border:0;
+  background:rgba(233,237,239,.08);
+  color:#e9edef;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.chat-upload-action:hover{background:rgba(233,237,239,.14)}
+.chat-upload-action svg{
+  width:19px;
+  height:19px;
+  flex:0 0 auto;
+}
+.admin-bg-control{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:start;
+}
+.admin-conversation-card.fullscreen{
+  position:fixed;
+  inset:10px;
+  z-index:950;
+  display:flex;
+  flex-direction:column;
+  margin:0;
+}
+.admin-conversation-card.fullscreen .admin-chat-thread{
+  flex:1;
+  max-height:none;
+}
+.emoji-bar{
+  display:none;
+  gap:6px;
+  flex-wrap:wrap;
+  padding:10px 14px;
+  background:#111b21;
+}
+.emoji-bar.open{display:flex}
+.emoji-bar button{
+  width:auto;
+  min-width:38px;
+  margin:0;
+  padding:8px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+}
+.chat-extra-row{
+  display:none;
+  grid-template-columns:1fr auto auto;
+  gap:8px;
+  padding:10px 14px;
+  background:#111b21;
+}
+.chat-extra-row.open{display:grid}
+.send-fab{background:#00a884;color:#06130f}
+.admin-groups-shell{margin-top:14px}
+.admin-group-card{
+  overflow:hidden;
+  background:#0b141a;
+  border:1px solid rgba(134,150,160,.22);
+  border-radius:8px;
+  margin-top:12px;
+}
+.admin-group-card .admin-chat-thread{max-height:430px}
+.gif-picker-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  gap:10px;
+}
+.gif-picker-item{
+  padding:0;
+  overflow:hidden;
+  border-radius:12px;
+  border:1px solid rgba(255,215,0,.16);
+  background:rgba(255,255,255,.05);
+}
+.gif-picker-item img{
+  display:block;
+  width:100%;
+  aspect-ratio:1;
+  object-fit:cover;
+}
+.gif-picker-controls{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  margin-bottom:12px;
+}
+.call-banner{
+  display:none;
+  margin-bottom:12px;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(47,191,113,.45);
+  background:rgba(47,191,113,.12);
+}
+.call-banner.show{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.admin-pill{
+  display:inline-block;
+  margin:4px 6px 4px 0;
+  padding:6px 9px;
+  border-radius:999px;
+  background:rgba(255,215,0,.1);
+  border:1px solid rgba(255,215,0,.16);
+  color:var(--gold);
+  font-size:12px;
+  font-weight:800;
+}
+
+.modal-bg{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  z-index:900;
+}
+.modal{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:min(92vw,540px);
+  max-height:82vh;
+  overflow-y:auto;
+  padding:22px;
+  border-radius:20px;
+  background:rgba(8,10,14,.96);
+  border:1px solid rgba(255,215,0,.22);
+  box-shadow:0 20px 50px rgba(0,0,0,.4);
+  z-index:901;
+}
+.modal h3{
+  color:var(--gold-2);
+  margin-bottom:14px;
+}
+
+@media (max-width:1100px){
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  body{padding:10px}
+  header{padding:14px}
+  .header-right{width:100%}
+  nav{width:100%}
+  nav a{flex:1;text-align:center;font-size:13px;padding:10px 8px}
+  .cards{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .toolbar{flex-direction:column}
+  .toolbar button,.toolbar select{width:100%}
+  .annonce-actions{flex-direction:column}
+  .annonce-actions button{width:100%}
+  .annonce-list{grid-template-columns:1fr}
+  #adminMessages .page-title{display:none}
+  #adminMessages{margin:-10px}
+  .admin-chat-layout{
+    display:block;
+    min-height:auto;
+    border-radius:0;
+  }
+  .admin-chat-sidebar{
+    min-height:auto;
+    max-height:168px;
+    overflow:auto;
+    border-right:0;
+    border-bottom:1px solid rgba(134,150,160,.22);
+  }
+  .admin-chat-sidebar .section-title{
+    padding:10px 12px;
+    font-size:13px;
+  }
+  .admin-chat-list{
+    display:flex;
+    overflow-x:auto;
+    gap:8px;
+    padding:8px;
+  }
+  .admin-chat-card{
+    min-width:190px;
+    padding:10px;
+    border-bottom:0;
+    border-radius:8px;
+    background:#182229;
+  }
+  .admin-chat-card p{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .admin-conversation-card{
+    border-radius:0!important;
+  }
+  .chat-topbar{
+    min-height:56px;
+    padding:8px 10px;
+  }
+  .chat-icon-actions button,.composer-icon,.send-fab,.voice-fab{
+    width:38px;
+    min-width:38px;
+    height:38px;
+  }
+  .admin-chat-thread{
+    min-height:calc(100vh - 355px);
+    max-height:calc(100vh - 255px);
+    padding:10px 8px;
+    align-content:end;
+  }
+  .message-line{
+    width:fit-content;
+    max-width:92%;
+    min-width:0;
+    padding:6px 8px 5px;
+    font-size:14px;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  audio.message-media{
+    width:100%;
+    max-width:240px;
+  }
+  .message-author{font-size:12px}
+  .message-date{
+    display:block;
+    float:none;
+    margin:4px 0 0;
+    text-align:right;
+  }
+  .message-tools{
+    overflow-x:auto;
+    justify-content:flex-start;
+  }
+  .message-tools button{
+    flex:0 0 auto;
+  }
+  .chat-composer{
+    gap:6px;
+    padding:8px;
+  }
+  .chat-composer textarea{
+    flex:1 1 auto;
+    min-width:0;
+    min-height:40px;
+    max-height:96px;
+    padding:10px 12px;
+    font-size:15px;
+    resize:none;
+  }
+  .chat-upload-row{
+    padding:8px;
+    width:min(220px,calc(100vw - 24px));
+  }
+  .chat-upload-action{
+    min-height:40px;
+    font-size:12px;
+  }
+  .chat-extra-row{grid-template-columns:1fr}
+  .admin-chat-actions{grid-template-columns:1fr}
+  li{flex-direction:column;align-items:flex-start}
+  li button{width:100%}
+}
+</style>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227"></head>
+<body>
+
+<div id="loginBox">
+  <h2>ADMIN EMPLOI INFO</h2>
+  <input type="text" id="loginUsername" placeholder="Nom d'utilisateur">
+  <input type="password" id="password" placeholder="Mot de passe admin">
+  <button onclick="login()">Connexion</button>
+  <p id="error"></p>
+</div>
+
+<div id="usernameModal">
+  <div class="inner">
+    <h3>Définir votre nom d'utilisateur</h3>
+    <input type="text" id="newUsername" placeholder="Nom d'utilisateur">
+    <button onclick="setUsername()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="gifPickerBg" onclick="closeGifPicker()"></div>
+<div class="modal" id="gifPickerModal">
+  <h3>GIF et stickers</h3>
+  <div class="gif-picker-controls">
+    <input id="gifSearchInput" placeholder="Rechercher un GIF ou sticker" oninput="renderGifPicker()">
+    <button onclick="closeGifPicker()" type="button">Fermer</button>
+  </div>
+  <label style="display:flex;gap:8px;align-items:center;margin-bottom:12px;color:var(--gold);font-weight:800;">
+    <input id="sendAsSticker" type="checkbox" style="width:auto;margin:0;"> Envoyer comme sticker
+  </label>
+  <div id="gifPickerGrid" class="gif-picker-grid"></div>
+</div>
+
+<div id="adminPanel">
+  <header>
+    <div class="brand-block">
+      <img src="logo.png" alt="EMPLOI INFO">
+      <div class="brand-copy">
+        <strong>EMPLOI INFO Admin</strong>
+        <span>Pilotage des annonces, publicités, commentaires et assistance</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="user-pill">Administrateur</span>
+      <nav>
+        <a class="nav-link" onclick="showPage('dashboard')">Dashboard</a>
+        <a class="nav-link" onclick="showPage('annonces','')">Annonces <span class="nav-badge" id="badgeAnnonces"></span></a>
+        <a onclick="showPage('categories')">Catégories</a>
+        <a onclick="showPage('entreprises')">Entreprises</a>
+        <a onclick="showPage('publicites')">Publicités</a>
+        <a onclick="showPage('blogAdmin')">Blog</a>
+        <a onclick="showPage('resourcesAdmin')">Ressources</a>
+        <a onclick="showPage('servicesAdmin')">Services</a>
+        <a onclick="showPage('formationsAdmin')">Formations</a>
+        <a onclick="showPage('actualitesAdmin')">Actualités</a>
+        <a class="nav-link" onclick="showPage('partnersAdmin')">Partenaires <span class="nav-badge" id="badgePartners"></span></a>
+        <a onclick="showPage('usersAdmin')">Candidatures</a>
+        <a class="nav-link" onclick="showPage('commentaires')">Commentaires <span class="nav-badge" id="badgeCommentaires"></span></a>
+        <a class="nav-link" onclick="showPage('assistance')">Assistance <span class="nav-badge" id="badgeContact"></span></a>
+        <a class="nav-link" onclick="showPage('adminMessages')">Messages administrateurs <span class="nav-badge" id="badgeAdminCalls"></span></a>
+        <a onclick="showPage('reunionsAdmin')">Réunions</a>
+        <a onclick="showPage('parametres')">Paramètres</a>
+        <a onclick="logout()">Déconnexion</a>
+      </nav>
+    </div>
+  </header>
+
+  <div id="dashboard">
+    <h1 class="page-title">Dashboard</h1>
+    <div class="cards">
+      <div class="stat-card">
+        <h3>Total annonces</h3>
+        <p id="totalAnnonces">0</p>
+      </div>
+      <div class="stat-card">
+        <h3>Publiées</h3>
+        <p id="publieesCount">0</p>
+      </div>
+      <div class="stat-card clickable" onclick="ouvrirAnnoncesEnAttente()">
+        <h3>En attente</h3>
+        <p id="attenteCount">0</p>
+      </div>
+      <div class="stat-card clickable" onclick="ouvrirAnnoncesUrgentesEnAttente()">
+        <h3>Urgentes en attente</h3>
+        <p id="urgentAnnonces">0</p>
+      </div>
+      <div class="stat-card clickable" onclick="showPage('usersAdmin')" style="display:none;">
+        <h3>Zone désactivée</h3>
+        <p id="usersCount">0</p>
+      </div>
+      <div class="stat-card clickable" onclick="showPage('usersAdmin')">
+        <h3>Candidatures</h3>
+        <p id="applicationsCount">0</p>
+      </div>
+      <div class="stat-card clickable" onclick="showPage('usersAdmin')" style="display:none;">
+        <h3>Alertes utilisateur</h3>
+        <p id="alertsCount">0</p>
+      </div>
+      <div class="stat-card clickable" onclick="showPage('usersAdmin')" style="display:none;">
+        <h3>Favoris utilisateur</h3>
+        <p id="favoritesCount">0</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Statistiques sur 7 jours</h3>
+      <div class="chart-shell">
+        <canvas id="statsCanvas" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div id="annonces">
+    <h1 class="page-title">Gestion des annonces</h1>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Publier une nouvelle annonce</h3>
+      <div class="form-grid">
+        <input class="full" type="text" id="titre" placeholder="Titre de l'annonce" oninput="updateApercu()">
+        <select id="categorie" oninput="updateApercu()">
+          <option>-- Catégorie --</option>
+        </select>
+        <select id="ville" oninput="updateApercu()">
+          <option value="">-- Ville --</option>
+        </select>
+        <select id="alignement" onchange="updateApercu()">
+          <option value="left">Alignement : Gauche</option>
+          <option value="center">Alignement : Centré</option>
+          <option value="right">Alignement : Droite</option>
+        </select>
+        <div class="toolbar full">
+          <button type="button" onclick="mettreGras()">Gras</button>
+          <button type="button" onclick="mettreItalic()">Italique</button>
+        </div>
+        <textarea class="full" id="texte" rows="6" placeholder="Description de l'annonce" oninput="updateApercu()"></textarea>
+        <input class="full" type="text" id="notice" placeholder="Notice (optionnelle)" oninput="updateApercu()">
+        <input class="full" type="file" id="annonceFile" accept="image/*,video/*" title="Téléverser image ou vidéo pour la bannière">
+      </div>
+      <button onclick="previewAnnonce()" type="button">Prévisualiser</button>
+      <button onclick="publier()">Publier et notifier</button>
+    </div>
+
+    <h3 class="section-title">Aperçu de l'annonce</h3>
+    <div class="card preview-box" id="apercuAnnonce">
+      <p style="text-align:center;color:#ccc;">L'aperçu s'affichera ici...</p>
+    </div>
+
+    <h3 class="section-title">Annonces publiées</h3>
+    <div id="listePub" class="annonce-list"></div>
+
+    <h3 class="section-title">Annonces en attente</h3>
+    <div id="listeAtt" class="annonce-list"></div>
+  </div>
+
+  <div id="categories">
+    <h1 class="page-title">Catégories</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Ajouter une catégorie</h3>
+      <input type="text" id="newCat" placeholder="Nom de la catégorie">
+      <button onclick="ajouterCategorie()">Ajouter</button>
+    </div>
+    <h3 class="section-title">Catégories existantes</h3>
+    <ul id="catList"></ul>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Ajouter une ville</h3>
+      <input type="text" id="newVille" placeholder="Nom de la ville">
+      <button onclick="ajouterVille()">Ajouter</button>
+    </div>
+    <h3 class="section-title">Villes existantes</h3>
+    <ul id="villesList"></ul>
+  </div>
+
+  <div id="entreprises">
+    <h1 class="page-title">Gestion des entreprises</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Ajouter une entreprise</h3>
+      <div class="form-grid">
+        <input type="text" id="nomEntreprise" placeholder="Nom de l'entreprise">
+        <input type="text" id="secteurEntreprise" placeholder="Secteur d'activité">
+        <input class="full" type="text" id="contactEntreprise" placeholder="Contact (email ou téléphone)">
+        <textarea class="full" id="descriptionEntreprise" rows="3" placeholder="Description"></textarea>
+      </div>
+      <button onclick="ajouterEntreprise()">Ajouter</button>
+    </div>
+    <h3 class="section-title">Entreprises existantes</h3>
+    <ul id="entreprisesList"></ul>
+  </div>
+
+  <div id="publicites">
+    <h1 class="page-title">Gestion des publicités</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Ajouter une publicité</h3>
+      <input type="text" id="pubTitre" placeholder="Titre de la publicité">
+      <textarea id="pubDescription" rows="4" placeholder="Description de la publicité"></textarea>
+      <input type="file" id="pubFile" accept="image/*,video/*" title="Téléverser image ou vidéo">
+      <input type="text" id="pubLien" placeholder="Lien (optionnel)">
+      <input type="number" id="pubDuration" min="1" max="3650" value="30" placeholder="Durée d'existence en jours">
+      <button onclick="previewPublicite()" type="button">Prévisualiser</button>
+      <button onclick="ajouterPublicite()">Ajouter</button>
+    </div>
+    <h3 class="section-title">Publicités existantes</h3>
+    <ul id="pubList"></ul>
+  </div>
+
+  <div id="blogAdmin" class="content-admin" data-section="blog">
+    <h1 class="page-title">Gestion du blog</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Nouvel article</h3>
+      <input type="text" id="blogTitre" placeholder="Titre de l'article">
+      <input type="text" id="blogCategorie" placeholder="Catégorie ou thème">
+      <textarea id="blogTexte" rows="7" placeholder="Contenu complet"></textarea>
+      <input type="file" id="blogImg" accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.txt,.apk">
+      <input type="text" id="blogLien" placeholder="Lien d'action, lien externe ou vidéo YouTube">
+      <button onclick="saveContentSection('blog')">Publier l'article</button>
+    </div>
+    <ul id="blogAdminList"></ul>
+  </div>
+
+  <div id="resourcesAdmin" class="content-admin" data-section="resources">
+    <h1 class="page-title">Gestion des ressources</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Nouvelle ressource</h3>
+      <input type="text" id="resourcesTitre" placeholder="Titre de la ressource">
+      <input type="text" id="resourcesCategorie" placeholder="Type : guide, modèle, lien utile...">
+      <textarea id="resourcesTexte" rows="7" placeholder="Description détaillée"></textarea>
+      <input type="file" id="resourcesImg" accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.txt,.apk">
+      <input type="text" id="resourcesLien" placeholder="Lien de téléchargement, lien externe ou vidéo YouTube">
+      <button onclick="saveContentSection('resources')">Publier la ressource</button>
+    </div>
+    <ul id="resourcesAdminList"></ul>
+  </div>
+
+  <div id="servicesAdmin" class="content-admin" data-section="services">
+    <h1 class="page-title">Gestion des services</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Nouveau service</h3>
+      <input type="text" id="servicesTitre" placeholder="Titre du service">
+      <input type="text" id="servicesCategorie" placeholder="Catégorie du service">
+      <textarea id="servicesTexte" rows="7" placeholder="Description, conditions, bénéfices"></textarea>
+      <input type="file" id="servicesImg" accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.txt,.apk">
+      <input type="text" id="servicesLien" placeholder="Lien de contact, commande ou vidéo YouTube">
+      <button onclick="saveContentSection('services')">Publier le service</button>
+    </div>
+    <ul id="servicesAdminList"></ul>
+  </div>
+
+  <div id="formationsAdmin" class="content-admin" data-section="formations">
+    <h1 class="page-title">Gestion des formations</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Nouvelle formation</h3>
+      <input type="text" id="formationsTitre" placeholder="Titre de la formation">
+      <input type="text" id="formationsCategorie" placeholder="Domaine ou niveau">
+      <input type="text" id="formationsLieu" placeholder="Lieu ou mode : en ligne, présentiel...">
+      <select id="formationsPricingType" onchange="toggleFormationPricing()">
+        <option value="gratuit">Formation gratuite</option>
+        <option value="payant">Formation payante</option>
+        <option value="promotion">Formation promotionnelle</option>
+      </select>
+      <div id="formationPriceBox" class="price-row">
+        <input type="text" id="formationsPrix" placeholder="Prix à afficher">
+        <input type="text" id="formationsPrixNormal" placeholder="Prix normal">
+        <input type="text" id="formationsPrixPromo" placeholder="Prix promotionnel">
+      </div>
+      <div id="formationPromoBox">
+        <select id="formationsPromoMode">
+          <option value="temps">Promotion limitée dans le temps</option>
+          <option value="places">Promotion limitée par nombre de personnes</option>
+          <option value="total">Toute la formation est promotionnelle</option>
+        </select>
+        <div class="price-row">
+          <input type="date" id="formationsPromoUntil" title="Date de fin de promotion">
+          <input type="number" id="formationsPromoPlaces" min="1" placeholder="Nombre de personnes">
+        </div>
+        <p class="price-note">Le prix normal sera barré sur le site quand un prix promotionnel est renseigné.</p>
+      </div>
+      <input type="date" id="formationsDateDebut" title="Date de début">
+      <textarea id="formationsTexte" rows="7" placeholder="Programme, durée, conditions, contacts"></textarea>
+      <input type="file" id="formationsImg" accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.txt,.apk">
+      <input type="text" id="formationsLien" placeholder="Lien d'inscription, WhatsApp ou vidéo YouTube">
+      <button onclick="saveContentSection('formations')">Publier la formation</button>
+    </div>
+    <ul id="formationsAdminList"></ul>
+  </div>
+
+  <div id="actualitesAdmin">
+    <h1 class="page-title">Gestion des actualités</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Source externe</h3>
+      <input type="text" id="newsSourceName" placeholder="Nom de la source">
+      <input type="url" id="newsSourceUrl" placeholder="URL du site ou flux d'actualité">
+      <button onclick="addNewsSource()">Ajouter la source</button>
+      <button onclick="refreshNewsSources()" type="button">Mettre à jour maintenant</button>
+    </div>
+    <h3 class="section-title">Sources définies</h3>
+    <ul id="newsSourcesList"></ul>
+  </div>
+
+  <div id="partnersAdmin">
+    <h1 class="page-title">Gestion des partenaires</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Demandes et partenaires validés</h3>
+      <div id="partnersAdminList"></div>
+    </div>
+  </div>
+
+  <div id="usersAdmin">
+    <h1 class="page-title">Candidatures</h1>
+    <div class="card" style="display:none;">
+      <h3 class="section-title" style="margin-top:0;">Zone désactivée</h3>
+      <div id="usersAdminList"></div>
+    </div>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Candidatures directes</h3>
+      <div id="applicationsAdminList"></div>
+    </div>
+  </div>
+
+  <div id="parametres">
+    <h1 class="page-title">Paramètres</h1>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Changer mot de passe</h3>
+      <input type="password" id="oldPwd" placeholder="Ancien mot de passe">
+      <input type="password" id="newPwd" placeholder="Nouveau mot de passe">
+      <button onclick="changerMotDePasse()">Valider</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Informations du site</h3>
+      <input type="text" id="siteName" placeholder="Nom du site">
+      <input type="text" id="siteEmail" placeholder="Email contact">
+      <button onclick="sauvegarderParametres()">Sauvegarder</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Son de notification</h3>
+      <input type="file" id="notificationSound" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,.mp3,.wav,.ogg,.m4a">
+      <p id="notificationSoundCurrent" style="color:var(--muted);margin-bottom:12px;"></p>
+      <button onclick="sauvegarderSonNotification()">Téléverser le son</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Ajouter un administrateur</h3>
+      <input type="text" id="adminUsername" placeholder="Nom d'utilisateur de connexion" autocomplete="username">
+      <select id="adminCountry"><option value="">Pays africain de partenariat</option></select>
+      <input type="text" id="adminWhatsapp" placeholder="Numero WhatsApp de l'administrateur">
+      <input type="email" id="adminEmail" placeholder="Email de l'administrateur">
+      <input type="password" id="adminPass" placeholder="Mot de passe" autocomplete="new-password">
+      <select id="adminRole">
+        <option value="admin">Administrateur</option>
+        <option value="super">Super administrateur</option>
+      </select>
+      <div class="card" style="box-shadow:none;margin:12px 0;background:rgba(255,255,255,.04);">
+        <h3 class="section-title" style="margin-top:0;">Permissions accordées</h3>
+        <label><input type="checkbox" class="adminPerm" value="annonces"> Annonces</label>
+        <label><input type="checkbox" class="adminPerm" value="publicites"> Publicités</label>
+        <label><input type="checkbox" class="adminPerm" value="partners"> Partenaires</label>
+        <label><input type="checkbox" class="adminPerm" value="comments"> Commentaires et assistance</label>
+        <label><input type="checkbox" class="adminPerm" value="content"> Blog, ressources, services et formations</label>
+        <label><input type="checkbox" class="adminPerm" value="actualites"> Actualités externes</label>
+        <label><input type="checkbox" class="adminPerm" value="settings"> Paramètres</label>
+        <label><input type="checkbox" class="adminPerm" value="manage_admins"> Gestion des administrateurs</label>
+      </div>
+      <button id="addAdminBtn">Ajouter</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Administrateurs existants</h3>
+      <ul id="adminsList"></ul>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Inviter un administrateur</h3>
+      <div class="form-grid">
+        <select id="inviteRole">
+          <option value="admin">Administrateur</option>
+          <option value="super">Super administrateur</option>
+        </select>
+        <select id="inviteCountryHint"></select>
+        <input type="text" id="inviteWhatsapp" placeholder="WhatsApp pré-rempli (optionnel)">
+        <input type="email" id="inviteEmail" placeholder="Email pré-rempli (optionnel)">
+      </div>
+      <div class="card" style="box-shadow:none;margin:12px 0;background:rgba(255,255,255,.04);">
+        <h3 class="section-title" style="margin-top:0;">Fonctions accordées via le lien</h3>
+        <label><input type="checkbox" class="invitePerm" value="annonces"> Annonces</label>
+        <label><input type="checkbox" class="invitePerm" value="publicites"> Publicités</label>
+        <label><input type="checkbox" class="invitePerm" value="partners"> Partenaires</label>
+        <label><input type="checkbox" class="invitePerm" value="comments"> Commentaires et assistance</label>
+        <label><input type="checkbox" class="invitePerm" value="content"> Blog, ressources, services et formations</label>
+        <label><input type="checkbox" class="invitePerm" value="actualites"> Actualités externes</label>
+        <label><input type="checkbox" class="invitePerm" value="settings"> Paramètres</label>
+        <label><input type="checkbox" class="invitePerm" value="manage_admins"> Gestion des administrateurs</label>
+      </div>
+      <select id="inviteGroupTarget"><option value="">Aucun groupe</option></select>
+      <button onclick="createAdminInvite()" type="button">Générer le lien d'invitation</button>
+      <input id="generatedInviteLink" readonly placeholder="Le lien généré s'affichera ici">
+      <ul id="adminInvitesList"></ul>
+    </div>
+
+  </div>
+
+  <div id="adminMessages">
+    <h1 class="page-title">Messages administrateurs</h1>
+    <div id="adminActiveCallBanner" class="call-banner"></div>
+    <div class="admin-chat-layout">
+      <div class="admin-chat-sidebar">
+        <h3 class="section-title">Administrateurs connectés</h3>
+        <div id="adminPresenceList" class="admin-chat-list"></div>
+      </div>
+      <div class="admin-conversation-card">
+        <div class="chat-topbar">
+          <div id="adminDmHeader" class="chat-topbar-title">
+            <strong>DM</strong>
+            <span>Choisissez un administrateur pour discuter.</span>
+          </div>
+          <div class="chat-icon-actions">
+            <button onclick="startAdminMeeting('dm','audio')" type="button" title="Appel vocal" aria-label="Appel vocal">☎</button>
+            <button onclick="startAdminMeeting('dm','video')" type="button" title="Appel vidéo" aria-label="Appel vidéo">▣</button>
+            <button onclick="toggleAdminPanelRow('adminDmBgRow')" type="button" title="Fond de discussion" aria-label="Fond de discussion">⋮</button>
+            <button onclick="toggleConversationFullscreen(this)" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+          </div>
+        </div>
+        <div class="chat-bg-row" id="adminDmBgRow">
+          <input id="adminChatBg" placeholder="URL du fond de conversation">
+          <button onclick="saveAdminChatBackground()" type="button">Fond</button>
+        </div>
+        <div id="adminDmThread" class="admin-chat-thread"></div>
+        <div class="emoji-bar" id="adminDmEmojiRow" data-target="adminDmText"></div>
+        <div class="chat-extra-row" id="adminDmExtraRow">
+          <input id="adminDmGifUrl" placeholder="Coller URL GIF">
+          <button onclick="openGifPicker('dm')" type="button">GIF/Stickers</button>
+        </div>
+        <div class="chat-upload-row" id="adminDmUploadRow">
+          <label class="chat-upload-action" title="Photo ou vidéo"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h16v14H4V5Zm2 2v8.4l3.4-3.4 2.6 2.6 3.6-4.6L18 13.2V7H6Zm2.2 2.8a1.8 1.8 0 1 0 3.6 0 1.8 1.8 0 0 0-3.6 0Z"/></svg><span>Médias</span><input type="file" id="adminDmPhoto" accept="image/*,video/*"></label>
+          <label class="chat-upload-action" title="Document"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 2h8l4 4v16H6V2Zm7 1.5V7h3.5L13 3.5ZM8 11h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg><span>Document</span><input type="file" id="adminDmFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,application/*,text/*"></label>
+          <label class="chat-upload-action" title="Audio"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v12.1A4 4 0 1 1 10 11.7V6h9V3h-7Z"/></svg><span>Audio</span><input type="file" id="adminDmAudio" accept="audio/*"></label>
+          <button class="chat-upload-action" onclick="openGifPicker('dm')" type="button" title="GIF et stickers" aria-label="GIF et stickers"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2v12h14V6H5Zm2 3h5v2H9v2h2v-1h2v3H7V9Zm7 0h2v6h-2V9Zm3 0h4v2h-2v1h2v2h-2v1h-2V9Z"/></svg><span>GIF</span></button>
+          <label class="chat-upload-action" title="Sticker ou image GIF"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3h8l5 5v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Zm7 2H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9h-4V5Z"/></svg><span>Sticker</span><input type="file" id="adminDmSticker" accept="image/*,.webp,.gif"></label>
+        </div>
+        <div class="chat-composer">
+          <button class="composer-icon" onclick="toggleAdminPanelRow('adminDmEmojiRow')" type="button" title="Emoji" aria-label="Emoji">☺</button>
+          <button class="composer-icon" onclick="toggleAdminPanelRow('adminDmUploadRow', this)" type="button" title="Joindre" aria-label="Joindre">＋</button>
+          <textarea id="adminDmText" rows="1" placeholder="Message"></textarea>
+          <button class="voice-fab" onclick="toggleVoiceRecording('dm')" type="button" id="voiceBtn_dm" title="Message vocal" aria-label="Message vocal" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3Zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.42 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.3 6-6.72h-1.7Z"/></svg></button>
+          <button class="send-fab" onclick="sendAdminDm()" type="button" title="Envoyer" aria-label="Envoyer">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card admin-groups-shell">
+      <h3 class="section-title" style="margin-top:0;">Groupes</h3>
+      <div class="form-grid">
+        <input id="adminGroupName" placeholder="Nom du groupe">
+        <input id="adminGroupDescription" placeholder="Description du groupe">
+        <select id="adminGroupMembers" multiple title="Administrateurs à ajouter"></select>
+      </div>
+      <button onclick="createAdminGroup()" type="button">Créer le groupe</button>
+      <div id="adminGroupsList"></div>
+    </div>
+  </div>
+
+  <div id="reunionsAdmin">
+    <h1 class="page-title">Réunions administrateurs</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Nouvel appel général</h3>
+      <div class="form-grid">
+        <input id="meetingTitle" placeholder="Titre de la réunion">
+        <select id="meetingType">
+          <option value="video">Vidéo</option>
+          <option value="audio">Vocal</option>
+        </select>
+      </div>
+      <button onclick="startAdminMeeting('all', document.getElementById('meetingType').value)" type="button">Générer le lien d'appel</button>
+      <div class="meeting-link-box" id="generatedMeetingLinkBox" style="display:none;">
+        <input id="generatedMeetingLink" readonly aria-label="Lien de l'appel généré">
+        <button type="button" onclick="copyGeneratedMeetingLink()">Copier</button>
+      </div>
+      <p class="meeting-copy-status" id="generatedMeetingLinkStatus"></p>
+    </div>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Historique et appels en cours</h3>
+      <button class="delete" onclick="clearAdminMeetingsHistory()" type="button">Vider l'historique des appels terminés</button>
+      <p id="adminMeetingsHistoryStatus" style="color:var(--muted);margin:10px 0 0;"></p>
+      <div id="adminMeetingsList" class="meeting-grid"></div>
+    </div>
+  </div>
+
+  <div id="commentaires">
+    <h1 class="page-title">Commentaires et signalements</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Filtres</h3>
+      <div class="admin-filters">
+        <select id="commentStatusFilter" onchange="renderAdminComments()">
+          <option value="">Tous les commentaires</option>
+          <option value="pending">Suspects en attente</option>
+          <option value="approved">Validés</option>
+          <option value="rejected">Rejetés</option>
+        </select>
+        <select id="commentTypeFilter" onchange="renderAdminComments()">
+          <option value="">Annonces et publicités</option>
+          <option value="annonce">Annonces</option>
+          <option value="publicite">Publicités</option>
+          <option value="formation">Formations</option>
+          <option value="actualite">Actualités</option>
+        </select>
+        <input id="commentSearch" placeholder="Rechercher un commentaire" oninput="renderAdminComments()">
+      </div>
+      <div id="adminCommentsList"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Mots-clés privés de modération</h3>
+      <p style="color:var(--muted);margin-bottom:12px;">Ces mots ne sont visibles que dans le panneau administrateur.</p>
+      <label style="display:flex;gap:10px;align-items:center;margin-bottom:12px;color:var(--gold-2);font-weight:800;">
+        <input type="checkbox" id="autoModerationEnabled" style="width:auto;margin:0;">
+        Modération automatique activée
+      </label>
+      <textarea id="autoKeywords" rows="6" placeholder="Mots automatiques intégrés : un par ligne"></textarea>
+      <textarea id="blockedKeywords" rows="4" placeholder="Mots interdits : un par ligne"></textarea>
+      <textarea id="suspectKeywords" rows="4" placeholder="Mots à vérifier : un par ligne"></textarea>
+      <input type="number" id="repeatLimit" min="1" value="2" placeholder="Répétitions avant mise en attente">
+      <button onclick="saveModerationSettings()">Sauvegarder les règles</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Problèmes signalés en privé</h3>
+      <div id="reportsList"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Visiteurs bloqués et demandes d'examen</h3>
+      <div id="blocksList"></div>
+      <h3 class="section-title">Demandes d'examen</h3>
+      <div id="appealsList"></div>
+    </div>
+  </div>
+
+  <div id="assistance">
+    <h1 class="page-title">Assistance visiteurs</h1>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Messages reçus depuis la page Contact</h3>
+      <p style="color:var(--muted);margin-bottom:12px;">Les conversations sont conservées 30 jours automatiquement. Vous pouvez aussi les supprimer manuellement.</p>
+      <div id="contactAdminList"></div>
+    </div>
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0;">Répondre depuis le panneau</h3>
+      <div class="comment-reply-box">
+        <select id="assistItemType" onchange="loadAssistPublications()">
+          <option value="annonce">Annonce</option>
+          <option value="publicite">Publicité</option>
+        </select>
+        <select id="assistPublication"></select>
+        <textarea class="full" id="assistText" placeholder="Réponse publique de l'administration"></textarea>
+        <input id="assistLink" placeholder="Lien optionnel">
+        <input id="assistMedia" type="file" accept="image/*,video/*">
+      </div>
+      <button onclick="sendAssistanceReply()">Publier la réponse admin</button>
+      <div id="assistPreview" class="preview-box" style="margin-top:14px;">Prévisualisation de l'assistance...</div>
+    </div>
+  </div>
+</div>
+
+<div id="previewAnnonceBg" class="modal-bg"></div>
+<div id="previewAnnonceOverlay" class="modal">
+  <h3>Prévisualisation annonce</h3>
+  <div id="previewAnnonceContent" class="preview-box" style="margin-bottom:15px;"></div>
+  <button onclick="confirmerAnnonce()">Confirmer et publier</button>
+  <button onclick="cancelPreviewAnnonce()" style="background:linear-gradient(180deg,#ff7a7a,#d94848);color:#fff;">Retour</button>
+</div>
+
+<div id="previewPubBg" class="modal-bg"></div>
+<div id="previewPubOverlay" class="modal">
+  <h3>Prévisualisation publicité</h3>
+  <div id="previewPubContent" class="preview-box" style="margin-bottom:15px;"></div>
+  <button onclick="confirmerPublicite()">Confirmer et ajouter</button>
+  <button onclick="cancelPreviewPub()" style="background:linear-gradient(180deg,#ff7a7a,#d94848);color:#fff;">Retour</button>
+</div>
+
+<script>
+const currentAdminRole = localStorage.getItem("admin_role") || "";
+const currentAdminPermissions = JSON.parse(localStorage.getItem("admin_permissions") || "[]");
+let currentCsrfToken = localStorage.getItem("admin_csrf") || "";
+const AFRICAN_COUNTRIES = ["Afrique du Sud","Algérie","Angola","Bénin","Botswana","Burkina Faso","Burundi","Cameroun","Cap-Vert","Comores","Congo","Côte d'Ivoire","Djibouti","Égypte","Érythrée","Éthiopie","Gabon","Gambie","Ghana","Guinée","Guinée-Bissau","Guinée équatoriale","Kenya","Lesotho","Liberia","Libye","Madagascar","Malawi","Mali","Maroc","Maurice","Mauritanie","Mozambique","Namibie","Niger","Nigeria","Ouganda","République centrafricaine","République démocratique du Congo","Rwanda","Sao Tomé-et-Principe","Sénégal","Seychelles","Sierra Leone","Somalie","Soudan","Soudan du Sud","Tanzanie","Tchad","Togo","Tunisie","Zambie","Zimbabwe"];
+
+function hasPermission(permission){
+  if(currentAdminRole === "super" && currentAdminPermissions.length === 0) return true;
+  return currentAdminPermissions.includes(permission);
+}
+
+function permissionForPage(page){
+  if(["dashboard"].includes(page)) return "";
+  if(["annonces","categories","entreprises"].includes(page)) return "annonces";
+  if(["publicites"].includes(page)) return "publicites";
+  if(["partnersAdmin"].includes(page)) return "partners";
+  if(["actualitesAdmin"].includes(page)) return "actualites";
+  if(["commentaires","assistance","usersAdmin"].includes(page)) return "comments";
+  if(["blogAdmin","resourcesAdmin","servicesAdmin","formationsAdmin"].includes(page)) return "content";
+  if(["parametres"].includes(page)) return "settings";
+  if(["adminMessages","reunionsAdmin"].includes(page)) return "";
+  return "";
+}
+
+function login(){
+  const username = document.getElementById("loginUsername").value.trim();
+  const pwd = document.getElementById("password").value.trim();
+  const error = document.getElementById("error");
+  if(!username || !pwd){ error.innerText="Nom d'utilisateur et mot de passe requis"; return; }
+
+  fetch("login.php", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: username, password: pwd})
+  })
+  .then(r => r.json())
+  .then(res => {
+    if(res.status === "success"){
+      localStorage.setItem("admin_logged", "true");
+      localStorage.setItem("admin_role", res.role);
+      localStorage.setItem("admin_permissions", JSON.stringify(res.permissions || []));
+      localStorage.setItem("admin_username", res.username || localStorage.getItem("admin_username"));
+      localStorage.setItem("admin_csrf", res.csrf || "");
+      location.reload();
+    } else {
+      error.innerText = res.msg;
+    }
+  })
+  .catch(e => {
+    console.error("Erreur login:", e);
+    error.innerText = "Erreur de connexion";
+  });
+}
+
+function logout(){
+  fetch("logout.php", {credentials:"same-origin"}).catch(()=>{});
+  localStorage.removeItem("admin_logged");
+  localStorage.removeItem("admin_role");
+  localStorage.removeItem("admin_permissions");
+  localStorage.removeItem("admin_csrf");
+  location.reload();
+}
+
+function setUsername(){
+  const username = document.getElementById("newUsername").value.trim();
+  if(!username) { alert("Nom d'utilisateur requis"); return; }
+  localStorage.setItem("admin_username", username);
+  document.getElementById("usernameModal").style.display = "none";
+  location.reload();
+}
+
+function showPage(page, filterMode){
+  const neededPermission = permissionForPage(page);
+  if(neededPermission && !hasPermission(neededPermission)){
+    alert("Vous n'avez pas la permission d'accéder à cette rubrique.");
+    return;
+  }
+  if(page === "annonces") window.adminAnnonceFilter = filterMode || "";
+  ['dashboard','annonces','categories','entreprises','publicites','blogAdmin','resourcesAdmin','servicesAdmin','formationsAdmin','actualitesAdmin','partnersAdmin','usersAdmin','commentaires','assistance','adminMessages','reunionsAdmin','parametres'].forEach(p=>{
+    const el = document.getElementById(p);
+    if(el) el.style.display='none';
+  });
+  const pageEl = document.getElementById(page);
+  if(pageEl) pageEl.style.display='block';
+
+  if(page==='dashboard') chargerStats();
+  if(page==='annonces'){ chargerAnnonces(); chargerCategories(); chargerVilles(); }
+  if(page==='categories'){ chargerCategories(); chargerVilles(); }
+  if(page==='entreprises') chargerEntreprises();
+  if(page==='publicites') chargerPublicites();
+  if(page==='blogAdmin') loadContentSection('blog');
+  if(page==='resourcesAdmin') loadContentSection('resources');
+  if(page==='servicesAdmin') loadContentSection('services');
+  if(page==='formationsAdmin') loadContentSection('formations');
+  if(page==='actualitesAdmin') loadNewsSources();
+  if(page==='partnersAdmin') loadPartnersAdmin();
+  if(page==='usersAdmin') chargerUsersAdmin();
+  if(page==='commentaires') chargerAdminInteractions();
+  if(page==='assistance'){ loadAssistPublications(); loadContactMessages(); }
+  if(page==='adminMessages') loadAdminMessages();
+  if(page==='reunionsAdmin') loadAdminMessages();
+  if(page==='parametres'){ chargerParametres(); loadAdminInvites(); loadAdminGroups(); initAfricanCountrySelects(); }
+}
+
+function securedFetch(url, options = {}){
+  const headers = new Headers(options.headers || {});
+  if(currentCsrfToken) headers.set("X-CSRF-Token", currentCsrfToken);
+  return fetch(url, {...options, headers, credentials:"same-origin"});
+}
+
+function chargerStats(){
+  fetch("data.json")
+    .then(r=>r.json())
+    .then(data=>{
+      const total = data.length;
+      const pub = data.filter(a=>a.publie).length;
+      const att = data.filter(a=>!a.publie).length;
+      const urg = data.filter(a=>a.urgent && !a.publie).length;
+
+      document.getElementById("totalAnnonces").innerText = total;
+      document.getElementById("publieesCount").innerText = pub;
+      document.getElementById("attenteCount").innerText = att;
+      document.getElementById("urgentAnnonces").innerText = urg;
+    })
+    .catch(e=>console.error("Erreur data.json:", e));
+
+  fetch("admin_user_data.php?ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success") return;
+      document.getElementById("usersCount").innerText = res.stats.users || 0;
+      document.getElementById("applicationsCount").innerText = res.stats.applications || 0;
+      document.getElementById("alertsCount").innerText = res.stats.alerts_enabled || 0;
+      document.getElementById("favoritesCount").innerText = res.stats.favorites || 0;
+    })
+    .catch(()=>{});
+
+  fetch("stats.json")
+    .then(r=>r.json())
+    .then(d=>{
+      const labels = Object.keys(d.vues_7_jours || {});
+      const values = Object.values(d.vues_7_jours || {});
+      const canvas = document.getElementById("statsCanvas");
+      if(!canvas || labels.length === 0) return;
+
+      const ctx = canvas.getContext("2d");
+      const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+      gradient.addColorStop(0, "rgba(255, 215, 92, 0.38)");
+      gradient.addColorStop(1, "rgba(255, 215, 92, 0.02)");
+
+      if(window.chart) window.chart.destroy();
+      window.chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Vues",
+            data: values,
+            borderColor: "#ffd35c",
+            backgroundColor: gradient,
+            borderWidth: 3,
+            tension: 0.38,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: "#fff3c4",
+            pointBorderColor: "#d9a900",
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: "#f7f3e8",
+                font: { weight: "700" }
+              }
+            },
+            tooltip: {
+              backgroundColor: "rgba(16,18,24,0.95)",
+              borderColor: "rgba(255,215,92,0.25)",
+              borderWidth: 1,
+              titleColor: "#ffd35c",
+              bodyColor: "#f7f3e8",
+              padding: 12,
+              displayColors: false
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255,255,255,0.05)" },
+              ticks: { color: "#d7ccaa" }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: "rgba(255,255,255,0.06)" },
+              ticks: { color: "#d7ccaa", precision: 0 }
+            }
+          }
+        }
+      });
+    })
+    .catch(e=>console.error("Erreur stats.json:", e));
+}
+
+function chargerUsersAdmin(){
+  fetch("admin_user_data.php?ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success"){
+        document.getElementById("usersAdminList").innerHTML = `<div class="empty-state">Connexion admin requise</div>`;
+        return;
+      }
+      const users = res.users || [];
+      const apps = res.applications || [];
+      document.getElementById("usersAdminList").innerHTML = users.length ? users.map(u=>`
+        <div class="report-item">
+          <div class="comment-admin-meta"><strong>${escapeHtml(u.name)}</strong> - ${escapeHtml(u.role || "candidat")}</div>
+          <p>Email : ${escapeHtml(u.email || "")}<br>Téléphone : ${escapeHtml(u.phone || "")}</p>
+          <p>Favoris : ${Number(u.favorites_count || 0)} - Alertes : ${u.alerts?.enabled ? "oui" : "non"}${u.alerts?.categories?.length ? " (" + escapeHtml(u.alerts.categories.join(", ")) + ")" : ""}</p>
+          <p class="date">Créé : ${u.created_at ? new Date(u.created_at).toLocaleString() : ""} - Dernière connexion : ${u.last_login ? new Date(u.last_login).toLocaleString() : ""}</p>
+        </div>
+      `).join("") : `<div class="empty-state">Les comptes utilisateur sont désactivés</div>`;
+
+      document.getElementById("applicationsAdminList").innerHTML = apps.length ? apps.map(app=>`
+        <div class="report-item">
+          <div class="comment-admin-meta"><strong>${escapeHtml(app.name)}</strong> - ${new Date(app.date).toLocaleString()}</div>
+          <p>Offre : <a href="details.html?id=${encodeURIComponent(app.offer_id || "")}" target="_blank" rel="noopener" style="color:var(--gold-2);">${escapeHtml(app.offer_id || "")}</a></p>
+          <p>Email : ${escapeHtml(app.email || "")}<br>Téléphone : ${escapeHtml(app.phone || "")}</p>
+          <p style="white-space:pre-wrap;">${escapeHtml(app.message || "")}</p>
+          ${app.cv ? `<a href="${escapeHtml(app.cv)}" target="_blank" rel="noopener" style="color:var(--gold-2);">Ouvrir le CV</a>` : ""}
+        </div>
+      `).join("") : `<div class="empty-state">Aucune candidature directe</div>`;
+    })
+    .catch(()=> {
+      document.getElementById("usersAdminList").innerHTML = `<div class="empty-state">Chargement impossible</div>`;
+    });
+}
+
+function chargerAnnonces(){
+  fetch("data.json")
+    .then(r=>r.json())
+    .then(data=>{
+      let pub = "", att = "";
+
+      data
+      .slice()
+      .sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0))
+      .forEach(a=>{
+        if(window.adminAnnonceFilter === "pendingUrgent" && (a.publie || !a.urgent)) return;
+        const banner = a.banniere ? (a.banniere.startsWith('http') ? a.banniere : 'https://emploi-info.page.gd/' + a.banniere) : "";
+        const text = richContentText(a.texte || "");
+        const cleanPhone = String(a.whatsapp || "").replace(/[^0-9]/g,'');
+        const dateText = a.date ? new Date(a.date).toLocaleString() : "Date non définie";
+        const card = `
+          <div class="annonce-item">
+            ${banner ? `<img class="annonce-cover" src="${escapeHtml(banner)}" alt="${escapeHtml(a.titre || "Annonce")}">` : `<div class="annonce-cover" style="display:grid;place-items:center;color:var(--muted);">EMPLOI INFO</div>`}
+            <div class="annonce-content">
+              <div class="annonce-badges">
+                <span class="annonce-badge ${a.publie ? "ok" : "pending"}">${a.publie ? "Publié" : "En attente"}</span>
+                ${a.urgent ? `<span class="annonce-badge pending">Urgent</span>` : ""}
+                ${a.categorie ? `<span class="annonce-badge">${escapeHtml(a.categorie)}</span>` : ""}
+              </div>
+              <b>${escapeHtml(a.titre || "Annonce sans titre")}</b>
+              <p class="date">${escapeHtml(dateText)}</p>
+              <div class="annonce-meta-grid">
+                ${a.nom ? `<div class="annonce-meta"><strong>Contact</strong><br>${escapeHtml(a.nom)}</div>` : ""}
+                ${a.ville ? `<div class="annonce-meta"><strong>Ville</strong><br>${escapeHtml(a.ville)}</div>` : ""}
+                ${a.whatsapp ? `<div class="annonce-meta"><strong>WhatsApp</strong><br><a href="https://wa.me/${cleanPhone}" target="_blank" rel="noopener">${escapeHtml(a.whatsapp)}</a></div>` : ""}
+                ${a.email ? `<div class="annonce-meta"><strong>Email</strong><br><a href="mailto:${escapeHtml(a.email)}">${escapeHtml(a.email)}</a></div>` : ""}
+              </div>
+              <p class="annonce-text-preview">${escapeHtml(text)}</p>
+              ${a.notice ? `<p style="color:var(--muted);"><i>${escapeHtml(richContentText(a.notice))}</i></p>` : ""}
+              <div class="annonce-actions">
+                ${!a.publie ? `<button class="action-btn validate" onclick="valider('${escapeJsAttr(a.id)}')">Valider</button>` : ""}
+                <button class="action-btn" onclick="window.open('details.html?id=${encodeURIComponent(a.id || "")}', '_blank', 'noopener')">Voir</button>
+                <button class="action-btn delete" onclick="supprimer('${escapeJsAttr(a.id)}')">Supprimer</button>
+              </div>
+            </div>
+          </div>
+        `;
+        if(a.publie) pub += card;
+        else att += card;
+      });
+
+      document.getElementById("listePub").innerHTML = pub || `<div class="empty-state">Aucune annonce publiée</div>`;
+      document.getElementById("listeAtt").innerHTML = att || `<div class="empty-state">Aucune annonce en attente</div>`;
+    })
+    .catch(e=>console.error("Erreur annonces:", e));
+}
+
+function valider(id){
+  if(!confirm("Valider cette annonce ?")) return;
+  fetch("update_publish.php",{
+    method:"POST",
+    credentials:"same-origin",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id:id,publie:true})
+  }).then(r=>r.json())
+  .then(res=>{
+    if(res.status !== "success"){
+      alert(res.msg || "Impossible de valider cette annonce");
+      return;
+    }
+    chargerAnnonces();
+    chargerStats();
+  })
+  .catch(e=>{
+    console.error("Erreur validation:", e);
+    alert("Erreur lors de la validation");
+  });
+}
+
+function supprimer(id){
+  if(!confirm("Supprimer cette annonce ?")) return;
+  fetch("update_publish.php",{
+    method:"POST",
+    credentials:"same-origin",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id:id,supprimer:true})
+  }).then(r=>r.json())
+  .then(res=>{
+    if(res.status !== "success"){
+      alert(res.msg || "Impossible de supprimer cette annonce");
+      return;
+    }
+    chargerAnnonces();
+    chargerStats();
+  })
+  .catch(e=>{
+    console.error("Erreur suppression:", e);
+    alert("Erreur lors de la suppression");
+  });
+}
+
+function ouvrirAnnoncesEnAttente(){
+  showPage("annonces", "");
+  setTimeout(()=>document.getElementById("listeAtt")?.scrollIntoView({behavior:"smooth", block:"start"}), 80);
+}
+
+function ouvrirAnnoncesUrgentesEnAttente(){
+  showPage("annonces", "pendingUrgent");
+  setTimeout(()=>document.getElementById("listeAtt")?.scrollIntoView({behavior:"smooth", block:"start"}), 80);
+}
+
+function mettreGras(){
+  const texte = document.getElementById("texte");
+  const start = texte.selectionStart;
+  const end = texte.selectionEnd;
+  const selectedText = texte.value.substring(start, end);
+  texte.value = texte.value.substring(0, start) + "**" + selectedText + "**" + texte.value.substring(end);
+  texte.focus();
+  texte.setSelectionRange(start + 2, end + 2);
+  updateApercu();
+}
+function mettreItalic(){
+  const texte = document.getElementById("texte");
+  const start = texte.selectionStart;
+  const end = texte.selectionEnd;
+  const selectedText = texte.value.substring(start, end);
+  texte.value = texte.value.substring(0, start) + "*" + selectedText + "*" + texte.value.substring(end);
+  texte.focus();
+  texte.setSelectionRange(start + 1, end + 1);
+  updateApercu();
+}
+function mettreH1(){ wrapPrefix("# "); }
+function mettreH2(){ wrapPrefix("## "); }
+function mettreH3(){ wrapPrefix("### "); }
+function mettreH4(){ wrapPrefix("#### "); }
+
+function wrapPrefix(prefix){
+  const texte = document.getElementById("texte");
+  const start = texte.selectionStart;
+  const end = texte.selectionEnd;
+  const selectedText = texte.value.substring(start, end);
+  texte.value = texte.value.substring(0, start) + prefix + selectedText + texte.value.substring(end);
+  texte.focus();
+  texte.setSelectionRange(start + prefix.length, end + prefix.length);
+  updateApercu();
+}
+
+function updateApercu(){
+  const titre = document.getElementById("titre").value.trim();
+  const texte = document.getElementById("texte").value;
+  const categorie = document.getElementById("categorie").value;
+  const ville = document.getElementById("ville").value;
+  const notice = document.getElementById("notice").value.trim();
+  const alignement = document.getElementById("alignement").value;
+  const apercu = document.getElementById("apercuAnnonce");
+
+  if(!titre && !texte){
+    apercu.innerHTML = '<p style="text-align:center;color:#ccc;">L\'aperçu s\'affichera ici...</p>';
+    return;
+  }
+
+  let renderedText = texte
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
+    .replace(/\n/g, '<br>');
+
+  apercu.innerHTML = `
+    ${titre ? `<h2 style="color:var(--gold-2);text-align:${alignement};">${titre}</h2>` : ''}
+    <div style="text-align:${alignement};">
+      <p style="white-space:pre-wrap;">${renderedText}</p>
+    </div>
+    ${notice ? `<p style="text-align:center;color:var(--gold-2);"><em>${notice}</em></p>` : ''}
+    ${categorie ? `<p style="text-align:center;color:#ccc;">Catégorie : ${categorie}</p>` : ''}
+    ${ville ? `<p style="text-align:center;color:#ccc;">Ville : ${ville}</p>` : ''}
+  `;
+}
+
+let previewAnnonceData = null;
+function previewAnnonce(){
+  const titre = document.getElementById("titre").value.trim();
+  const texte = document.getElementById("texte").value.trim();
+  const categorie = document.getElementById("categorie").value;
+  const ville = document.getElementById("ville").value;
+  const notice = document.getElementById("notice").value.trim();
+  const file = document.getElementById("annonceFile").files[0];
+
+  if(!titre || !texte) { alert("Titre et description requis"); return; }
+
+  previewAnnonceData = {titre, texte, categorie, ville, notice, file};
+
+  let mediaHTML = '';
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const isVideo = file.type.startsWith('video/');
+      mediaHTML = isVideo ?
+         `<video style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:10px;" controls><source src="${e.target.result}"></video>`
+        : `<img src="${e.target.result}" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:10px;">`;
+      renderPreview(mediaHTML);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    renderPreview(mediaHTML);
+  }
+
+  function renderPreview(mediaHTML){
+    const preview = `
+      ${mediaHTML}
+      <div>
+        <p><strong style="color:var(--gold-2);">Titre :</strong></p>
+        <p style="font-size:18px;font-weight:bold;color:var(--gold-2);margin-bottom:10px;">${titre}</p>
+        <p><strong style="color:var(--gold-2);">Catégorie :</strong> ${categorie}</p>
+        <p><strong style="color:var(--gold-2);">Ville :</strong> ${ville || "Non spécifiée"}</p>
+        <p><strong style="color:var(--gold-2);">Date :</strong> ${new Date().toLocaleString()}</p>
+      </div>
+      <div style="margin-top:15px;">
+        <h4 style="color:var(--gold-2);margin-bottom:10px;">Contenu :</h4>
+        <p style="white-space:pre-wrap;line-height:1.6;">${texte}</p>
+      </div>
+      ${notice ? `<div style="background:rgba(255,215,0,0.12);padding:10px;border-radius:10px;margin-top:10px;">
+        <p><strong style="color:var(--gold-2);">Notice :</strong></p>
+        <p>${notice}</p>
+      </div>` : ''}
+    `;
+
+    document.getElementById("previewAnnonceContent").innerHTML = preview;
+    document.getElementById("previewAnnonceBg").style.display = "block";
+    document.getElementById("previewAnnonceOverlay").style.display = "block";
+  }
+}
+
+function cancelPreviewAnnonce(){
+  document.getElementById("previewAnnonceBg").style.display = "none";
+  document.getElementById("previewAnnonceOverlay").style.display = "none";
+}
+
+function confirmerAnnonce(){
+  cancelPreviewAnnonce();
+  document.querySelector('button[onclick="publier()"]').click();
+}
+
+let previewPubData = null;
+function previewPublicite(){
+  const titre = document.getElementById("pubTitre").value.trim();
+  const description = document.getElementById("pubDescription").value.trim();
+  const file = document.getElementById("pubFile").files[0];
+  const lien = document.getElementById("pubLien").value.trim();
+  const duration = parseInt(document.getElementById("pubDuration").value, 10) || 30;
+
+  if(!titre || !description || !file) { alert("Titre, description et fichier requis"); return; }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const isVideo = file.type.startsWith('video/');
+    const mediaHTML = isVideo ?
+       `<video style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;" controls><source src="${e.target.result}"></video>`
+      : `<img src="${e.target.result}" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;">`;
+
+    const preview = `
+      ${mediaHTML}
+      <div style="margin-top:10px;">
+        <p><strong style="color:var(--gold-2);">Titre :</strong></p>
+        <p style="font-size:16px;font-weight:bold;color:var(--gold-2);">${titre}</p>
+        <p style="margin-top:10px;"><strong style="color:var(--gold-2);">Description :</strong></p>
+        <p style="white-space:pre-wrap;">${description.substring(0,150)}${description.length > 150 ? '...' : ''}</p>
+        ${lien ? `<p style="margin-top:10px;"><strong style="color:var(--gold-2);">Lien :</strong> <a href="${lien}" target="_blank" style="color:#78d68f;">${lien}</a></p>` : ''}
+        <p style="margin-top:10px;"><strong style="color:var(--gold-2);">Durée :</strong> ${duration} jour(s)</p>
+      </div>
+    `;
+
+    previewPubData = {titre, description, file, lien, duration};
+    document.getElementById("previewPubContent").innerHTML = preview;
+    document.getElementById("previewPubBg").style.display = "block";
+    document.getElementById("previewPubOverlay").style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+
+function cancelPreviewPub(){
+  document.getElementById("previewPubBg").style.display = "none";
+  document.getElementById("previewPubOverlay").style.display = "none";
+}
+
+function confirmerPublicite(){
+  cancelPreviewPub();
+  ajouterPublicite();
+}
+
+function publier(){
+  const titre = document.getElementById("titre").value.trim();
+  const texte = document.getElementById("texte").value.trim();
+  if(!titre || !texte) { alert("Titre et description requis"); return; }
+
+  const fd = new FormData();
+  fd.append("titre", titre);
+  fd.append("texte", texte);
+  fd.append("notice", document.getElementById("notice").value);
+  fd.append("categorie", document.getElementById("categorie").value);
+  fd.append("ville", document.getElementById("ville").value);
+  fd.append("alignement", document.getElementById("alignement").value);
+  fd.append("direct_publish", "1");
+
+  const file = document.getElementById("annonceFile").files[0];
+  if(file) fd.append("banniere", file);
+
+  fetch("save.php", {method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status==="success"){
+        alert("Annonce publiée et notification envoyée");
+        document.getElementById("titre").value="";
+        document.getElementById("texte").value="";
+        document.getElementById("notice").value="";
+        document.getElementById("annonceFile").value="";
+        updateApercu();
+        chargerAnnonces();
+        chargerStats();
+      } else {
+        alert(res.msg || "Erreur lors de la publication");
+      }
+    })
+    .catch(e=>console.error("Erreur publication:", e));
+}
+
+function chargerCategories(){
+  fetch("categories.json")
+    .then(r=>r.json())
+    .then(data=>{
+      const select = document.getElementById("categorie");
+      const list = document.getElementById("catList");
+
+      if(select){
+        select.innerHTML = '<option>-- Catégorie --</option>';
+        data.forEach(c=>{
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          select.appendChild(opt);
+        });
+      }
+
+      if(list){
+        list.innerHTML = "";
+        data.forEach((c, i)=>{
+          const li = document.createElement("li");
+          li.innerHTML = `<span>${c}</span><button onclick="supprimerCategorie(${i})">Supprimer</button>`;
+          list.appendChild(li);
+        });
+      }
+    })
+    .catch(e=>console.error("Erreur catégories:", e));
+}
+
+function chargerVilles(){
+  fetch("villes.json?ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(data=>{
+      const villes = Array.isArray(data) ? data : [];
+      const select = document.getElementById("ville");
+      const list = document.getElementById("villesList");
+
+      if(select){
+        const current = select.value;
+        select.innerHTML = '<option value="">-- Ville --</option>';
+        villes.forEach(v=>{
+          const opt = document.createElement("option");
+          opt.value = v;
+          opt.textContent = v;
+          select.appendChild(opt);
+        });
+        if(current) select.value = current;
+      }
+
+      if(list){
+        list.innerHTML = villes.map((v, i)=>`<li><span>${escapeHtml(v)}</span><button onclick="supprimerVille(${i})">Supprimer</button></li>`).join("");
+      }
+    })
+    .catch(e=>console.error("Erreur villes:", e));
+}
+
+function ajouterCategorie(){
+  const nom = document.getElementById("newCat").value.trim();
+  if(!nom) { alert("Nom requis"); return; }
+
+  fetch("categories.json")
+    .then(r=>r.json())
+    .then(data=>{
+      data.push(nom);
+      return fetch("save_categories.php", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(data)
+      });
+    })
+    .then(()=>{
+      document.getElementById("newCat").value="";
+      chargerCategories();
+      alert("Catégorie ajoutée");
+    })
+    .catch(e=>console.error("Erreur:", e));
+}
+
+function ajouterVille(){
+  const nom = document.getElementById("newVille").value.trim();
+  if(!nom) { alert("Nom requis"); return; }
+
+  fetch("villes.json?ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(data=>{
+      const villes = Array.isArray(data) ? data : [];
+      if(!villes.includes(nom)) villes.push(nom);
+      return fetch("save_villes.php", {
+        method:"POST",
+        credentials:"same-origin",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(villes)
+      });
+    })
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success"){ alert(res.msg || "Sauvegarde impossible"); return; }
+      document.getElementById("newVille").value = "";
+      chargerVilles();
+    });
+}
+
+function supprimerVille(i){
+  if(!confirm("Supprimer cette ville ?")) return;
+  fetch("villes.json?ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(data=>{
+      const villes = Array.isArray(data) ? data : [];
+      villes.splice(i, 1);
+      return fetch("save_villes.php", {
+        method:"POST",
+        credentials:"same-origin",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(villes)
+      });
+    })
+    .then(()=>chargerVilles());
+}
+
+function supprimerCategorie(i){
+  if(!confirm("Supprimer cette catégorie ?")) return;
+  fetch("categories.json")
+    .then(r=>r.json())
+    .then(data=>{
+      data.splice(i, 1);
+      return fetch("save_categories.php", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(data)
+      });
+    })
+    .then(()=>chargerCategories())
+    .catch(e=>console.error("Erreur:", e));
+}
+
+function chargerEntreprises(){
+  fetch("entreprises.json")
+    .then(r=>r.json())
+    .then(data=>{
+      const list = document.getElementById("entreprisesList");
+      list.innerHTML = "";
+      data.forEach((ent, i)=>{
+        const li = document.createElement("li");
+        li.innerHTML = `<span><strong>${ent.nom}</strong> - ${ent.secteur} (${ent.contact})</span><button onclick="supprimerEntreprise(${i})">Supprimer</button>`;
+        list.appendChild(li);
+      });
+    })
+    .catch(e=>console.error("Erreur entreprises:", e));
+}
+
+function ajouterEntreprise(){
+  const nom = document.getElementById("nomEntreprise").value.trim();
+  const secteur = document.getElementById("secteurEntreprise").value.trim();
+  const contact = document.getElementById("contactEntreprise").value.trim();
+  const description = document.getElementById("descriptionEntreprise").value.trim();
+
+  if(!nom || !secteur) { alert("Nom et secteur requis"); return; }
+
+  fetch("entreprises.json")
+    .then(r=>r.json())
+    .then(data=>{
+      data.push({nom, secteur, contact, description});
+      return fetch("save_entreprises.php", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(data)
+      });
+    })
+    .then(()=>{
+      document.getElementById("nomEntreprise").value="";
+      document.getElementById("secteurEntreprise").value="";
+      document.getElementById("contactEntreprise").value="";
+      document.getElementById("descriptionEntreprise").value="";
+      chargerEntreprises();
+      alert("Entreprise ajoutée");
+    })
+    .catch(e=>console.error("Erreur:", e));
+}
+
+function supprimerEntreprise(i){
+  if(!confirm("Supprimer cette entreprise ?")) return;
+  fetch("entreprises.json")
+    .then(r=>r.json())
+    .then(data=>{
+      data.splice(i, 1);
+      return fetch("save_entreprises.php", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(data)
+      });
+    })
+    .then(()=>chargerEntreprises())
+    .catch(e=>console.error("Erreur:", e));
+}
+
+function chargerPublicites(){
+  fetch("ads.json")
+    .then(r=>r.json())
+    .then(data=>{
+      const list = document.getElementById("pubList");
+      list.innerHTML = "";
+      data.forEach((ad, i)=>{
+        const li = document.createElement("li");
+        const expiry = ad.expires_at ? ` - expire le ${new Date(ad.expires_at).toLocaleDateString()}` : "";
+        li.innerHTML = `<span>${ad.titre}${expiry}</span><button onclick="supprimerPublicite(${i})">Supprimer</button>`;
+        list.appendChild(li);
+      });
+    })
+    .catch(e=>console.error("Erreur publicités:", e));
+}
+
+function ajouterPublicite(){
+  const titre = document.getElementById("pubTitre").value.trim();
+  const description = document.getElementById("pubDescription").value.trim();
+  const file = document.getElementById("pubFile").files[0];
+  const lien = document.getElementById("pubLien").value.trim() || "";
+  const duration = parseInt(document.getElementById("pubDuration").value, 10) || 30;
+
+  if(!titre || !description || !file) { alert("Titre, description et fichier requis"); return; }
+
+  const fd = new FormData();
+  fd.append("titre", titre);
+  fd.append("description", description);
+  fd.append("file", file);
+  fd.append("lien", lien);
+  fd.append("duration_days", duration);
+
+  securedFetch("save_publicite.php", {method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.success){
+        document.getElementById("pubTitre").value="";
+        document.getElementById("pubDescription").value="";
+        document.getElementById("pubFile").value="";
+        document.getElementById("pubLien").value="";
+        document.getElementById("pubDuration").value="30";
+        chargerPublicites();
+        alert("Publicité ajoutée");
+      } else {
+        alert("Erreur : " + res.message);
+      }
+    })
+    .catch(e=>{console.error("Erreur:", e); alert("Erreur lors de l'upload");});
+}
+
+function supprimerPublicite(i){
+  if(!confirm("Supprimer cette publicité ?")) return;
+  fetch("ads.json")
+    .then(r=>r.json())
+    .then(data=>{
+      data.splice(i, 1);
+      return securedFetch("save_ads.php", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(data)
+      });
+    })
+    .then(()=>chargerPublicites())
+    .catch(e=>console.error("Erreur:", e));
+}
+
+const sectionFiles = {
+  blog: "blog.json",
+  resources: "resources.json",
+  services: "services.json",
+  formations: "formations.json"
+};
+
+function sectionField(section, suffix){
+  return document.getElementById(section + suffix);
+}
+
+function buildSectionButtons(lien){
+  return lien ? [{texte:"Ouvrir", lien:lien, couleur:"#c9a227"}] : [];
+}
+
+function toggleFormationPricing(){
+  const type = sectionField("formations", "PricingType")?.value || "gratuit";
+  const priceBox = document.getElementById("formationPriceBox");
+  const promoBox = document.getElementById("formationPromoBox");
+  if(priceBox) priceBox.style.display = type === "gratuit" ? "none" : "grid";
+  if(promoBox) promoBox.style.display = type === "promotion" ? "block" : "none";
+}
+
+function renderSectionAdminMedia(item){
+  if(!window.ContentMedia) return "";
+  const media = ContentMedia.renderFile(item) + ContentMedia.renderExternal(item.lien);
+  return media ? `<div class="section-admin-media">${media}</div>` : "";
+}
+
+function renderFormationAdminPrice(item){
+  const type = item.pricing_type || (item.prix ? "payant" : "gratuit");
+  if(type === "gratuit") return `<span class="admin-pill">Gratuit</span>`;
+  if(type === "promotion"){
+    const limit = item.promo_mode === "places" && item.promo_places ?
+       ` - ${escapeHtml(item.promo_places)} personne(s)`
+      : item.promo_mode === "temps" && item.promo_until
+        ?
+         ` - jusqu'au ${new Date(item.promo_until).toLocaleDateString()}`
+        : item.promo_mode === "total" ? " - promotion totale" : "";
+    return `<span class="admin-pill">Promo : ${escapeHtml(item.prix_promo || item.prix || "")}${item.prix_normal ? ` / normal ${escapeHtml(item.prix_normal)}` : ""}${limit}</span>`;
+  }
+  return `<span class="admin-pill">Payant : ${escapeHtml(item.prix || item.prix_normal || "")}</span>`;
+}
+
+function saveContentSection(section){
+  const titre = sectionField(section, "Titre")?.value.trim() || "";
+  const texte = sectionField(section, "Texte")?.value.trim() || "";
+  const categorie = sectionField(section, "Categorie")?.value.trim() || "";
+  const lieu = sectionField(section, "Lieu")?.value.trim() || "";
+  const prix = sectionField(section, "Prix")?.value.trim() || "";
+  const pricingType = sectionField(section, "PricingType")?.value || "";
+  const prixNormal = sectionField(section, "PrixNormal")?.value.trim() || "";
+  const prixPromo = sectionField(section, "PrixPromo")?.value.trim() || "";
+  const promoMode = sectionField(section, "PromoMode")?.value || "";
+  const promoUntil = sectionField(section, "PromoUntil")?.value || "";
+  const promoPlaces = sectionField(section, "PromoPlaces")?.value.trim() || "";
+  const dateDebut = sectionField(section, "DateDebut")?.value || "";
+  const lien = sectionField(section, "Lien")?.value.trim() || "";
+  const img = sectionField(section, "Img")?.files[0];
+
+  if(!titre || !texte){ alert("Titre et contenu requis"); return; }
+
+  const fd = new FormData();
+  fd.append("section", section);
+  fd.append("titre", titre);
+  fd.append("texte", texte);
+  fd.append("categorie", categorie);
+  fd.append("lieu", lieu);
+  fd.append("prix", prix);
+  fd.append("pricing_type", pricingType);
+  fd.append("prix_normal", prixNormal);
+  fd.append("prix_promo", prixPromo);
+  fd.append("promo_mode", promoMode);
+  fd.append("promo_until", promoUntil);
+  fd.append("promo_places", promoPlaces);
+  fd.append("date_debut", dateDebut);
+  fd.append("lien", lien);
+  fd.append("boutons", JSON.stringify(buildSectionButtons(lien)));
+  if(img) fd.append("img", img);
+
+  securedFetch("save_section.php", {method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success"){ alert(res.message || "Erreur de sauvegarde"); return; }
+      ["Titre","Texte","Categorie","Lieu","Prix","PrixNormal","PrixPromo","PromoUntil","PromoPlaces","DateDebut","Lien"].forEach(s=>{
+        const el = sectionField(section, s);
+        if(el) el.value = "";
+      });
+      if(section === "formations"){
+        const typeEl = sectionField(section, "PricingType");
+        const modeEl = sectionField(section, "PromoMode");
+        if(typeEl) typeEl.value = "gratuit";
+        if(modeEl) modeEl.value = "temps";
+        toggleFormationPricing();
+      }
+      const imgEl = sectionField(section, "Img");
+      if(imgEl) imgEl.value = "";
+      loadContentSection(section);
+      alert("Publication ajoutée");
+    })
+    .catch(()=>alert("Erreur lors de la sauvegarde"));
+}
+
+function loadContentSection(section){
+  fetch(sectionFiles[section] + "?ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(items=>{
+      const list = document.getElementById(section + "AdminList");
+      const data = Array.isArray(items) ? items : [];
+      list.innerHTML = data.map(item=>`
+        <li class="section-admin-item">
+          <div class="section-admin-body">
+            <strong>${escapeHtml(item.titre || "Sans titre")}</strong>
+            ${item.categorie ? `<span>${escapeHtml(item.categorie)}</span>` : ""}
+            ${section === "formations" ? renderFormationAdminPrice(item) : ""}
+            ${item.texte ? `<p>${escapeHtml(item.texte).slice(0, 220)}${String(item.texte).length > 220 ? "..." : ""}</p>` : ""}
+            ${renderSectionAdminMedia(item)}
+          </div>
+          <button onclick="deleteContentSectionItem('${section}','${escapeHtml(item.id || "")}')">Supprimer</button>
+        </li>
+      `).join("") || `<li><span>Aucune publication</span></li>`;
+    });
+}
+
+function deleteContentSectionItem(section, id){
+  if(!id || !confirm("Supprimer cette publication ?")) return;
+  securedFetch("delete_section_item.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({section, id})
+  }).then(()=>loadContentSection(section));
+}
+
+function loadNewsSources(){
+  fetch("news_sources.php?action=list&ts=" + Date.now(), {cache:"no-store", credentials:"same-origin"})
+    .then(r=>r.json())
+    .then(res=>{
+      const list = document.getElementById("newsSourcesList");
+      const sources = Array.isArray(res.sources) ? res.sources : [];
+      list.innerHTML = sources.map(source=>`
+        <li class="section-admin-item">
+          <div class="section-admin-body">
+            <strong>${escapeHtml(source.name || "Source")}</strong>
+            <span>${escapeHtml(source.url || "")}</span>
+            ${source.last_fetch ? `<p>Dernière mise à jour : ${new Date(source.last_fetch).toLocaleString()}</p>` : ""}
+          </div>
+          <button class="delete" onclick="deleteNewsSource('${escapeHtml(source.id || "")}')">Supprimer</button>
+        </li>
+      `).join("") || `<li><span>Aucune source définie</span></li>`;
+    })
+    .catch(()=>alert("Impossible de charger les sources"));
+}
+
+function addNewsSource(){
+  const name = document.getElementById("newsSourceName").value.trim();
+  const url = document.getElementById("newsSourceUrl").value.trim();
+  if(!name || !url){ alert("Nom et URL requis"); return; }
+  securedFetch("news_sources.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"add", name, url})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Ajout impossible"); return; }
+    document.getElementById("newsSourceName").value = "";
+    document.getElementById("newsSourceUrl").value = "";
+    loadNewsSources();
+  }).catch(()=>alert("Erreur lors de l'ajout"));
+}
+
+function deleteNewsSource(id){
+  if(!id || !confirm("Supprimer cette source ?")) return;
+  securedFetch("news_sources.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"delete", id})
+  }).then(()=>loadNewsSources());
+}
+
+function refreshNewsSources(){
+  securedFetch("news_sources.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"refresh"})
+  }).then(r=>r.json()).then(res=>{
+    alert(res.message || "Actualités mises à jour");
+    loadNewsSources();
+  }).catch(()=>alert("Mise à jour impossible"));
+}
+
+let adminInteractionState = {comments:[], reports:[], settings:{}};
+let assistPublications = [];
+let contactAdminMessages = [];
+let adminAlertSnapshot = JSON.parse(localStorage.getItem("adminAlertSnapshot") || "{}");
+
+function escapeHtml(value){
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function escapeJsAttr(value){
+  return escapeHtml(String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/[\r\n]/g, " "));
+}
+
+function richContentText(value){
+  const raw = String(value || "");
+  if(!/[<][a-z!/]/i.test(raw)) return raw.replace(/\s+/g, " ").trim();
+  const template = document.createElement("template");
+  template.innerHTML = raw;
+  return (template.content.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function itemDetailsUrl(type, id){
+  return `${type === "publicite" ? "publicite-details.html" : "details.html"}?id=${encodeURIComponent(id || "")}`;
+}
+
+function chargerAdminInteractions(){
+  fetch("admin_interactions.php?action=list", {cache:"no-store"})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success"){ alert(res.message || "Chargement impossible"); return; }
+      adminInteractionState = res;
+      document.getElementById("autoModerationEnabled").checked = res.settings.auto_moderation_enabled !== false;
+      document.getElementById("autoKeywords").value = (res.settings.auto_keywords || []).join("\n");
+      document.getElementById("blockedKeywords").value = (res.settings.blocked_keywords || []).join("\n");
+      document.getElementById("suspectKeywords").value = (res.settings.suspect_keywords || []).join("\n");
+      document.getElementById("repeatLimit").value = res.settings.repeat_limit || 2;
+      renderAdminComments();
+      renderReports();
+      renderBlocks();
+      renderAppeals();
+    })
+    .catch(e=>console.error("Erreur commentaires:", e));
+}
+
+function setBadge(id, count){
+  const badge = document.getElementById(id);
+  if(!badge) return;
+  badge.textContent = count > 99 ? "99+" : String(count);
+  badge.style.display = count > 0 ? "inline-block" : "none";
+}
+
+function notifyAdmin(title, body, targetPage){
+  alert(title + "\n" + body);
+  if("Notification" in window && Notification.permission === "granted"){
+    const n = new Notification(title, {body, icon:"logo.png", badge:"logo.png", tag:targetPage || "admin"});
+    n.onclick = () => { window.focus(); if(targetPage) showPage(targetPage); n.close(); };
+  }
+}
+
+function requestAdminNotifications(){
+  if("Notification" in window && Notification.permission === "default"){
+    Notification.requestPermission().catch(()=>{});
+  }
+}
+
+function pollAdminAlerts(initial=false){
+  if(localStorage.getItem("admin_logged") !== "true") return;
+  Promise.all([
+    fetch("data.json?ts="+Date.now(), {cache:"no-store"}).then(r=>r.json()).catch(()=>[]),
+    fetch("admin_interactions.php?action=list&ts="+Date.now(), {cache:"no-store"}).then(r=>r.json()).catch(()=>({})),
+    fetch("send_contact?action=admin&ts="+Date.now(), {cache:"no-store"}).then(r=>r.json()).catch(()=>({})),
+    fetch("partners.php?action=admin&ts="+Date.now(), {cache:"no-store"}).then(r=>r.json()).catch(()=>({}))
+  ]).then(([annonces, interactions, contacts, partners])=>{
+    const pendingAnnonces = (Array.isArray(annonces) ? annonces : []).filter(a=>!a.publie).length;
+    const pendingComments = (interactions.comments || []).filter(c=>c.status === "pending").length;
+    const newReports = (interactions.reports || []).filter(r=>(r.status || "new") === "new").length;
+    const newAppeals = (interactions.appeals || []).filter(a=>(a.status || "new") === "new").length;
+    const openContacts = (contacts.messages || []).filter(m=>(m.status || "open") === "open").length;
+    const pendingPartners = (partners.partners || []).filter(p=>(p.status || "pending") === "pending").length;
+    const commentTotal = pendingComments + newReports + newAppeals;
+
+    setBadge("badgeAnnonces", pendingAnnonces);
+    setBadge("badgeCommentaires", commentTotal);
+    setBadge("badgeContact", openContacts);
+    setBadge("badgePartners", pendingPartners);
+
+    const next = {pendingAnnonces, pendingComments, newReports, newAppeals, openContacts, pendingPartners};
+    if(!initial){
+      if(pendingAnnonces > (adminAlertSnapshot.pendingAnnonces || 0)) notifyAdmin("Nouvelle annonce en attente", "Cliquez sur Annonces pour vérifier.", "annonces");
+      if(pendingComments > (adminAlertSnapshot.pendingComments || 0)) notifyAdmin("Nouveau commentaire suspect", "Cliquez sur Commentaires pour examiner.", "commentaires");
+      if(newReports > (adminAlertSnapshot.newReports || 0)) notifyAdmin("Nouveau signalement privé", "Cliquez sur Commentaires pour le lire.", "commentaires");
+      if(newAppeals > (adminAlertSnapshot.newAppeals || 0)) notifyAdmin("Nouvelle demande d'examen", "Cliquez sur Commentaires pour traiter.", "commentaires");
+      if(openContacts > (adminAlertSnapshot.openContacts || 0)) notifyAdmin("Nouveau message contact", "Cliquez sur Assistance pour répondre.", "assistance");
+      if(pendingPartners > (adminAlertSnapshot.pendingPartners || 0)) notifyAdmin("Nouvelle demande partenaire", "Cliquez sur Partenaires pour traiter.", "partnersAdmin");
+    }
+    adminAlertSnapshot = next;
+    localStorage.setItem("adminAlertSnapshot", JSON.stringify(next));
+  });
+}
+
+function renderAdminComments(){
+  const status = document.getElementById("commentStatusFilter").value;
+  const type = document.getElementById("commentTypeFilter").value;
+  const search = document.getElementById("commentSearch").value.toLowerCase();
+  const list = document.getElementById("adminCommentsList");
+  const rows = (adminInteractionState.comments || []).filter(c=>{
+    const haystack = `${c.username || ""} ${c.text || ""} ${c.item_id || ""}`.toLowerCase();
+    return (!status || c.status === status) && (!type || c.item_type === type) && (!search || haystack.includes(search));
+  });
+  if(!rows.length){ list.innerHTML = `<div class="empty-state">Aucun commentaire trouvé</div>`; return; }
+  list.innerHTML = rows.map(c=>`
+    <div class="comment-admin-item ${escapeHtml(c.status)}">
+      <div class="comment-admin-meta">
+        <strong>@${escapeHtml(c.username)}</strong> - ${escapeHtml(c.status)} - ${new Date(c.date).toLocaleString()}
+        <br><a href="${itemDetailsUrl(c.item_type, c.item_id)}" target="_blank" rel="noopener" style="color:var(--gold-2);">${escapeHtml(c.item_type)} : ${escapeHtml(c.item_id)}</a>
+      </div>
+      <p style="white-space:pre-wrap;">${escapeHtml(c.text)}</p>
+      ${c.media ? (c.media_type === "video" ? `<video class="admin-media" controls><source src="${escapeHtml(c.media)}"></video>` : `<img class="admin-media" src="${escapeHtml(c.media)}" alt="">`) : ""}
+      <div class="comment-admin-actions">
+        <button class="validate" onclick="moderateComment('approve','${escapeHtml(c.id)}')">Valider</button>
+        <button onclick="moderateComment('reject','${escapeHtml(c.id)}')">Rejeter</button>
+        <button class="delete" onclick="moderateComment('delete','${escapeHtml(c.id)}')">Supprimer</button>
+        <button class="delete" onclick="blockVisitor('${escapeHtml(c.visitor_hash || "")}','${escapeHtml(c.ip_hash || "")}')">Bloquer visiteur</button>
+        <button onclick="prepareAdminReply('${escapeHtml(c.item_type)}','${escapeHtml(c.item_id)}','${escapeHtml(c.id)}','${escapeHtml(c.username)}')">Répondre</button>
+      </div>
+      <div class="comment-reply-box" id="replyBox_${escapeHtml(c.id)}" style="display:none;">
+        <textarea class="full" id="replyText_${escapeHtml(c.id)}" placeholder="Réponse administrateur"></textarea>
+        <input id="replyLink_${escapeHtml(c.id)}" placeholder="Lien optionnel">
+        <input id="replyMedia_${escapeHtml(c.id)}" type="file" accept="image/*,video/*">
+        <select id="replyTagType_${escapeHtml(c.id)}"><option value="annonce">Tag annonce</option><option value="publicite">Tag publicité</option></select>
+        <select id="replyTag_${escapeHtml(c.id)}"></select>
+        <button class="full" onclick="sendAdminReply('${escapeHtml(c.id)}','${escapeHtml(c.item_type)}','${escapeHtml(c.item_id)}','${escapeHtml(c.username)}')">Envoyer la réponse</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function moderateComment(action, id){
+  if(action === "delete" && !confirm("Supprimer ce commentaire ?")) return;
+  fetch("admin_interactions.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action, comment_id:id})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Action impossible"); return; }
+    chargerAdminInteractions();
+  });
+}
+
+function prepareAdminReply(type, itemId, commentId, username){
+  const box = document.getElementById(`replyBox_${commentId}`);
+  if(!box) return;
+  box.style.display = box.style.display === "none" ? "grid" : "none";
+  const text = document.getElementById(`replyText_${commentId}`);
+  if(text && !text.value) text.value = `@${username} `;
+  loadTagOptions(document.getElementById(`replyTagType_${commentId}`), document.getElementById(`replyTag_${commentId}`));
+  document.getElementById(`replyTagType_${commentId}`).onchange = e => loadTagOptions(e.target, document.getElementById(`replyTag_${commentId}`));
+}
+
+function loadTagOptions(typeSelect, targetSelect){
+  const type = typeSelect.value;
+  const file = type === "publicite" ? "ads.json" : "data.json";
+  fetch(file + "?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json()).then(data=>{
+    targetSelect.innerHTML = `<option value="">Aucun tag</option>`;
+    (Array.isArray(data) ? data : []).forEach(item=>{
+      const opt = document.createElement("option");
+      opt.value = item.id;
+      opt.textContent = item.titre || item.title || item.id;
+      opt.dataset.title = opt.textContent;
+      targetSelect.appendChild(opt);
+    });
+  });
+}
+
+function sendAdminReply(commentId, itemType, itemId, replyTo){
+  const fd = new FormData();
+  const tagSelect = document.getElementById(`replyTag_${commentId}`);
+  fd.append("action", "reply");
+  fd.append("item_type", itemType);
+  fd.append("item_id", itemId);
+  fd.append("parent_id", commentId);
+  fd.append("reply_to", replyTo);
+  fd.append("text", document.getElementById(`replyText_${commentId}`).value.trim());
+  fd.append("link", document.getElementById(`replyLink_${commentId}`).value.trim());
+  fd.append("tag_type", document.getElementById(`replyTagType_${commentId}`).value);
+  fd.append("tag_id", tagSelect.value);
+  fd.append("tag_title", tagSelect.selectedOptions[0]?.dataset.title || "");
+  const media = document.getElementById(`replyMedia_${commentId}`).files[0];
+  if(media) fd.append("media", media);
+  fetch("admin_interactions.php", {method:"POST", body:fd})
+    .then(r=>r.json()).then(res=>{
+      if(res.status !== "success"){ alert(res.message || "Réponse impossible"); return; }
+      chargerAdminInteractions();
+      alert("Réponse publiée");
+    });
+}
+
+function renderReports(){
+  const list = document.getElementById("reportsList");
+  const reports = adminInteractionState.reports || [];
+  if(!reports.length){ list.innerHTML = `<div class="empty-state">Aucun problème signalé</div>`; return; }
+  list.innerHTML = reports.map(r=>`
+    <div class="report-item">
+      <div class="comment-admin-meta">
+        <strong>${escapeHtml(r.status || "new")}</strong> - @${escapeHtml(r.username)} - ${new Date(r.date).toLocaleString()}
+        <br><a href="${itemDetailsUrl(r.item_type, r.item_id)}" target="_blank" rel="noopener" style="color:var(--gold-2);">${escapeHtml(r.item_type)} : ${escapeHtml(r.item_id)}</a>
+      </div>
+      <p style="white-space:pre-wrap;">${escapeHtml(r.message)}</p>
+      ${r.screenshot ? `<img class="admin-media" src="${escapeHtml(r.screenshot)}" alt="Capture">` : ""}
+      <div class="comment-admin-actions">
+        <button class="delete" onclick="blockVisitor('${escapeHtml(r.visitor_hash || "")}','${escapeHtml(r.ip_hash || "")}')">Bloquer visiteur</button>
+      </div>
+      <button onclick="markReportRead('${escapeHtml(r.id)}')">Marquer comme traité</button>
+    </div>
+  `).join("");
+}
+
+function blockVisitor(visitorHash, ipHash){
+  const reason = prompt("Motif du blocage", "Non-respect des conditions d'utilisation");
+  if(reason === null) return;
+  fetch("admin_interactions.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"block_visitor", visitor_hash:visitorHash, ip_hash:ipHash, reason})
+  }).then(r=>r.json()).then(res=>{
+    alert(res.status === "success" ? "Visiteur bloqué" : (res.message || "Blocage impossible"));
+    chargerAdminInteractions();
+  });
+}
+
+function renderBlocks(){
+  const list = document.getElementById("blocksList");
+  const blocks = adminInteractionState.blocks || [];
+  if(!blocks.length){ list.innerHTML = `<div class="empty-state">Aucun visiteur bloqué</div>`; return; }
+  list.innerHTML = blocks.map(b=>`
+    <div class="report-item">
+      <div class="comment-admin-meta"><strong>${escapeHtml(b.status || "blocked")}</strong> - ${new Date(b.date).toLocaleString()}</div>
+      <p>${escapeHtml(b.reason || "")}</p>
+      <button onclick="unblockVisitor('${escapeHtml(b.id)}')">Débloquer</button>
+    </div>
+  `).join("");
+}
+
+function unblockVisitor(id){
+  fetch("admin_interactions.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"unblock_visitor", block_id:id})
+  }).then(()=>chargerAdminInteractions());
+}
+
+function renderAppeals(){
+  const list = document.getElementById("appealsList");
+  const appeals = adminInteractionState.appeals || [];
+  if(!appeals.length){ list.innerHTML = `<div class="empty-state">Aucune demande d'examen</div>`; return; }
+  list.innerHTML = appeals.map(a=>`
+    <div class="report-item">
+      <div class="comment-admin-meta"><strong>${escapeHtml(a.status || "new")}</strong> - ${new Date(a.date).toLocaleString()}</div>
+      <p style="white-space:pre-wrap;">${escapeHtml(a.message)}</p>
+      <div class="comment-admin-actions">
+        <button class="validate" onclick="setAppealStatus('${escapeHtml(a.id)}','approved')">Approuver l'accès</button>
+        <button class="delete" onclick="setAppealStatus('${escapeHtml(a.id)}','refused')">Refuser définitivement</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function setAppealStatus(id, status){
+  fetch("admin_interactions.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"appeal_status", appeal_id:id, status})
+  }).then(()=>chargerAdminInteractions());
+}
+
+function markReportRead(id){
+  fetch("admin_interactions.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"report_status", report_id:id, status:"treated"})
+  }).then(()=>chargerAdminInteractions());
+}
+
+function saveModerationSettings(){
+  fetch("admin_interactions.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      action:"settings",
+      auto_moderation_enabled:document.getElementById("autoModerationEnabled").checked,
+      auto_keywords:document.getElementById("autoKeywords").value,
+      blocked_keywords:document.getElementById("blockedKeywords").value,
+      suspect_keywords:document.getElementById("suspectKeywords").value,
+      repeat_limit:document.getElementById("repeatLimit").value
+    })
+  }).then(r=>r.json()).then(res=>{
+    alert(res.status === "success" ? "Règles sauvegardées" : (res.message || "Erreur"));
+  });
+}
+
+function contactMessageBubbleHtml(conv, msg){
+  const isAdmin = msg.sender === "admin";
+  return `
+    <div class="message-line ${isAdmin ? "mine" : ""}">
+      <span class="message-author">${isAdmin ? "Administration" : escapeHtml(conv.name || "Visiteur")}</span>
+      <span class="message-date">${msg.created_at ? new Date(msg.created_at).toLocaleString() : ""}</span>
+      ${msg.text ? `<div class="message-text">${escapeHtml(msg.text)}</div>` : ""}
+      ${contactMediaHtml(msg)}
+    </div>
+  `;
+}
+
+function renderContactMessageThread(conv){
+  return (conv.messages || []).map(msg=>contactMessageBubbleHtml(conv, msg)).join("");
+}
+
+function loadContactMessages(){
+  const list = document.getElementById("contactAdminList");
+  if(!list) return;
+  list.innerHTML = `<div class="empty-state">Chargement des messages...</div>`;
+  fetch("send_contact?action=admin&ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success"){
+        list.innerHTML = `<div class="empty-state">${escapeHtml(res.message || "Chargement impossible")}</div>`;
+        return;
+      }
+      contactAdminMessages = res.messages || [];
+      if(!contactAdminMessages.length){
+        list.innerHTML = `<div class="empty-state">Aucun message contact pour le moment.</div>`;
+        return;
+      }
+      list.innerHTML = contactAdminMessages.map(conv=>`
+        <div class="admin-conversation-card" style="margin-bottom:14px;">
+          <div class="chat-topbar">
+            <div class="chat-topbar-title">
+              <strong>${escapeHtml(conv.subject || "Demande d'assistance")}</strong>
+              <span>${escapeHtml(conv.name || "Visiteur")} - ${escapeHtml(conv.category || "general")} - ${escapeHtml(conv.status || "open")}</span>
+            </div>
+            <div class="chat-icon-actions">
+              <button onclick="closeContactMessage('${escapeHtml(conv.id)}')" type="button" title="Fermer" aria-label="Fermer">✓</button>
+              <button onclick="deleteContactMessage('${escapeHtml(conv.id)}')" type="button" title="Supprimer" aria-label="Supprimer">×</button>
+            </div>
+          </div>
+          <div class="chat-bg-row open">
+            <span style="color:#8696a0;">${escapeHtml(conv.email || "")}${conv.whatsapp ? " - " + escapeHtml(conv.whatsapp) : ""}</span>
+            <span style="color:#8696a0;">${conv.updated_at ? new Date(conv.updated_at).toLocaleString() : ""}</span>
+          </div>
+          <div class="admin-chat-thread">
+            ${renderContactMessageThread(conv) || `<div class="empty-state">Aucun message</div>`}
+          </div>
+          <div class="chat-composer">
+            <label class="composer-icon" title="Joindre une image" aria-label="Joindre une image">
+              ＋<input id="contactMedia_${escapeHtml(conv.id)}" type="file" accept="image/*,audio/*" style="display:none">
+            </label>
+            <textarea id="contactReply_${escapeHtml(conv.id)}" rows="1" placeholder="Réponse de l'administration"></textarea>
+            <button class="voice-fab" onclick="toggleVoiceRecording('contact','${escapeJsAttr(conv.id)}')" type="button" id="voiceBtn_contact_${escapeHtml(conv.id)}" title="Message vocal" aria-label="Message vocal" aria-pressed="false">${voiceButtonIcon(false)}</button>
+            <button class="send-fab" onclick="replyContactMessage('${escapeHtml(conv.id)}')" type="button" title="Envoyer" aria-label="Envoyer">➤</button>
+          </div>
+        </div>
+      `).join("");
+      initMessageShortcuts();
+    })
+    .catch(()=>{ list.innerHTML = `<div class="empty-state">Erreur lors du chargement.</div>`; });
+}
+
+function replyContactMessage(id, voiceBlob){
+  const input = document.getElementById("contactReply_" + id);
+  const mediaInput = document.getElementById("contactMedia_" + id);
+  const message = input?.value.trim() || "";
+  const media = mediaInput?.files[0];
+  if(!message && !media && !voiceBlob){ alert("Réponse, image ou vocal requis"); return; }
+  const fd = new FormData();
+  fd.append("action", "reply");
+  fd.append("id", id);
+  fd.append("message", message);
+  if(voiceBlob) fd.append("media", voiceBlob, voiceAttachmentName(voiceBlob));
+  else if(media) fd.append("media", media);
+  fetch("send_contact.php", {method:"POST", body:fd}).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Réponse impossible"); return; }
+    if(input){
+      input.value = "";
+      updateComposerMode(input);
+    }
+    if(mediaInput) mediaInput.value = "";
+    loadContactMessages();
+    pollAdminAlerts(true);
+  }).catch(()=>alert("Erreur"));
+}
+
+function closeContactMessage(id){
+  fetch("send_contact.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"close", id})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Action impossible"); return; }
+    loadContactMessages();
+    pollAdminAlerts(true);
+  }).catch(()=>alert("Erreur"));
+}
+
+function deleteContactMessage(id){
+  if(!confirm("Supprimer définitivement cette conversation ?")) return;
+  fetch("send_contact.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"delete", id})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Suppression impossible"); return; }
+    loadContactMessages();
+    pollAdminAlerts(true);
+  }).catch(()=>alert("Erreur"));
+}
+
+function loadPartnersAdmin(){
+  const list = document.getElementById("partnersAdminList");
+  if(!list) return;
+  if(!hasPermission("partners")){
+    list.innerHTML = `<div class="empty-state">Vous n'avez pas la permission de gérer les partenaires.</div>`;
+    return;
+  }
+  list.innerHTML = `<div class="empty-state">Chargement des partenaires...</div>`;
+  fetch("partners.php?action=admin&ts=" + Date.now(), {cache:"no-store"})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success"){
+        list.innerHTML = `<div class="empty-state">${escapeHtml(res.message || "Chargement impossible")}</div>`;
+        return;
+      }
+      const rows = res.partners || [];
+      list.innerHTML = rows.length ? rows.map(p=>`
+        <div class="comment-admin-item ${p.status === "approved" ? "approved" : p.status === "rejected" ? "rejected" : "pending"}">
+          <div class="comment-admin-meta">
+            <strong>${escapeHtml(p.organization || "")}</strong>
+            <span>${p.updated_at ? new Date(p.updated_at).toLocaleString() : ""}</span>
+          </div>
+          <p><strong>Responsable :</strong> ${escapeHtml(p.name || "")} - ${escapeHtml(p.email || "")} - ${escapeHtml(p.whatsapp || "")}</p>
+          <p><strong>Type :</strong> ${escapeHtml(p.type || "")} - <strong>Ville/Pays :</strong> ${escapeHtml(p.city || "")} - <strong>Statut :</strong> ${escapeHtml(p.status || "pending")}</p>
+          ${p.website ? `<p><a href="${escapeHtml(p.website)}" target="_blank" rel="noopener" style="color:var(--gold-2);">${escapeHtml(p.website)}</a></p>` : ""}
+          <p style="white-space:pre-wrap;">${escapeHtml(p.message || "")}</p>
+          <div class="comment-admin-actions">
+            <button onclick="setPartnerStatus('${escapeHtml(p.id)}','approve')">Valider</button>
+            <button onclick="setPartnerStatus('${escapeHtml(p.id)}','reject')">Rejeter</button>
+            <button onclick="setPartnerStatus('${escapeHtml(p.id)}','delete')">Supprimer</button>
+          </div>
+        </div>
+      `).join("") : `<div class="empty-state">Aucune demande partenaire.</div>`;
+    })
+    .catch(()=>{ list.innerHTML = `<div class="empty-state">Erreur lors du chargement.</div>`; });
+}
+
+function setPartnerStatus(id, action){
+  if(action === "delete" && !confirm("Supprimer cette demande partenaire ?")) return;
+  fetch("partners.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action, id})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Action impossible"); return; }
+    loadPartnersAdmin();
+    pollAdminAlerts(true);
+  }).catch(()=>alert("Erreur"));
+}
+
+function loadAssistPublications(){
+  const type = document.getElementById("assistItemType").value;
+  const file = type === "publicite" ? "ads.json" : "data.json";
+  fetch(file + "?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json()).then(data=>{
+    assistPublications = Array.isArray(data) ? data : [];
+    const select = document.getElementById("assistPublication");
+    select.innerHTML = assistPublications.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.titre || item.id)}</option>`).join("");
+    updateAssistPreview();
+  });
+}
+
+function updateAssistPreview(){
+  const text = document.getElementById("assistText")?.value || "";
+  const link = document.getElementById("assistLink")?.value || "";
+  const pub = assistPublications.find(p=>p.id === document.getElementById("assistPublication")?.value);
+  const preview = document.getElementById("assistPreview");
+  if(preview) preview.innerHTML = `<strong>Admin</strong><p style="white-space:pre-wrap;">${escapeHtml(text || "Votre réponse s'affichera ici.")}</p>${link ? `<a href="${escapeHtml(link)}">${escapeHtml(link)}</a>` : ""}${pub ? `<p>Tag : ${escapeHtml(pub.titre || pub.id)}</p>` : ""}`;
+}
+
+function sendAssistanceReply(){
+  const type = document.getElementById("assistItemType").value;
+  const select = document.getElementById("assistPublication");
+  const pub = assistPublications.find(p=>p.id === select.value);
+  const fd = new FormData();
+  fd.append("action", "reply");
+  fd.append("item_type", type);
+  fd.append("item_id", select.value);
+  fd.append("text", document.getElementById("assistText").value.trim());
+  fd.append("link", document.getElementById("assistLink").value.trim());
+  fd.append("tag_type", type);
+  fd.append("tag_id", select.value);
+  fd.append("tag_title", pub?.titre || select.value);
+  const media = document.getElementById("assistMedia").files[0];
+  if(media) fd.append("media", media);
+  fetch("admin_interactions.php", {method:"POST", body:fd})
+    .then(r=>r.json()).then(res=>{
+      if(res.status !== "success"){ alert(res.message || "Envoi impossible"); return; }
+      document.getElementById("assistText").value = "";
+      document.getElementById("assistLink").value = "";
+      document.getElementById("assistMedia").value = "";
+      updateAssistPreview();
+      alert("Assistance publiée");
+    });
+}
+
+document.addEventListener("input", e=>{
+  if(["assistText","assistLink"].includes(e.target.id)) updateAssistPreview();
+});
+
+function chargerParametres(){
+  fetch("params.json").then(r=>r.json()).then(data=>{
+    document.getElementById("siteName").value = data.nom || "";
+    document.getElementById("siteEmail").value = data.email || "";
+    const current = document.getElementById("notificationSoundCurrent");
+    if(current) current.innerHTML = data.notification_sound ? `Son actuel : <a href="${escapeHtml(data.notification_sound)}" target="_blank" style="color:var(--gold-2);">${escapeHtml(data.notification_sound)}</a>` : "Aucun son personnalisé.";
+  }).catch(e=>console.error("Erreur chargement params:", e));
+  chargerAdmins();
+}
+
+function sauvegarderParametres(){
+  const nom = document.getElementById("siteName").value.trim();
+  const email = document.getElementById("siteEmail").value.trim();
+  if(!nom || !email){ alert("Nom et email requis"); return; }
+  fetch("save_params.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({nom: nom, email: email})
+  }).then(r=>r.json()).then(res=>{
+    alert(res.message || "Sauvegardé");
+  }).catch(()=>alert("Erreur"));
+}
+
+function sauvegarderSonNotification(){
+  const input = document.getElementById("notificationSound");
+  const file = input.files[0];
+  if(!file){ alert("Choisissez un fichier audio"); return; }
+  const fd = new FormData();
+  fd.append("sound", file);
+  fetch("save_notification_sound.php", {method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status !== "success"){ alert(res.msg || "Téléversement impossible"); return; }
+      input.value = "";
+      alert("Son de notification enregistré");
+      chargerParametres();
+    })
+    .catch(()=>alert("Erreur lors du téléversement"));
+}
+
+function chargerAdmins(){
+  fetch("admins.json").then(r=>r.json()).then(data=>{
+    document.getElementById("adminsList").innerHTML = data.map((a,i)=>`<li><span><strong>${escapeHtml(a.username || "Sans nom")}</strong> - ${escapeHtml(a.role)}<br>Pays : ${escapeHtml(a.country || "")} - WhatsApp : ${escapeHtml(a.whatsapp || "")} - Email : ${escapeHtml(a.email || "")}<br>Permissions : ${escapeHtml((a.permissions || []).join(", ") || "Toutes si super historique")}<br>Créé le ${new Date(a.created_at).toLocaleDateString()}</span><button onclick="supprimerAdmin(${i})">Supprimer</button></li>`).join("");
+  });
+}
+
+function ajouterAdmin(){
+  if(!hasPermission("manage_admins")){ alert("Permission gestion des administrateurs requise"); return; }
+  const username = document.getElementById("adminUsername").value.trim();
+  const country = document.getElementById("adminCountry").value.trim();
+  const whatsapp = document.getElementById("adminWhatsapp").value.trim();
+  const email = document.getElementById("adminEmail").value.trim();
+  const pwd = document.getElementById("adminPass").value.trim();
+  const role = document.getElementById("adminRole").value;
+  const permissions = Array.from(document.querySelectorAll(".adminPerm:checked")).map(el=>el.value);
+  if(!username || !country || !whatsapp || !email || !pwd){ alert("Nom d'utilisateur, pays, WhatsApp, email et mot de passe requis"); return; }
+  fetch("add_admin.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username: username, country: country, whatsapp: whatsapp, email: email, password: pwd, role: role, permissions: permissions})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status==="success" || res.status==="ok"){
+      alert("Admin ajouté");
+      document.getElementById("adminUsername").value="";
+      document.getElementById("adminCountry").value="";
+      document.getElementById("adminWhatsapp").value="";
+      document.getElementById("adminEmail").value="";
+      document.getElementById("adminPass").value="";
+      document.querySelectorAll(".adminPerm").forEach(el=>el.checked=false);
+      chargerAdmins();
+    }else{
+      alert(res.msg);
+    }
+  });
+}
+
+function supprimerAdmin(i){
+  if(!hasPermission("manage_admins")){ alert("Permission gestion des administrateurs requise"); return; }
+  fetch("admins.json").then(r=>r.json()).then(data=>{
+    data.splice(i,1);
+    fetch("save_admins.php",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(data)
+    }).then(chargerAdmins);
+  });
+}
+
+function requireRole(roles){
+  if(!roles.includes(currentAdminRole)){
+    alert("Action non autorisée pour votre rôle");
+    return false;
+  }
+  return true;
+}
+
+function changerMotDePasse(){
+  const oldPwd = document.getElementById("oldPwd").value.trim();
+  const newPwd = document.getElementById("newPwd").value.trim();
+  if(!oldPwd || !newPwd){ alert("Ancien et nouveau mot de passe requis"); return; }
+  fetch("change_pwd.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({old: oldPwd, new: newPwd})
+  }).then(r=>r.json()).then(res=>{
+    alert(res.message);
+  }).catch(()=>alert("Erreur"));
+}
+
+function initAfricanCountrySelects(){
+  const inviteCountry = document.getElementById("inviteCountryHint");
+  if(inviteCountry && inviteCountry.options.length <= 1){
+    inviteCountry.innerHTML = '<option value="">Pays africain à choisir par l’invité</option>' + AFRICAN_COUNTRIES.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  }
+  const adminCountry = document.getElementById("adminCountry");
+  if(adminCountry && adminCountry.options.length <= 1){
+    adminCountry.innerHTML = '<option value="">Pays africain de partenariat</option>' + AFRICAN_COUNTRIES.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  }
+}
+
+function selectedValues(selector){
+  return Array.from(document.querySelectorAll(selector)).filter(el=>el.checked).map(el=>el.value);
+}
+
+function createAdminInvite(){
+  if(!hasPermission("manage_admins")){ alert("Permission requise : gestion des administrateurs"); return; }
+  const payload = {
+    action:"create",
+    role:document.getElementById("inviteRole").value,
+    permissions:selectedValues(".invitePerm"),
+    country_hint:document.getElementById("inviteCountryHint").value,
+    whatsapp_hint:document.getElementById("inviteWhatsapp").value.trim(),
+    email_hint:document.getElementById("inviteEmail").value.trim(),
+    group_id:document.getElementById("inviteGroupTarget").value
+  };
+  securedFetch("admin_invites.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Invitation impossible"); return; }
+    document.getElementById("generatedInviteLink").value = res.link || "";
+    navigator.clipboard?.writeText(res.link || "").catch(()=>{});
+    loadAdminInvites();
+    alert("Lien généré et copié si le navigateur l'autorise.");
+  }).catch(()=>alert("Erreur invitation"));
+}
+
+function loadAdminInvites(){
+  if(!hasPermission("manage_admins")) return;
+  fetch("admin_invites.php?ts=" + Date.now(), {cache:"no-store", credentials:"same-origin"})
+    .then(r=>r.json()).then(res=>{
+      const list = document.getElementById("adminInvitesList");
+      if(!list) return;
+      const invites = Array.isArray(res.invites) ? res.invites : [];
+      list.innerHTML = invites.slice().reverse().map(inv=>`
+        <li class="section-admin-item">
+          <div class="section-admin-body">
+            <strong>${escapeHtml(inv.role || "admin")} - ${escapeHtml((inv.permissions||[]).join(", ") || "Toutes fonctions")}</strong>
+            <span>Statut : ${escapeHtml(inv.status || "pending")} - expire le ${inv.expires_at ? new Date(inv.expires_at).toLocaleString() : ""}</span>
+            ${inv.accepted_username ? `<p>Accepté par : ${escapeHtml(inv.accepted_username)}</p>` : ""}
+          </div>
+          ${inv.status === "pending" ? `<button class="delete" onclick="cancelAdminInvite('${escapeHtml(inv.id)}')">Annuler</button>` : ""}
+        </li>
+      `).join("") || `<li><span>Aucune invitation</span></li>`;
+    }).catch(()=>{});
+}
+
+function cancelAdminInvite(id){
+  securedFetch("admin_invites.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"cancel", id})
+  }).then(()=>loadAdminInvites());
+}
+
+let adminMessagesState = {admins:[], groups:[], dms:[], meetings:[], current_admin:""};
+let selectedAdminDm = "";
+let seenActiveMeetingIds = new Set(JSON.parse(localStorage.getItem("seen_admin_meetings") || "[]"));
+let voiceRecorder = null;
+let voiceChunks = [];
+let activeVoiceButtonId = "";
+const QUICK_EMOJIS = ["😀","😂","😍","👍","🙏","🔥","🎉","❤️","😮","😢","✅","👏"];
+let gifTarget = {scope:"dm", groupId:""};
+const ADMIN_GIF_LIBRARY = [
+  {title:"Bravo", tags:"bravo felicitation celebration", url:"https://media.giphy.com/media/ely3apij36BJhoZ234/giphy.gif"},
+  {title:"Merci", tags:"merci thanks thank you", url:"https://media.giphy.com/media/3oEdva9BUHPIs2SkGk/giphy.gif"},
+  {title:"OK", tags:"ok accord oui", url:"https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif"},
+  {title:"Super", tags:"super excellent good", url:"https://media.giphy.com/media/111ebonMs90YLu/giphy.gif"},
+  {title:"En cours", tags:"travail work loading", url:"https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif"},
+  {title:"Appel", tags:"call phone vocal video", url:"https://media.giphy.com/media/l0HlNaQ6gWfllcjDO/giphy.gif"},
+  {title:"Bienvenue", tags:"welcome bienvenue hello", url:"https://media.giphy.com/media/ASd0Ukj0y3qMM/giphy.gif"},
+  {title:"Urgent", tags:"urgent alert attention", url:"https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif"},
+  {title:"Sticker coeur", tags:"sticker coeur love", url:"https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif"},
+  {title:"Sticker rire", tags:"sticker rire lol humour", url:"https://media.giphy.com/media/10JhviFuU2gWD6/giphy.gif"}
+];
+
+function loadAdminMessages(){
+  fetch("admin_messages.php?ts=" + Date.now(), {cache:"no-store", credentials:"same-origin"})
+    .then(r=>r.json()).then(res=>{
+      if(res.status !== "success") return;
+      adminMessagesState = res;
+      notifyNewAdminCalls();
+      renderAdminPresence();
+      renderAdminDm();
+      renderAdminGroups();
+      renderAdminMeetings();
+      renderActiveCallBanner();
+    }).catch(()=>{});
+}
+
+function notifyNewAdminCalls(){
+  const meetings = adminMessagesState.meetings || [];
+  meetings.filter(m => m.status === "active").forEach(m=>{
+    if(seenActiveMeetingIds.has(m.id)) return;
+    seenActiveMeetingIds.add(m.id);
+    if(m.created_by && m.created_by !== adminMessagesState.current_admin){
+      notifyAdmin("Appel administrateur en cours", `${m.title || "Réunion"} - cliquez pour rejoindre`, "reunionsAdmin");
+    }
+  });
+  localStorage.setItem("seen_admin_meetings", JSON.stringify(Array.from(seenActiveMeetingIds).slice(-60)));
+}
+
+function loadAdminGroups(){
+  loadAdminMessages();
+}
+
+function otherDmMember(dm){
+  return (dm.members || []).find(name => name !== adminMessagesState.current_admin) || "";
+}
+
+function formatLastSeen(value){
+  if(!value) return "Jamais connecté";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString();
+}
+
+function isAdminMessengerManager(){
+  return localStorage.getItem("admin_role") === "super" || hasPermission("manage_admins");
+}
+
+function saveAdminChatBackground(){
+  const input = document.getElementById("adminChatBg");
+  const value = input?.value.trim() || "";
+  localStorage.setItem("admin_chat_bg", value);
+  applyAdminChatBackground();
+}
+
+function applyAdminChatBackground(){
+  const bg = localStorage.getItem("admin_chat_bg") || "";
+  document.querySelectorAll(".admin-chat-thread").forEach(el=>{
+    el.style.backgroundImage = bg ?
+       `linear-gradient(rgba(12,15,20,.78),rgba(12,15,20,.78)), url("${bg.replace(/"/g, "%22")}")`
+      : "";
+  });
+  const input = document.getElementById("adminChatBg");
+  if(input) input.value = bg;
+}
+
+function initEmojiBars(){
+  document.querySelectorAll(".emoji-bar").forEach(bar=>{
+    if(bar.dataset.ready === "1") return;
+    bar.dataset.ready = "1";
+    const target = bar.dataset.target;
+    bar.innerHTML = QUICK_EMOJIS.map(e=>`<button type="button" onclick="appendEmojiTo('${escapeJsAttr(target)}','${e}')">${e}</button>`).join("");
+  });
+}
+
+function initMessageShortcuts(){
+  const dmText = document.getElementById("adminDmText");
+  if(dmText && dmText.dataset.shortcutReady !== "1"){
+    dmText.dataset.shortcutReady = "1";
+    dmText.addEventListener("input", () => updateComposerMode(dmText));
+    dmText.addEventListener("keydown", e=>{
+      if(e.ctrlKey && e.key === "Enter"){
+        e.preventDefault();
+        sendAdminDm();
+      }
+    });
+    updateComposerMode(dmText);
+  }
+  document.querySelectorAll('textarea[id^="groupMsg_"]').forEach(textarea=>{
+    if(textarea.dataset.shortcutReady === "1") return;
+    textarea.dataset.shortcutReady = "1";
+    textarea.addEventListener("input", () => updateComposerMode(textarea));
+    textarea.addEventListener("keydown", e=>{
+      if(e.ctrlKey && e.key === "Enter"){
+        e.preventDefault();
+        sendAdminGroupMessage(textarea.id.replace(/^groupMsg_/, ""));
+      }
+    });
+    updateComposerMode(textarea);
+  });
+  document.querySelectorAll('textarea[id^="contactReply_"]').forEach(textarea=>{
+    if(textarea.dataset.shortcutReady === "1") return;
+    textarea.dataset.shortcutReady = "1";
+    textarea.addEventListener("input", () => updateComposerMode(textarea));
+    textarea.addEventListener("keydown", e=>{
+      if(e.ctrlKey && e.key === "Enter"){
+        e.preventDefault();
+        replyContactMessage(textarea.id.replace(/^contactReply_/, ""));
+      }
+    });
+    updateComposerMode(textarea);
+  });
+}
+
+function updateComposerMode(textarea){
+  const composer = textarea?.closest(".chat-composer");
+  if(!composer) return;
+  composer.classList.toggle("has-text", textarea.value.trim().length > 0);
+}
+
+function appendEmojiTo(targetId, emoji){
+  const el = document.getElementById(targetId);
+  if(!el) return;
+  const start = el.selectionStart || el.value.length;
+  const end = el.selectionEnd || el.value.length;
+  el.value = el.value.slice(0,start) + emoji + el.value.slice(end);
+  el.focus();
+  el.selectionStart = el.selectionEnd = start + emoji.length;
+  updateComposerMode(el);
+}
+
+function toggleConversationFullscreen(button){
+  const card = button.closest(".admin-conversation-card");
+  if(!card) return;
+  card.classList.toggle("fullscreen");
+  button.textContent = card.classList.contains("fullscreen") ? "↙" : "⛶";
+}
+
+function positionChatUploadRow(el, trigger){
+  if(!el || !trigger) return;
+  el.style.visibility = "hidden";
+  el.classList.add("open");
+  const rect = trigger.getBoundingClientRect();
+  const menuWidth = el.offsetWidth || 220;
+  const menuHeight = el.offsetHeight || 260;
+  const left = Math.max(8, Math.min(rect.left, window.innerWidth - menuWidth - 8));
+  const top = Math.max(8, rect.top - menuHeight - 10);
+  el.style.left = left + "px";
+  el.style.top = top + "px";
+  el.style.visibility = "";
+}
+
+function toggleAdminPanelRow(id, trigger){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(el.classList.contains("chat-upload-row") && !el.classList.contains("open")){
+    document.querySelectorAll(".chat-upload-row.open").forEach(row=>{
+      if(row !== el) row.classList.remove("open");
+    });
+  }
+  const shouldOpen = !el.classList.contains("open");
+  if(shouldOpen && el.classList.contains("chat-upload-row")){
+    positionChatUploadRow(el, trigger || window.event?.currentTarget || document.activeElement);
+  }else{
+    el.classList.toggle("open", shouldOpen);
+  }
+}
+
+document.addEventListener("click", event => {
+  if(event.target.closest(".chat-upload-row") || event.target.closest(".composer-icon")) return;
+  document.querySelectorAll(".chat-upload-row.open").forEach(row=>row.classList.remove("open"));
+});
+
+function openGifPicker(scope, groupId=""){
+  gifTarget = {scope, groupId};
+  document.getElementById("gifPickerBg").style.display = "block";
+  document.getElementById("gifPickerModal").style.display = "block";
+  renderGifPicker();
+}
+
+function closeGifPicker(){
+  document.getElementById("gifPickerBg").style.display = "none";
+  document.getElementById("gifPickerModal").style.display = "none";
+}
+
+function renderGifPicker(){
+  const q = (document.getElementById("gifSearchInput")?.value || "").toLowerCase().trim();
+  const grid = document.getElementById("gifPickerGrid");
+  if(!grid) return;
+  const items = ADMIN_GIF_LIBRARY.filter(item => !q || (item.title + " " + item.tags).toLowerCase().includes(q));
+  grid.innerHTML = items.map(item=>`
+    <button class="gif-picker-item" type="button" onclick="sendPickedGif('${escapeJsAttr(item.url)}')">
+      <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.title)}">
+    </button>
+  `).join("") || `<div class="empty-state">Aucun GIF dans la collection locale</div>`;
+}
+
+function sendPickedGif(url){
+  const asSticker = document.getElementById("sendAsSticker")?.checked;
+  const body = new FormData();
+  body.append("action", gifTarget.scope === "group" ? "group_message" : "dm_message");
+  body.append("message", "");
+  body.append("gif_url", url);
+  body.append("attachment_kind", asSticker ? "sticker" : "gif");
+  if(gifTarget.scope === "group") body.append("group_id", gifTarget.groupId);
+  else body.append("to", selectedAdminDm);
+  if(gifTarget.scope !== "group" && !selectedAdminDm){ alert("Choisissez un administrateur"); return; }
+  securedFetch("admin_messages.php", {method:"POST", body})
+    .then(r=>r.json()).then(res=>{
+      if(res.status !== "success"){ alert(res.message || "Envoi impossible"); return; }
+      closeGifPicker();
+      loadAdminMessages();
+    }).catch(()=>alert("Erreur GIF"));
+}
+
+function pickedAdminAttachment(prefix){
+  const photo = document.getElementById(prefix + "Photo");
+  const file = document.getElementById(prefix + "File");
+  const audio = document.getElementById(prefix + "Audio");
+  const sticker = document.getElementById(prefix + "Sticker");
+  if(sticker?.files?.[0]) return {file:sticker.files[0], kind:"sticker", inputs:[sticker, photo, file, audio]};
+  if(photo?.files?.[0]) return {file:photo.files[0], kind:"media", inputs:[photo, file, audio, sticker]};
+  if(audio?.files?.[0]) return {file:audio.files[0], kind:"audio", inputs:[audio, photo, file, sticker]};
+  if(file?.files?.[0]) return {file:file.files[0], kind:"file", inputs:[file, photo, audio, sticker]};
+  return {file:null, kind:"", inputs:[photo, file, audio, sticker].filter(Boolean)};
+}
+
+function voiceButtonIcon(recording){
+  if(recording){
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 7h10v10H7z"/></svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3Zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.42 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.3 6-6.72h-1.7Z"/></svg>`;
+}
+
+function setVoiceButtonRecording(buttonId, isRecording){
+  const button = document.getElementById(buttonId);
+  if(!button) return;
+  button.classList.toggle("recording", isRecording);
+  button.setAttribute("aria-pressed", isRecording ? "true" : "false");
+  button.setAttribute("title", isRecording ? "Arrêter l'enregistrement" : "Message vocal");
+  button.setAttribute("aria-label", isRecording ? "Arrêter l'enregistrement" : "Message vocal");
+  button.innerHTML = voiceButtonIcon(isRecording);
+}
+
+function voiceAttachmentName(blob){
+  const type = blob?.type || "";
+  if(type.includes("mp4")) return "message-vocal.m4a";
+  if(type.includes("ogg")) return "message-vocal.ogg";
+  return "message-vocal.webm";
+}
+
+function contactMediaHtml(msg){
+  const media = msg.media || "";
+  if(!media) return "";
+  const url = escapeHtml(media);
+  const mediaType = (msg.media_type || "").toLowerCase();
+  const lower = media.toLowerCase().split("?")[0];
+  const isAudio = mediaType === "audio" || mediaType === "voice" || /\.(webm|ogg|oga|mp3|m4a|wav|aac)$/i.test(lower);
+  const isVideo = mediaType === "video" || /\.(mp4|webm|mov|m4v)$/i.test(lower);
+  if(isAudio) return `<audio class="message-media" src="${url}" controls></audio>`;
+  if(isVideo) return `<video class="message-media" src="${url}" controls></video>`;
+  return `<img class="message-media" src="${url}" alt="Image jointe">`;
+}
+
+function attachmentHtml(att){
+  if(!att || !att.url) return "";
+  const mime = att.mime || "";
+  const kind = att.kind || "";
+  const name = escapeHtml(att.name || "Fichier");
+  const url = escapeHtml(att.url);
+  if(mime.startsWith("image/")) return `<a href="${url}" target="_blank" rel="noopener"><img class="message-media" src="${url}" alt="${name}"></a><a class="message-file" href="${url}" download>Télécharger ${name}</a>`;
+  if(mime.startsWith("video/")) return `<video class="message-media" src="${url}" controls></video><a class="message-file" href="${url}" download>Télécharger ${name}</a>`;
+  if(mime.startsWith("audio/") || kind === "voice" || kind === "audio") return `<audio class="message-media" src="${url}" controls></audio><a class="message-file" href="${url}" download>Télécharger ${name}</a>`;
+  return `<a class="message-file" href="${url}" target="_blank" rel="noopener" download><span>${name}</span><span>Télécharger</span></a>`;
+}
+
+function reactionsHtml(reactions){
+  const values = Object.values(reactions || {});
+  if(!values.length) return "";
+  return `<div style="margin-top:6px;">${values.map(r=>`<span class="admin-pill">${escapeHtml(r)}</span>`).join("")}</div>`;
+}
+
+function messageBubbleHtml(m, scope, targetId){
+  if(m.deleted){
+    return `<div class="message-line deleted ${m.from === adminMessagesState.current_admin ? "mine" : ""}">Message supprimé</div>`;
+  }
+  const canDelete = m.from === adminMessagesState.current_admin || isAdminMessengerManager();
+  return `
+    <div class="message-line ${m.from === adminMessagesState.current_admin ? "mine" : ""}">
+      <span class="message-author">${escapeHtml(m.from)}</span> <span class="message-date">${m.date ? new Date(m.date).toLocaleString() : ""}</span>
+      ${m.text ? `<div class="message-text">${escapeHtml(m.text)}</div>` : ""}
+      ${attachmentHtml(m.attachment)}
+      ${reactionsHtml(m.reactions)}
+      ${canDelete ? `<div class="message-tools"><button class="delete" type="button" onclick="deleteAdminMessage('${escapeJsAttr(scope)}','${escapeJsAttr(targetId)}','${escapeJsAttr(m.id)}')">Supprimer</button></div>` : ""}
+      <div class="message-tools">
+        <button type="button" onclick="reactAdminMessage('${escapeJsAttr(scope)}','${escapeJsAttr(targetId)}','${escapeJsAttr(m.id)}','❤️')">❤️</button>
+        <button type="button" onclick="reactAdminMessage('${escapeJsAttr(scope)}','${escapeJsAttr(targetId)}','${escapeJsAttr(m.id)}','👍')">👍</button>
+        ${m.from === adminMessagesState.current_admin ? `<button type="button" onclick="editAdminMessage('${escapeJsAttr(scope)}','${escapeJsAttr(targetId)}','${escapeJsAttr(m.id)}','${escapeJsAttr(m.text || "")}')">Modifier</button>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderAdminPresence(){
+  const root = document.getElementById("adminPresenceList");
+  const memberSelect = document.getElementById("adminGroupMembers");
+  const inviteGroup = document.getElementById("inviteGroupTarget");
+  if(memberSelect){
+    memberSelect.innerHTML = (adminMessagesState.admins || [])
+      .filter(a => a.username !== adminMessagesState.current_admin)
+      .map(a=>`<option value="${escapeHtml(a.username)}">${escapeHtml(a.username)}${a.country ? " - " + escapeHtml(a.country) : ""}</option>`).join("");
+  }
+  if(inviteGroup){
+    const selected = inviteGroup.value;
+    inviteGroup.innerHTML = '<option value="">Aucun groupe</option>' + (adminMessagesState.groups || []).map(g=>`<option value="${escapeHtml(g.id)}">${escapeHtml(g.name)}</option>`).join("");
+    inviteGroup.value = selected;
+  }
+  if(!root) return;
+  root.innerHTML = (adminMessagesState.admins || []).map(a=>`
+    <div class="admin-chat-card ${a.username === selectedAdminDm ? "active" : ""}">
+      <strong><span class="presence-dot ${a.online ? "online" : ""}"></span>${escapeHtml(a.username)}</strong>
+      <p style="color:var(--muted);margin:7px 0 10px;">${a.banned ? "Bloqué/banni" : (a.online ? "Connecté maintenant" : "Dernière connexion : " + escapeHtml(formatLastSeen(a.last_seen)))}</p>
+      ${a.username !== adminMessagesState.current_admin ? `<div class="admin-chat-actions"><button type="button" onclick="selectAdminDm('${escapeJsAttr(a.username)}')">DM</button><button type="button" onclick="selectAdminDm('${escapeJsAttr(a.username)}');startAdminMeeting('dm','audio')">Appel</button>${isAdminMessengerManager() ? `<button class="${a.banned ? "validate" : "delete"}" type="button" onclick="toggleAdminBan('${escapeJsAttr(a.username)}', ${a.banned ? "false" : "true"})">${a.banned ? "Débloquer" : "Bloquer"}</button>` : ""}</div>` : ""}
+    </div>
+  `).join("") || `<div class="empty-state">Aucun administrateur</div>`;
+}
+
+function selectAdminDm(username){
+  selectedAdminDm = username;
+  renderAdminPresence();
+  renderAdminDm();
+}
+
+function renderAdminDm(){
+  const header = document.getElementById("adminDmHeader");
+  const root = document.getElementById("adminDmThread");
+  if(!root || !header) return;
+  if(!selectedAdminDm){
+    const first = (adminMessagesState.admins || []).find(a => a.username !== adminMessagesState.current_admin);
+    if(first) selectedAdminDm = first.username;
+  }
+  header.innerHTML = selectedAdminDm ?
+     `<strong>${escapeHtml(selectedAdminDm)}</strong><span>Discussion privée</span>`
+    : `<strong>DM</strong><span>Choisissez un administrateur pour discuter.</span>`;
+  const dm = (adminMessagesState.dms || []).find(item => otherDmMember(item) === selectedAdminDm);
+  const messages = dm ? (dm.messages || []) : [];
+  root.innerHTML = messages.slice(-40).map(m=>messageBubbleHtml(m, "dm", dm?.id || "")).join("") || `<div class="empty-state">Aucun message privé</div>`;
+  applyAdminChatBackground();
+  initEmojiBars();
+  initMessageShortcuts();
+  root.scrollTop = root.scrollHeight;
+}
+
+function sendAdminDm(voiceBlob){
+  const textarea = document.getElementById("adminDmText");
+  const message = textarea?.value.trim() || "";
+  const attachment = pickedAdminAttachment("adminDm");
+  const gifUrl = document.getElementById("adminDmGifUrl")?.value.trim() || "";
+  if(!selectedAdminDm){ alert("Choisissez un administrateur"); return; }
+  if(!message && !attachment.file && !gifUrl && !voiceBlob){ alert("Message ou fichier requis"); return; }
+  const body = new FormData();
+  body.append("action", "dm_message");
+  body.append("to", selectedAdminDm);
+  body.append("message", message);
+  if(gifUrl) body.append("gif_url", gifUrl);
+  if(voiceBlob){ body.append("attachment", voiceBlob, voiceAttachmentName(voiceBlob)); body.append("attachment_kind", "voice"); }
+  else if(attachment.file){ body.append("attachment", attachment.file); body.append("attachment_kind", attachment.kind); }
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    body
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Envoi impossible"); return; }
+    textarea.value = "";
+    updateComposerMode(textarea);
+    const gifInput = document.getElementById("adminDmGifUrl");
+    if(gifInput) gifInput.value = "";
+    attachment.inputs.forEach(input=>{ input.value = ""; });
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur message"));
+}
+
+function renderAdminGroups(){
+  const root = document.getElementById("adminGroupsList");
+  if(!root) return;
+  const groups = adminMessagesState.groups || [];
+  root.innerHTML = groups.map(g=>`
+    <div class="admin-group-card admin-conversation-card">
+      <div class="chat-topbar">
+        <div class="chat-topbar-title">
+          <strong>${escapeHtml(g.name)}</strong>
+          <span>${escapeHtml((g.members||[]).join(", "))}</span>
+        </div>
+        <div class="chat-icon-actions">
+          <button onclick="startAdminMeeting('group','audio','${escapeJsAttr(g.id)}')" type="button" title="Appel vocal" aria-label="Appel vocal">☎</button>
+          <button onclick="startAdminMeeting('group','video','${escapeJsAttr(g.id)}')" type="button" title="Appel vidéo" aria-label="Appel vidéo">▣</button>
+          <button onclick="toggleConversationFullscreen(this)" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+        </div>
+      </div>
+      ${g.description ? `<p style="color:#8696a0;margin:10px 14px;">${escapeHtml(g.description)}</p>` : ""}
+      <div class="admin-chat-thread" id="groupThread_${escapeHtml(g.id)}">
+        ${(g.messages||[]).slice(-30).map(m=>messageBubbleHtml(m, "group", g.id)).join("") || `<div class="empty-state">Aucun message</div>`}
+      </div>
+      <div class="emoji-bar" id="groupMsg_${escapeHtml(g.id)}EmojiRow" data-target="groupMsg_${escapeHtml(g.id)}"></div>
+      <div class="chat-extra-row" id="groupMsg_${escapeHtml(g.id)}ExtraRow">
+        <input id="groupMsg_${escapeHtml(g.id)}GifUrl" placeholder="Coller URL GIF">
+        <button onclick="openGifPicker('group','${escapeJsAttr(g.id)}')" type="button">GIF/Stickers</button>
+      </div>
+      <div class="chat-upload-row" id="groupMsg_${escapeHtml(g.id)}UploadRow">
+        <label class="chat-upload-action" title="Photo ou vidéo"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h16v14H4V5Zm2 2v8.4l3.4-3.4 2.6 2.6 3.6-4.6L18 13.2V7H6Zm2.2 2.8a1.8 1.8 0 1 0 3.6 0 1.8 1.8 0 0 0-3.6 0Z"/></svg><span>Médias</span><input type="file" id="groupMsg_${escapeHtml(g.id)}Photo" accept="image/*,video/*"></label>
+        <label class="chat-upload-action" title="Document"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 2h8l4 4v16H6V2Zm7 1.5V7h3.5L13 3.5ZM8 11h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg><span>Document</span><input type="file" id="groupMsg_${escapeHtml(g.id)}File" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,application/*,text/*"></label>
+        <label class="chat-upload-action" title="Audio"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v12.1A4 4 0 1 1 10 11.7V6h9V3h-7Z"/></svg><span>Audio</span><input type="file" id="groupMsg_${escapeHtml(g.id)}Audio" accept="audio/*"></label>
+        <button class="chat-upload-action" onclick="openGifPicker('group','${escapeJsAttr(g.id)}')" type="button" title="GIF et stickers" aria-label="GIF et stickers"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2v12h14V6H5Zm2 3h5v2H9v2h2v-1h2v3H7V9Zm7 0h2v6h-2V9Zm3 0h4v2h-2v1h2v2h-2v1h-2V9Z"/></svg><span>GIF</span></button>
+        <label class="chat-upload-action" title="Sticker ou image GIF"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3h8l5 5v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Zm7 2H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9h-4V5Z"/></svg><span>Sticker</span><input type="file" id="groupMsg_${escapeHtml(g.id)}Sticker" accept="image/*,.webp,.gif"></label>
+      </div>
+      <div class="chat-composer">
+        <button class="composer-icon" onclick="toggleAdminPanelRow('groupMsg_${escapeJsAttr(g.id)}EmojiRow')" type="button" title="Emoji" aria-label="Emoji">☺</button>
+        <button class="composer-icon" onclick="toggleAdminPanelRow('groupMsg_${escapeJsAttr(g.id)}UploadRow', this)" type="button" title="Joindre" aria-label="Joindre">＋</button>
+        <textarea id="groupMsg_${escapeHtml(g.id)}" rows="1" placeholder="Message au groupe"></textarea>
+        <button class="voice-fab" onclick="toggleVoiceRecording('group','${escapeJsAttr(g.id)}')" type="button" id="voiceBtn_group_${escapeHtml(g.id)}" title="Message vocal" aria-label="Message vocal" aria-pressed="false">${voiceButtonIcon(false)}</button>
+        <button class="send-fab" onclick="sendAdminGroupMessage('${escapeJsAttr(g.id)}')" type="button" title="Envoyer" aria-label="Envoyer">➤</button>
+      </div>
+    </div>
+  `).join("") || `<div class="empty-state">Aucun groupe</div>`;
+  applyAdminChatBackground();
+  initEmojiBars();
+  initMessageShortcuts();
+  groups.forEach(g=>{
+    const thread = document.getElementById("groupThread_" + g.id);
+    if(thread) thread.scrollTop = thread.scrollHeight;
+  });
+}
+
+function createAdminGroup(){
+  if(!hasPermission("manage_admins")){ alert("Permission requise : gestion des administrateurs"); return; }
+  const select = document.getElementById("adminGroupMembers");
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      action:"create_group",
+      name:document.getElementById("adminGroupName").value.trim(),
+      description:document.getElementById("adminGroupDescription").value.trim(),
+      members:Array.from(select.selectedOptions).map(o=>o.value)
+    })
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Création impossible"); return; }
+    document.getElementById("adminGroupName").value = "";
+    document.getElementById("adminGroupDescription").value = "";
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur groupe"));
+}
+
+function sendAdminGroupMessage(groupId, voiceBlob){
+  const textarea = document.getElementById("groupMsg_" + groupId);
+  const message = textarea?.value.trim() || "";
+  const attachment = pickedAdminAttachment("groupMsg_" + groupId);
+  const gifUrl = document.getElementById("groupMsg_" + groupId + "GifUrl")?.value.trim() || "";
+  if(!message && !attachment.file && !gifUrl && !voiceBlob){ alert("Message ou fichier requis"); return; }
+  const body = new FormData();
+  body.append("action", "group_message");
+  body.append("group_id", groupId);
+  body.append("message", message);
+  if(gifUrl) body.append("gif_url", gifUrl);
+  if(voiceBlob){ body.append("attachment", voiceBlob, voiceAttachmentName(voiceBlob)); body.append("attachment_kind", "voice"); }
+  else if(attachment.file){ body.append("attachment", attachment.file); body.append("attachment_kind", attachment.kind); }
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    body
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Envoi impossible"); return; }
+    textarea.value = "";
+    updateComposerMode(textarea);
+    const gifInput = document.getElementById("groupMsg_" + groupId + "GifUrl");
+    if(gifInput) gifInput.value = "";
+    attachment.inputs.forEach(input=>{ input.value = ""; });
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur message"));
+}
+
+function adminMeetingLink(meeting){
+  const link = typeof meeting === "string" ? meeting : (meeting?.link || "");
+  if(!link) return "";
+  try{
+    return new URL(link, location.origin).href;
+  }catch(e){
+    return link;
+  }
+}
+
+function showGeneratedMeetingLink(meeting){
+  const box = document.getElementById("generatedMeetingLinkBox");
+  const input = document.getElementById("generatedMeetingLink");
+  const status = document.getElementById("generatedMeetingLinkStatus");
+  const link = adminMeetingLink(meeting);
+  if(!box || !input || !link) return;
+  box.style.display = "grid";
+  input.value = link;
+  if(status) status.textContent = "Lien généré. Vous pouvez le copier et le partager dans Réunions.";
+}
+
+function copyTextValue(text, statusId){
+  const status = statusId ? document.getElementById(statusId) : null;
+  const value = text || "";
+  const done = () => {
+    if(status) status.textContent = "Lien copié.";
+    else alert("Lien copié.");
+  };
+  const failed = () => {
+    const helper = document.createElement("textarea");
+    helper.value = value;
+    helper.setAttribute("readonly", "");
+    helper.style.position = "fixed";
+    helper.style.left = "-9999px";
+    document.body.appendChild(helper);
+    helper.select();
+    try{
+      document.execCommand("copy");
+      done();
+    }catch(e){
+      if(status) status.textContent = "Copie impossible. Sélectionnez le lien manuellement.";
+      else alert("Copie impossible. Sélectionnez le lien manuellement.");
+    }
+    document.body.removeChild(helper);
+  };
+  if(navigator.clipboard?.writeText) navigator.clipboard.writeText(value).then(done).catch(failed);
+  else failed();
+}
+
+function copyGeneratedMeetingLink(){
+  const input = document.getElementById("generatedMeetingLink");
+  copyTextValue(input?.value || "", "generatedMeetingLinkStatus");
+}
+
+function copyAdminMeetingLink(id){
+  const meeting = (adminMessagesState.meetings || []).find(m => m.id === id);
+  copyTextValue(adminMeetingLink(meeting), "adminMeetingsHistoryStatus");
+}
+
+function startAdminMeeting(scope, type, groupId){
+  const titleInput = document.getElementById("meetingTitle");
+  const payload = {action:"create_meeting", scope, type:type || "video", title:titleInput?.value.trim() || "Réunion administrateurs"};
+  if(scope === "dm"){
+    if(!selectedAdminDm){ alert("Choisissez un administrateur"); return; }
+    payload.to = selectedAdminDm;
+    payload.title = "Appel avec " + selectedAdminDm;
+  }
+  if(scope === "group") payload.group_id = groupId;
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Appel impossible"); return; }
+    showGeneratedMeetingLink(res.meeting);
+    loadAdminMessages();
+    joinAdminMeeting(res.meeting.id, true);
+  }).catch(()=>alert("Erreur appel"));
+}
+
+function joinAdminMeeting(id, hostMode = false){
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"join_meeting", id})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Lien indisponible"); return; }
+    const link = hostMode ? adminMeetingLink(res.link) + (String(res.link).includes("?") ? "&" : "?") + "host=1" : res.link;
+    if(hostMode){
+      location.href = link;
+    }else{
+      window.open(link, "_blank", "noopener");
+    }
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur réunion"));
+}
+
+function endAdminMeeting(id){
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"end_meeting", id})
+  }).then(()=>loadAdminMessages()).catch(()=>alert("Erreur réunion"));
+}
+
+function clearAdminMeetingsHistory(){
+  const status = document.getElementById("adminMeetingsHistoryStatus");
+  const endedCount = (adminMessagesState.meetings || []).filter(m => m.status !== "active").length;
+  if(!endedCount){
+    if(status) status.textContent = "Aucun appel terminé à supprimer. Les appels en cours restent affichés.";
+    alert("Aucun appel terminé à supprimer.");
+    return;
+  }
+  if(!confirm("Vider l'historique des appels terminés ? Les appels en cours seront conservés.")) return;
+  if(status) status.textContent = "Suppression de l'historique en cours...";
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"clear_meetings_history"})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){
+      if(status) status.textContent = res.message || "Suppression impossible.";
+      alert(res.message || "Suppression impossible");
+      return;
+    }
+    seenActiveMeetingIds = new Set((adminMessagesState.meetings || []).filter(m => m.status === "active").map(m => m.id));
+    localStorage.setItem("seen_admin_meetings", JSON.stringify(Array.from(seenActiveMeetingIds).slice(-100)));
+    if(status) status.textContent = (res.deleted || 0) + " appel(s) terminé(s) supprimé(s). Les appels en cours sont conservés.";
+    alert((res.deleted || 0) + " appel(s) terminé(s) supprimé(s).");
+    loadAdminMessages();
+  }).catch(()=>{
+    if(status) status.textContent = "Erreur pendant la suppression de l'historique.";
+    alert("Erreur historique");
+  });
+}
+
+function deleteAdminMessage(scope, targetId, messageId){
+  if(!confirm("Supprimer ce message ?")) return;
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"delete_message", scope, target_id:targetId, message_id:messageId})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Suppression impossible"); return; }
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur suppression"));
+}
+
+function editAdminMessage(scope, targetId, messageId, currentText){
+  const text = prompt("Modifier le message", currentText || "");
+  if(text === null) return;
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"edit_message", scope, target_id:targetId, message_id:messageId, text})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Modification impossible"); return; }
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur modification"));
+}
+
+function reactAdminMessage(scope, targetId, messageId, reaction){
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"react_message", scope, target_id:targetId, message_id:messageId, reaction})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Réaction impossible"); return; }
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur réaction"));
+}
+
+async function toggleVoiceRecording(scope, groupId){
+  const buttonId = scope === "group" ? "voiceBtn_group_" + groupId : (scope === "contact" ? "voiceBtn_contact_" + groupId : "voiceBtn_dm");
+  if(voiceRecorder && voiceRecorder.state === "recording"){
+    voiceRecorder.stop();
+    return;
+  }
+  if(!navigator.mediaDevices?.getUserMedia){ alert("Enregistrement vocal indisponible sur ce navigateur"); return; }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    voiceChunks = [];
+    activeVoiceButtonId = buttonId;
+    const preferredTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
+    const mimeType = preferredTypes.find(type => window.MediaRecorder && MediaRecorder.isTypeSupported(type));
+    voiceRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+    voiceRecorder.ondataavailable = e => { if(e.data.size) voiceChunks.push(e.data); };
+    voiceRecorder.onstop = () => {
+      stream.getTracks().forEach(track=>track.stop());
+      setVoiceButtonRecording(activeVoiceButtonId, false);
+      activeVoiceButtonId = "";
+      const blob = new Blob(voiceChunks, {type:voiceRecorder.mimeType || mimeType || "audio/webm"});
+      if(scope === "group") sendAdminGroupMessage(groupId, blob);
+      else if(scope === "contact") replyContactMessage(groupId, blob);
+      else sendAdminDm(blob);
+    };
+    voiceRecorder.start();
+    setVoiceButtonRecording(buttonId, true);
+  }catch(e){
+    setVoiceButtonRecording(buttonId, false);
+    activeVoiceButtonId = "";
+    alert("Micro refusé ou indisponible");
+  }
+}
+
+function toggleAdminBan(username, shouldBan){
+  const action = shouldBan ? "ban_admin" : "unban_admin";
+  securedFetch("admin_messages.php", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action, username})
+  }).then(r=>r.json()).then(res=>{
+    if(res.status !== "success"){ alert(res.message || "Action impossible"); return; }
+    loadAdminMessages();
+  }).catch(()=>alert("Erreur blocage"));
+}
+
+function meetingDuration(m){
+  const start = m.created_at ? new Date(m.created_at).getTime() : 0;
+  const end = m.ended_at ? new Date(m.ended_at).getTime() : Date.now();
+  if(!start) return "";
+  const minutes = Math.max(0, Math.round((end - start) / 60000));
+  return minutes + " min";
+}
+
+function renderAdminMeetings(){
+  const root = document.getElementById("adminMeetingsList");
+  const badge = document.getElementById("badgeAdminCalls");
+  const activeCount = (adminMessagesState.meetings || []).filter(m => m.status === "active").length;
+  if(badge){
+    badge.style.display = activeCount ? "inline-block" : "none";
+    badge.textContent = activeCount;
+  }
+  if(!root) return;
+  const meetings = (adminMessagesState.meetings || []).slice().reverse();
+  root.innerHTML = meetings.map(m=>{
+    const link = adminMeetingLink(m);
+    return `
+    <div class="meeting-card ${m.status === "active" ? "active" : ""}">
+      <strong>${escapeHtml(m.title || "Réunion administrateurs")}</strong>
+      <p style="color:var(--muted);margin:8px 0;">${escapeHtml(m.type || "video")} - ${escapeHtml(m.status === "active" ? "En cours" : "Terminé")} - Hôte : ${escapeHtml(m.host || m.created_by || "")} - ${meetingDuration(m)} - ${((m.participants||[]).length)} participant(s)</p>
+      <div class="meeting-link-box">
+        <input value="${escapeHtml(link)}" readonly aria-label="Lien de l'appel">
+        <button type="button" onclick="copyAdminMeetingLink('${escapeJsAttr(m.id)}')">Copier</button>
+      </div>
+      <div class="admin-chat-actions">
+        ${m.status === "active" ? `<button type="button" onclick="joinAdminMeeting('${escapeJsAttr(m.id)}')">Rejoindre</button>` : `<button type="button" disabled>Appel terminé</button>`}
+        ${m.status === "active" && localStorage.getItem("admin_role") === "super" ? `<button class="delete" type="button" onclick="endAdminMeeting('${escapeJsAttr(m.id)}')">Arrêter</button>` : ""}
+      </div>
+    </div>
+  `;
+  }).join("") || `<div class="empty-state">Aucune réunion</div>`;
+}
+
+function renderActiveCallBanner(){
+  const banner = document.getElementById("adminActiveCallBanner");
+  if(!banner) return;
+  const active = (adminMessagesState.meetings || []).find(m => m.status === "active");
+  if(!active){ banner.className = "call-banner"; banner.innerHTML = ""; return; }
+  banner.className = "call-banner show";
+  banner.innerHTML = `<strong>Appel en cours : ${escapeHtml(active.title || "Réunion")}</strong><button type="button" onclick="joinAdminMeeting('${escapeJsAttr(active.id)}')">Rejoindre</button>`;
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  toggleFormationPricing();
+  if(localStorage.getItem("admin_logged") === "true"){
+    fetch("admin_session.php?ts=" + Date.now(), {cache:"no-store", credentials:"same-origin"})
+      .then(r=>r.json())
+      .then(session=>{
+        if(session.status !== "success") throw new Error(session.message || "Session expirée");
+        localStorage.setItem("admin_role", session.role || "");
+        localStorage.setItem("admin_permissions", JSON.stringify(session.permissions || []));
+        localStorage.setItem("admin_username", session.username || localStorage.getItem("admin_username") || "");
+        localStorage.setItem("admin_csrf", session.csrf || "");
+        currentCsrfToken = session.csrf || "";
+    document.getElementById("adminPanel").style.display="block";
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("password").addEventListener("keypress", e=>{ if(e.key==="Enter") login(); });
+    const username = session.username || localStorage.getItem("admin_username") || "Non défini";
+    const currentUsernameEl = document.getElementById("currentUsername");
+    if(currentUsernameEl) currentUsernameEl.textContent = username;
+    if(localStorage.getItem("admin_username") && localStorage.getItem("admin_username") !== "Non défini"){
+      document.getElementById("usernameModal").style.display = "none";
+    }
+    requestAdminNotifications();
+    showPage("dashboard");
+    pollAdminAlerts(true);
+    setInterval(()=>pollAdminAlerts(false), 30000);
+    loadAdminMessages();
+    setInterval(loadAdminMessages, 20000);
+      })
+      .catch(()=>{
+        localStorage.removeItem("admin_logged");
+        localStorage.removeItem("admin_role");
+        localStorage.removeItem("admin_permissions");
+        localStorage.removeItem("admin_csrf");
+        document.getElementById("adminPanel").style.display="none";
+        document.getElementById("loginBox").style.display="block";
+        document.getElementById("password").addEventListener("keypress", e=>{ if(e.key==="Enter") login(); });
+        document.getElementById("loginUsername").focus();
+      });
+  } else {
+    document.getElementById("adminPanel").style.display="none";
+    document.getElementById("loginBox").style.display="block";
+    document.getElementById("password").addEventListener("keypress", e=>{ if(e.key==="Enter") login(); });
+    document.getElementById("loginUsername").focus();
+  }
+});
+
+document.getElementById("addAdminBtn").onclick = ajouterAdmin;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js', {scope: '/'}).catch(function(){});
+  });
+}
+</script>
+<script src="assets/content-media.js"></script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>
+

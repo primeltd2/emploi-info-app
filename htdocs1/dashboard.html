@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | EMPLOI INFO</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+  body{background:linear-gradient(135deg,#111,#3a2c00,#c9a227);color:white;min-height:100vh;padding:20px;}
+  .cards{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:20px;}
+  .card{background:rgba(0,0,0,.6);padding:15px;border-radius:15px;border-left:5px solid gold;flex:1 1 200px;}
+  .card h3{color:gold;margin-bottom:10px;text-align:center;}
+  .section-title{margin-top:30px;margin-bottom:10px;font-size:18px;color:#FFD700;}
+  canvas{background:rgba(0,0,0,.4);border-radius:12px;padding:10px;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1 style="text-align:center;margin-bottom:20px;">Dashboard | EMPLOI INFO</h1>
+
+<div class="cards">
+  <div class="card"><h3>Total annonces</h3><p id="totalAnnonces">0</p></div>
+  <div class="card"><h3>Annonces publiÃ©es</h3><p id="publiÃ©esCount">0</p></div>
+  <div class="card"><h3>Annonces en attente</h3><p id="attenteCount">0</p></div>
+  <div class="card"><h3>Annonces urgentes</h3><p id="urgentAnnonces">0</p></div>
+</div>
+
+<h3 class="section-title">Statistiques (7 derniers jours)</h3>
+<canvas id="statsCanvas" width="400" height="200"></canvas>
+
+<script>
+function chargerStats(){
+  fetch("stats.json").then(r=>r.json()).then(stats=>{
+    const ctx=document.getElementById("statsCanvas").getContext("2d");
+    if(window.chart) window.chart.destroy();
+    window.chart=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:Object.keys(stats.vues_7_jours||{}),
+        datasets:[{
+          label:"Vues",
+          data:Object.values(stats.vues_7_jours||{}),
+          borderColor:"#FFD700",
+          backgroundColor:"rgba(255,215,0,0.2)",
+          tension:0.4
+        }]
+      },
+      options:{responsive:true}
+    });
+    // Remplir les stats numÃ©riques si prÃ©sentes
+    if(stats.totalAnnonces) document.getElementById("totalAnnonces").innerText=stats.totalAnnonces;
+    if(stats.publiÃ©esCount) document.getElementById("publiÃ©esCount").innerText=stats.publiÃ©esCount;
+    if(stats.attenteCount) document.getElementById("attenteCount").innerText=stats.attenteCount;
+    if(stats.urgentAnnonces) document.getElementById("urgentAnnonces").innerText=stats.urgentAnnonces;
+  });
+}
+chargerStats();
+setInterval(chargerStats,30000);
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

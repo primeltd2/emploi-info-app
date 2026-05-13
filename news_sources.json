@@ -1,0 +1,44 @@
+[
+  {
+    "id": "src_international_france24",
+    "name": "France 24 - Monde",
+    "url": "https://www.france24.com/fr/rss",
+    "category": "international",
+    "created_at": "2026-05-08T00:00:00+01:00"
+  },
+  {
+    "id": "src_international_bbc_afrique",
+    "name": "BBC Afrique",
+    "url": "https://feeds.bbci.co.uk/afrique/rss.xml",
+    "category": "international",
+    "created_at": "2026-05-08T00:00:00+01:00"
+  },
+  {
+    "id": "src_afrique_africanews",
+    "name": "Africanews",
+    "url": "https://fr.africanews.com/feed/rss",
+    "category": "afrique",
+    "created_at": "2026-05-08T00:00:00+01:00"
+  },
+  {
+    "id": "src_afrique_jeuneafrique",
+    "name": "Jeune Afrique",
+    "url": "https://www.jeuneafrique.com/feed/",
+    "category": "afrique",
+    "created_at": "2026-05-08T00:00:00+01:00"
+  },
+  {
+    "id": "src_benin_24haubenin",
+    "name": "24 Heures au Bénin",
+    "url": "https://www.24haubenin.info/",
+    "category": "benin",
+    "created_at": "2026-05-08T00:00:00+01:00"
+  },
+  {
+    "id": "src_benin_banouto",
+    "name": "Banouto",
+    "url": "https://www.banouto.bj/",
+    "category": "benin",
+    "created_at": "2026-05-08T00:00:00+01:00"
+  }
+]

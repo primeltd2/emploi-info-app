@@ -1,0 +1,270 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | EMPLOI INFO - Services</title>
+
+<style>
+body{font-family:Arial;background:#111;color:#fff;min-height:100vh;padding:20px}
+
+input,textarea,button{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+  border:none;
+}
+
+textarea{min-height:90px}
+
+button{
+  background:gold;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.card{
+  background:rgba(0,0,0,.6);
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:20px;
+  border-left:5px solid gold;
+}
+
+.action-btn{
+  margin-top:10px;
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.delete{background:#FF4C4C;color:white;}
+
+.btn-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.btn-row input[type="text"]{
+  flex:2.5;
+}
+
+.btn-row input[type="url"]{
+  flex:3;
+}
+
+.btn-row input[type="color"]{
+  flex:0.6;
+  height:44px;
+}
+
+.btn-row button{
+  background:#ff4c4c;
+  color:#fff;
+}
+
+.preview{
+  background:rgba(255,255,255,.05);
+  border:1px dashed gold;
+  padding:15px;
+  border-radius:12px;
+  margin-top:15px;
+}
+
+.preview h4{color:gold;margin-bottom:5px}
+
+.preview .btn{
+  display:inline-block;
+  padding:8px 14px;
+  border-radius:8px;
+  color:#fff;
+  font-weight:bold;
+  margin:5px 5px 0 0;
+}
+
+.time{
+  font-size:12px;
+  opacity:.75;
+  margin-bottom:5px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox" style="max-width:350px;margin:auto">
+  <h2 style="color:gold;text-align:center">Admin Services</h2>
+  <input type="password" id="password" placeholder="Mot de passe admin">
+  <button onclick="login()">Connexion</button>
+  <p id="error" style="color:red;text-align:center"></p>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" style="display:none;max-width:900px;margin:auto">
+
+<h1>Services | Admin</h1>
+
+<div class="card">
+<h3>Ajouter un service</h3>
+
+<input type="text" id="titre" placeholder="Titre" oninput="updatePreview()">
+<textarea id="texte" placeholder="Description" oninput="updatePreview()"></textarea>
+<input type="file" id="img">
+
+<h4>Boutons personnalisÃ©s</h4>
+<div id="btnContainer"></div>
+
+<button onclick="ajouterBouton()" style="background:#00ccff;color:#000">
+âž• Ajouter un bouton
+</button>
+
+<!-- APERÃ‡U -->
+<div class="preview" id="previewBox">
+  <h4>AperÃ§u avant publication</h4>
+  <div id="previewContent">Remplis les champs pour voir lâ€™aperÃ§uâ€¦</div>
+</div>
+
+<button onclick="ajouterService()" style="margin-top:15px">
+Publier le service
+</button>
+</div>
+
+<h3>Services existants</h3>
+<div id="listeServices"></div>
+
+</div>
+
+<script>
+const ADMIN_PASSWORD="53535353"
+
+/* ===== LOGIN ===== */
+function login(){
+  if(password.value===ADMIN_PASSWORD){
+    loginBox.style.display="none"
+    adminPanel.style.display="block"
+    chargerServicesAdmin()
+  }else error.innerText="Mot de passe incorrect"
+}
+
+/* ===== AJOUT BOUTON ===== */
+function ajouterBouton(){
+  const div=document.createElement("div")
+  div.className="btn-row"
+  div.innerHTML=`
+    <input type="text" placeholder="Texte bouton" oninput="updatePreview()">
+    <input type="url" placeholder="Lien https://..." oninput="updatePreview()">
+    <input type="color" value="#ffd700" oninput="updatePreview()">
+    <button type="button" onclick="this.parentNode.remove();updatePreview()">âœ–</button>
+  `
+  btnContainer.appendChild(div)
+  updatePreview()
+}
+
+/* ===== APERÃ‡U ===== */
+function updatePreview(){
+  const titre=document.getElementById("titre").value
+  const texte=document.getElementById("texte").value
+  const btns=[]
+
+  document.querySelectorAll(".btn-row").forEach(row=>{
+    const i=row.querySelectorAll("input")
+    if(i[0].value && i[1].value){
+      btns.push({texte:i[0].value, lien:i[1].value, couleur:i[2].value})
+    }
+  })
+
+  let html=""
+  if(titre) html+=`<b>${titre}</b><br>`
+  if(texte) html+=`<pre>${texte}</pre>`
+
+  btns.forEach(b=>{
+    html+=`<a class="btn" style="background:${b.couleur}" href="#">${b.texte}</a>`
+  })
+
+  previewContent.innerHTML=html || "Remplis les champs pour voir lâ€™aperÃ§uâ€¦"
+}
+
+/* ===== TEMPS RELATIF ===== */
+function timeAgo(date){
+  const diff=Math.floor((Date.now()-new Date(date))/60000)
+  if(diff<1) return "Ã€ lâ€™instant"
+  if(diff<60) return `Il y a ${diff} min`
+  const h=Math.floor(diff/60)
+  if(h<24) return `Il y a ${h} h`
+  return `Il y a ${Math.floor(h/24)} jour(s)`
+}
+
+/* ===== CHARGER SERVICES ===== */
+async function chargerServicesAdmin(){
+  const res=await fetch("services.json?"+Date.now())
+  const data=await res.json()
+  listeServices.innerHTML=""
+
+  data.forEach((s,i)=>{
+    const div=document.createElement("div")
+    div.className="card"
+
+    const boutons=s.boutons?.map(b=>
+      `<a class="btn" style="background:${b.couleur}" href="${b.lien}" target="_blank">${b.texte}</a>`
+    ).join("")||""
+
+    div.innerHTML=`
+      <b>${s.titre}</b>
+      <div class="time">${timeAgo(s.date)}</div>
+      <pre>${s.texte}</pre>
+      ${boutons}
+      <br>
+      <button class="action-btn delete" onclick="supprimer(${i})">Supprimer</button>
+    `
+    listeServices.appendChild(div)
+  })
+}
+
+/* ===== AJOUT SERVICE ===== */
+function ajouterService(){
+  const titre=titreInput.value.trim()
+  const texte=texteInput.value.trim()
+  if(!titre||!texte) return alert("Champs obligatoires")
+
+  const boutons=[]
+  document.querySelectorAll(".btn-row").forEach(r=>{
+    const i=r.querySelectorAll("input")
+    if(i[0].value && i[1].value)
+      boutons.push({texte:i[0].value,lien:i[1].value,couleur:i[2].value})
+  })
+
+  const fd=new FormData()
+  fd.append("titre",titre)
+  fd.append("texte",texte)
+  fd.append("boutons",JSON.stringify(boutons))
+  if(img.files[0]) fd.append("img",img.files[0])
+
+  fetch("save_service.php",{method:"POST",body:fd})
+  .then(()=>location.reload())
+}
+
+/* ===== SUPPRIMER ===== */
+function supprimer(i){
+  if(!confirm("Supprimer ce service ?")) return
+  fetch("delete_service.php",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({index:i})
+  }).then(()=>chargerServicesAdmin())
+}
+
+/* alias inputs */
+const titreInput=document.getElementById("titre")
+const texteInput=document.getElementById("texte")
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

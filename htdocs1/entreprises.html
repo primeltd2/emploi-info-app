@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entreprises | EMPLOI INFO</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+  body{background:linear-gradient(135deg,#111,#3a2c00,#c9a227);color:white;min-height:100vh;padding:20px;}
+  .card{background:rgba(0,0,0,.6);padding:15px;border-radius:15px;border-left:5px solid gold;margin-bottom:20px;}
+  h1,h3{color:gold;margin-bottom:10px;text-align:center;}
+  input,button{width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:none;}
+  button{background:gold;color:black;font-weight:bold;cursor:pointer;}
+  ul{list-style:none;padding-left:0;}
+  li{background:rgba(255,215,0,0.1);padding:8px;border-radius:6px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+  .delete{background:#FF4C4C;color:white;padding:4px 8px;border:none;border-radius:6px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<h1>Gestion des entreprises</h1>
+
+<div class="card">
+  <h3>Ajouter une entreprise</h3>
+  <input type="text" id="newEntreprise" placeholder="Nom de l'entreprise">
+  <button onclick="ajouterEntreprise()">Ajouter</button>
+</div>
+
+<div class="card">
+  <h3>Entreprises existantes</h3>
+  <ul id="listeEntreprises"></ul>
+</div>
+
+<script>
+function chargerEntreprises(){
+  fetch("entreprises.json").then(r=>r.json()).then(data=>{
+    const ul=document.getElementById("listeEntreprises");
+    ul.innerHTML="";
+    data.forEach((ent,i)=>{
+      const li=document.createElement("li");
+      li.textContent=ent;
+      const del=document.createElement("button");
+      del.textContent="Supprimer"; del.className="delete";
+      del.onclick=()=>{supprimerEntreprise(i)};
+      li.appendChild(del);
+      ul.appendChild(li);
+    });
+  });
+}
+
+function ajouterEntreprise(){
+  const val=document.getElementById("newEntreprise").value.trim();
+  if(!val){alert("Nom requis"); return;}
+  fetch("entreprises.json").then(r=>r.json()).then(data=>{
+    data.push(val);
+    fetch("save_entreprises.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+      .then(()=>{document.getElementById("newEntreprise").value="";chargerEntreprises();});
+  });
+}
+
+function supprimerEntreprise(index){
+  fetch("entreprises.json").then(r=>r.json()).then(data=>{
+    data.splice(index,1);
+    fetch("save_entreprises.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+      .then(()=>chargerEntreprises());
+  });
+}
+
+chargerEntreprises();
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

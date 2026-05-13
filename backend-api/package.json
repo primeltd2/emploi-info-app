@@ -1,0 +1,23 @@
+{
+  "name": "emploi-info-backend-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "API REST progressive pour EMPLOI INFO.",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "zod": "^4.1.12"
+  }
+}

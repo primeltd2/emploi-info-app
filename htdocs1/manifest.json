@@ -1,0 +1,22 @@
+{
+  "name": "EMPLOI INFO",
+  "short_name": "EMPLOI",
+  "description": "Découvrez les dernières offres d'emploi, stages et formations. Publiez vos annonces facilement.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#c9a227",
+  "theme_color": "#c9a227",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

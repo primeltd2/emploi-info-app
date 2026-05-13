@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Chat | EMPLOI INFO</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: linear-gradient(135deg, #111, #3a2c00, #c9a227); color: white; min-height: 100vh; padding: 10px; }
+.chat-container { max-width: 800px; margin: 0 auto; background: rgba(0,0,0,0.8); border-radius: 15px; padding: 20px; }
+.messages { height: 400px; overflow-y: auto; border: 1px solid #555; border-radius: 10px; padding: 10px; margin-bottom: 20px; background: #222; }
+.message { margin-bottom: 10px; padding: 10px; border-radius: 10px; background: rgba(255,215,0,0.1); }
+.message.own { background: rgba(201,162,39,0.3); text-align: right; }
+.input-area { position: relative; display: flex; gap: 10px; align-items: flex-end; }
+textarea { flex: 1; min-height: 60px; max-height: 120px; padding: 10px; border-radius: 10px; border: none; resize: vertical; background: #333; color: white; font-size: 14px; }
+button { padding: 10px 15px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
+.send-btn { background: gold; color: black; }
+.plus-btn { background: #555; color: white; position: relative; }
+.plus-btn::after { content: '+'; font-size: 20px; }
+.attachment-menu { position: absolute; bottom: 54px; left: 0; width: 190px; display: flex; flex-direction: column-reverse; gap: 7px; background: #333; border-radius: 18px; padding: 8px; box-shadow: 0 18px 45px rgba(0,0,0,0.45); opacity: 0; pointer-events: none; transform: translateY(14px) scale(.96); transform-origin: bottom left; transition: opacity .18s ease, transform .18s ease; }
+.attachment-menu.show { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+.attachment-menu button { display: block; width: 100%; margin-bottom: 0; background: #666; color: white; text-align:left; }
+.attachment-menu button:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="chat-container">
+  <h2>💬 Chat Admin</h2>
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <button class="plus-btn" id="plusBtn" onclick="toggleAttachmentMenu()" title="Plus d'options"></button>
+    <div class="attachment-menu" id="attachmentMenu">
+      <button onclick="selectAttachment('image')">📷 Image</button>
+      <button onclick="selectAttachment('video')">🎥 Vidéo</button>
+      <button onclick="selectAttachment('audio')">🎤 Audio</button>
+      <button onclick="selectAttachment('file')">📄 Fichier</button>
+      <button onclick="selectAttachment('gif')">🎉 GIF</button>
+    </div>
+    <textarea id="messageInput" placeholder="Tapez votre message..." onkeydown="handleKeyDown(event)"></textarea>
+    <button class="send-btn" onclick="sendMessage()">Envoyer</button>
+  </div>
+</div>
+
+<script>
+let messages = [];
+
+function toggleAttachmentMenu() {
+  const menu = document.getElementById('attachmentMenu');
+  menu.classList.toggle('show');
+}
+
+function selectAttachment(type) {
+  // Ici, ouvrir le sélecteur de fichiers pour le type spécifié
+  const input = document.createElement('input');
+  input.type = 'file';
+  if (type === 'image') input.accept = 'image/*';
+  else if (type === 'video') input.accept = 'video/*';
+  else if (type === 'audio') input.accept = 'audio/*';
+  else if (type === 'gif') input.accept = 'image/gif';
+  else input.accept = '*/*';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Simuler l'envoi du fichier
+      addMessage('Fichier envoyé: ' + file.name, true);
+    }
+  };
+  input.click();
+  document.getElementById('attachmentMenu').classList.remove('show');
+}
+
+function handleKeyDown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if (text) {
+    addMessage(text, true);
+    input.value = '';
+  }
+}
+
+function addMessage(text, isOwn = false) {
+  const messagesDiv = document.getElementById('messages');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'message' + (isOwn ? ' own' : '');
+  messageDiv.textContent = text;
+  messagesDiv.appendChild(messageDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Simulation de réception de messages
+setInterval(() => {
+  if (Math.random() > 0.9) {
+    addMessage('Message automatique reçu', false);
+  }
+}, 5000);
+</script>
+</body>
+</html>

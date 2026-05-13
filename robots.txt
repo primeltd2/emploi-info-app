@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://emploi-info.page.gd/sitemap.xml

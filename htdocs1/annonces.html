@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrÃ©er une annonce | EMPLOI INFO</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+  body{background:linear-gradient(135deg,#111,#3a2c00,#c9a227);color:white;min-height:100vh;padding:20px;}
+  .card{background:rgba(0,0,0,.6);padding:15px;border-radius:15px;border-left:5px solid gold;margin-bottom:20px;}
+  .card h3{color:gold;margin-bottom:10px;text-align:center;}
+  textarea,input,select,button{width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:none;}
+  button{background:gold;color:black;font-weight:bold;cursor:pointer;}
+  .action-btn{margin-right:6px;padding:6px 12px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+  .validate{background:#4CAF50;color:white;}
+  .delete{background:#FF4C4C;color:white;}
+  #listePubliÃ©es, #listeAttente{margin-top:20px;}
+</style>
+</head>
+<body>
+
+<h1 style="text-align:center;margin-bottom:20px;">CrÃ©er une annonce</h1>
+
+<div class="card">
+  <h3>Formulaire annonce</h3>
+  <input type="text" id="titre" placeholder="Titre" required>
+  <select id="categorie"></select>
+
+  <div style="display:flex;gap:10px;margin-bottom:10px;">
+    <button type="button" onclick="mettreGras()">Gras</button>
+    <button type="button" onclick="mettreItalic()">Italique</button>
+    <select id="alignement">
+      <option value="left">Gauche</option>
+      <option value="center">CentrÃ©</option>
+      <option value="right">Droite</option>
+    </select>
+  </div>
+
+  <textarea id="texte" rows="6" placeholder="Description de l'annonce" required></textarea>
+  <input type="text" id="notice" placeholder="Notice (optionnelle)">
+  <input type="file" id="banniere">
+
+  <h4>Boutons d'action</h4>
+  <input type="text" id="btn1_text" placeholder="Texte bouton 1">
+  <select id="btn1_color">
+    <option value="#FFD700">Gold</option>
+    <option value="#FF4C4C">Red</option>
+    <option value="#4CAF50">Green</option>
+    <option value="#2196F3">Blue</option>
+  </select>
+  <input type="text" id="btn1_link" placeholder="Lien bouton 1">
+
+  <input type="text" id="btn2_text" placeholder="Texte bouton 2">
+  <select id="btn2_color">
+    <option value="#FFD700">Gold</option>
+    <option value="#FF4C4C">Red</option>
+    <option value="#4CAF50">Green</option>
+    <option value="#2196F3">Blue</option>
+  </select>
+  <input type="text" id="btn2_link" placeholder="Lien bouton 2">
+
+  <input type="text" id="btn3_text" placeholder="Texte bouton 3">
+  <select id="btn3_color">
+    <option value="#FFD700">Gold</option>
+    <option value="#FF4C4C">Red</option>
+    <option value="#4CAF50">Green</option>
+    <option value="#2196F3">Blue</option>
+  </select>
+  <input type="text" id="btn3_link" placeholder="Lien bouton 3">
+
+  <button type="button" onclick="publier()">Publier</button>
+</div>
+
+<h3 class="section-title">Annonces publiÃ©es</h3>
+<div id="listePubliÃ©es"></div>
+<h3 class="section-title">Annonces en attente</h3>
+<div id="listeAttente"></div>
+
+<script>
+/* === GLOBAL FUNCTIONS === */
+
+// Charger catÃ©gories
+function chargerCategories(){
+  fetch("categories.json")
+    .then(r=>r.json())
+    .then(data=>{
+      const select = document.getElementById("categorie");
+      select.innerHTML="";
+      data.forEach(cat=>{
+        const opt = document.createElement("option");
+        opt.value = cat; opt.textContent = cat;
+        select.appendChild(opt);
+      });
+    });
+}
+chargerCategories();
+
+// Mise en forme texte
+function mettreGras(){
+  const t=document.getElementById("texte");
+  const s=t.selectionStart, e=t.selectionEnd;
+  if(s===e){alert("SÃ©lectionne un texte"); return;}
+  t.value=t.value.substring(0,s)+"<b>"+t.value.substring(s,e)+"</b>"+t.value.substring(e);
+}
+function mettreItalic(){
+  const t=document.getElementById("texte");
+  const s=t.selectionStart, e=t.selectionEnd;
+  if(s===e){alert("SÃ©lectionne un texte"); return;}
+  t.value=t.value.substring(0,s)+"<i>"+t.value.substring(s,e)+"</i>"+t.value.substring(e);
+}
+
+/* Publier annonce */
+function publier(){
+  if(!document.getElementById("titre").value || !document.getElementById("texte").value){
+    alert("Champs obligatoires !");
+    return;
+  }
+  const boutons=[];
+  for(let i=1;i<=3;i++){
+    const t=document.getElementById(`btn${i}_text`).value;
+    const c=document.getElementById(`btn${i}_color`).value;
+    const l=document.getElementById(`btn${i}_link`).value;
+    if(t) boutons.push({texte:t,couleur:c,lien:l});
+  }
+
+  const fd=new FormData();
+  fd.append("titre", document.getElementById("titre").value);
+  fd.append("texte", document.getElementById("texte").value);
+  fd.append("notice", document.getElementById("notice").value);
+  fd.append("categorie", document.getElementById("categorie").value);
+  fd.append("alignement", document.getElementById("alignement").value);
+  fd.append("boutons", JSON.stringify(boutons));
+  const banniere=document.getElementById("banniere").files[0];
+  if(banniere) fd.append("banniere", banniere);
+
+  fetch("save.php",{method:"POST",body:fd})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status==="success"){
+        alert("Annonce publiÃ©e !");
+        document.querySelectorAll("input,textarea").forEach(el=>el.value="");
+        chargerAnnonces();
+      }
+    });
+}
+
+/* Charger annonces */
+function chargerAnnonces(){
+  fetch("data.json").then(r=>r.json()).then(data=>{
+    let pub="", att="";
+    data.forEach(a=>{
+      const styleAlign = a.alignement || 'left';
+      const html = `<div class="card" style="text-align:${styleAlign}">
+        <b>${a.titre}</b> <span style="font-size:12px;opacity:.8">${new Date(a.date).toLocaleString()}</span>
+        <p>${a.texte}</p>
+        ${a.notice?`<i>${a.notice}</i>`:""}
+        ${a.boutons?a.boutons.map(b=>`<a class="action-btn" style="background:${b.couleur};color:white;" href="${b.lien}" target="_blank">${b.texte}</a>`).join(''):""}
+        <div style="margin-top:10px;">
+          ${!a.publie?`<button class="action-btn validate" onclick="valider(${a.id})">Valider</button>`:""}
+          <button class="action-btn delete" onclick="supprimer(${a.id})">Supprimer</button>
+        </div>
+      </div>`;
+      if(a.publie) pub+=html; else att+=html;
+    });
+    document.getElementById("listePubliÃ©es").innerHTML=pub;
+    document.getElementById("listeAttente").innerHTML=att;
+  });
+}
+
+/* Valider annonce */
+function valider(id){
+  fetch("update_publish.php",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id:id,publie:true})
+  }).then(()=>chargerAnnonces());
+}
+
+/* Supprimer annonce */
+function supprimer(id){
+  if(!confirm("Supprimer cette annonce ?")) return;
+  fetch("update_publish.php",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id:id,supprimer:true})
+  }).then(()=>chargerAnnonces());
+}
+
+/* Charger annonces au dÃ©part */
+chargerAnnonces();
+</script>
+    <script>
+fetch("track_view.php");
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

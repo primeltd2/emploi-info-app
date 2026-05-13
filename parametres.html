@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paramètres | EMPLOI INFO</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+  body{background:linear-gradient(135deg,#111,#3a2c00,#c9a227);color:white;min-height:100vh;padding:20px;}
+  .card{background:rgba(0,0,0,.6);padding:15px;border-radius:15px;border-left:5px solid gold;margin-bottom:20px;}
+  h1,h3{color:gold;margin-bottom:10px;text-align:center;}
+  input,button{width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:none;}
+  button{background:gold;color:black;font-weight:bold;cursor:pointer;}
+</style>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227"></head>
+<body>
+
+<h1>Paramètres du site</h1>
+
+<div class="card">
+  <h3>Changer mot de passe admin</h3>
+  <input type="password" id="oldPwd" placeholder="Mot de passe actuel">
+  <input type="password" id="newPwd" placeholder="Nouveau mot de passe">
+  <button onclick="changerMotDePasse()">Valider</button>
+</div>
+
+<div class="card">
+  <h3>Informations du site</h3>
+  <input type="text" id="siteName" placeholder="Nom du site">
+  <input type="text" id="siteEmail" placeholder="Email contact">
+  <button onclick="sauvegarderParametres()">Sauvegarder</button>
+</div>
+
+<script>
+function changerMotDePasse(){
+  const oldP=oldPwd.value.trim();
+  const newP=newPwd.value.trim();
+  if(!oldP || !newP){alert("Remplir tous les champs");return;}
+  fetch("change_pwd.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({old:oldP,new:newP})})
+    .then(r=>r.json()).then(res=>alert(res.message));
+}
+
+function sauvegarderParametres(){
+  const nom=siteName.value.trim();
+  const email=siteEmail.value.trim();
+  fetch("save_params.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nom, email})})
+    .then(r=>r.json()).then(res=>alert(res.message));
+}
+</script>
+
+<script src="assets/content-media.js"></script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

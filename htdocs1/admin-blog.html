@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Blog - EMPLOI INFO</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{background:#111;color:white;min-height:100vh;display:flex;flex-direction:column;}
+header{padding:15px;background:rgba(0,0,0,0.7);text-align:center;}
+header h1{color:gold;font-size:24px;}
+.container{padding:20px;flex:1;max-width:900px;margin:auto;}
+input,textarea,button,select{padding:10px;margin-bottom:10px;border-radius:8px;border:none;width:100%;}
+button{cursor:pointer;font-weight:bold;}
+button.publish-btn{background:gold;color:black;}
+button.close-btn{background:red;color:white;}
+.card{background:rgba(0,0,0,0.55);border-left:5px solid gold;padding:15px;margin-bottom:15px;border-radius:10px;}
+.card h2{color:gold;}
+.card .date{font-size:12px;opacity:.8;margin-bottom:8px;}
+.card img{width:100%;border-radius:8px;margin-bottom:8px;}
+.card .btn{display:inline-block;margin:5px 5px 0 0;padding:8px 12px;border-radius:8px;font-weight:bold;color:white;cursor:pointer;}
+.overlay-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:100;}
+.overlay{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0);background:rgba(0,0,0,0.95);padding:20px;border-radius:12px;z-index:101;transition:transform 0.3s ease;}
+.overlay.show{transform:translate(-50%,-50%) scale(1);}
+#btnContainer div{display:flex;gap:6px;margin-bottom:6px;}
+#btnContainer input,#btnContainer select{flex:1;width:auto;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ADMIN BLOG - EMPLOI INFO</h1>
+</header>
+
+<div class="container">
+
+  <div id="loginSection">
+    <h2>Connexion Admin</h2>
+    <input type="password" id="adminPassword" placeholder="Mot de passe">
+    <button id="loginBtn" class="publish-btn">Se connecter</button>
+  </div>
+
+  <div id="blogSection" style="display:none;">
+    <button id="openFormBtn" class="publish-btn">Publier un nouvel article</button>
+
+    <h2 style="margin-top:20px;">Articles existants</h2>
+    <div id="blogList">
+      <p style="text-align:center;">Chargementâ€¦</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- FORMULAIRE ARTICLE -->
+<div class="overlay-bg" id="formOverlayBg"></div>
+<div class="overlay" id="formOverlay">
+  <h3>Publier un article</h3>
+  <input type="text" id="blogTitre" placeholder="Titre de l'article">
+  <textarea id="blogTexte" rows="6" placeholder="Contenu de l'article"></textarea>
+  <input type="file" id="blogImg" accept="image/*">
+
+  <h4>Boutons personnalisÃ©s</h4>
+  <div id="btnContainer"></div>
+  <button id="addBtn" class="publish-btn">Ajouter un bouton</button>
+
+  <button id="sendBlogBtn" class="publish-btn">Publier</button>
+  <button id="closeFormBtn" class="close-btn">Fermer</button>
+</div>
+
+<script>
+// ===== LOGIN ADMIN =====
+const loginSection = document.getElementById("loginSection");
+const blogSection = document.getElementById("blogSection");
+const loginBtn = document.getElementById("loginBtn");
+loginBtn.onclick = () => {
+  const pass = document.getElementById("adminPassword").value.trim();
+  if(pass === "53535353"){
+    loginSection.style.display="none";
+    blogSection.style.display="block";
+    chargerBlog();
+  } else {
+    alert("Mot de passe incorrect !");
+  }
+}
+
+// ===== OVERLAY =====
+const formOverlay = document.getElementById("formOverlay");
+const formOverlayBg = document.getElementById("formOverlayBg");
+document.getElementById("openFormBtn").onclick = ()=>{
+  formOverlayBg.style.display="block";
+  formOverlay.classList.add("show");
+}
+document.getElementById("closeFormBtn").onclick = ()=>{
+  formOverlay.classList.remove("show");
+  formOverlayBg.style.display="none";
+}
+
+// ===== CHARGER BLOG EXISTANT =====
+async function chargerBlog(){
+  try{
+    const res = await fetch("blog.json?ts="+Date.now());
+    const data = await res.json();
+    const blogList = document.getElementById("blogList");
+    blogList.innerHTML="";
+    if(data.length===0){ blogList.innerHTML="<p>Aucun article pour l'instant.</p>"; return; }
+    data.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    data.forEach(a=>{
+      const div = document.createElement("div");
+      div.className="card";
+      let btnHTML = "";
+      if(a.boutons){
+        a.boutons.forEach(b=>{
+          btnHTML += `<a class="btn" href="${b.lien}" target="_blank" style="background:${b.couleur}">${b.texte}</a>`;
+        });
+      }
+      div.innerHTML = `
+        ${a.img?`<img src="${a.img}">`:''}
+        <h2>${a.titre}</h2>
+        <div class="date">${new Date(a.date).toLocaleString('fr-FR')}</div>
+        <pre>${a.texte}</pre>
+        <div>${btnHTML}</div>
+      `;
+      blogList.appendChild(div);
+    });
+  }catch(e){console.error(e);}
+}
+
+// ===== BOUTONS DYNAMIQUES =====
+const btnContainer = document.getElementById("btnContainer");
+document.getElementById("addBtn").onclick = ()=>{
+  const div = document.createElement("div");
+  div.innerHTML = `
+    <input type="text" placeholder="Texte bouton">
+    <input type="text" placeholder="Lien bouton">
+    <select>
+      <option value="#FFD700">Gold</option>
+      <option value="#4CAF50">Green</option>
+      <option value="#FF4C4C">Red</option>
+      <option value="#2196F3">Blue</option>
+    </select>
+    <button type="button" class="close-btn" onclick="this.parentElement.remove()">X</button>
+  `;
+  btnContainer.appendChild(div);
+}
+
+// ===== PUBLIER ARTICLE AVEC IMAGE & BOUTONS =====
+document.getElementById("sendBlogBtn").onclick = async ()=>{
+  const titre = document.getElementById("blogTitre").value.trim();
+  const texte = document.getElementById("blogTexte").value.trim();
+  const imgFile = document.getElementById("blogImg").files[0];
+  if(!titre||!texte){alert("Veuillez remplir tous les champs."); return;}
+
+  let boutons = [];
+  btnContainer.querySelectorAll("div").forEach(d=>{
+    const t = d.querySelector("input:nth-child(1)").value.trim();
+    const l = d.querySelector("input:nth-child(2)").value.trim();
+    const c = d.querySelector("select").value;
+    if(t && l) boutons.push({texte:t,lien:l,couleur:c});
+  });
+
+  const formData = new FormData();
+  formData.append("titre", titre);
+  formData.append("texte", texte);
+  formData.append("boutons", JSON.stringify(boutons));
+  if(imgFile) formData.append("image", imgFile);
+
+  try{
+    const res = await fetch("submit_blog.php", {method:"POST", body:formData});
+    if(res.ok){
+      alert("Article publiÃ© avec succÃ¨s !");
+      formOverlay.classList.remove("show");
+      formOverlayBg.style.display="none";
+      document.getElementById("blogTitre").value="";
+      document.getElementById("blogTexte").value="";
+      document.getElementById("blogImg").value="";
+      btnContainer.innerHTML="";
+      chargerBlog();
+    } else {alert("Erreur lors de la publication.");}
+  } catch(e){console.error(e); alert("Erreur lors de la publication.");}
+}
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

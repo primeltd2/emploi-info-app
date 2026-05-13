@@ -1,0 +1,332 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Détails Publicité | EMPLOI INFO</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{
+  background:linear-gradient(135deg,#000,#3a2c00,#c9a227);
+  color:white;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+header{
+  text-align:center;
+  padding:20px;
+  background:rgba(0,0,0,0.6);
+  border-bottom:3px solid gold;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+
+header h1{color:gold;font-size:24px;}
+header img{
+  width:54px;
+  height:54px;
+  border-radius:12px;
+  object-fit:cover;
+  border:1px solid rgba(255,215,0,.35);
+}
+
+.container{
+  flex:1;
+  padding:20px;
+  max-width:900px;
+  margin:auto;
+  width:100%;
+}
+
+.card{
+  background:rgba(0,0,0,0.7);
+  border-radius:15px;
+  padding:25px;
+  border-left:5px solid gold;
+  box-shadow:0 4px 10px rgba(0,0,0,0.4);
+}
+
+.card img, .card video{
+  width:100%;
+  max-height:400px;
+  object-fit:cover;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+.card h2{
+  color:gold;
+  font-size:28px;
+  margin-bottom:15px;
+  text-align:center;
+}
+
+.card p{
+  font-size:16px;
+  line-height:1.6;
+  margin-bottom:15px;
+  white-space:pre-wrap;
+}
+
+.btn{
+  display:inline-block;
+  padding:12px 20px;
+  border-radius:8px;
+  text-decoration:none;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  margin:10px 5px;
+  transition:0.3s;
+}
+
+.btn:hover{
+  transform:scale(1.05);
+}
+
+.btn-back{
+  background:gold;
+  color:black;
+}
+
+.btn-visit{
+  background:#4CAF50;
+  color:white;
+}
+
+.btn-share{
+  background:#1E90FF;
+  color:white;
+}
+
+footer{
+  text-align:center;
+  padding:15px;
+  background:rgba(0,0,0,0.6);
+  font-size:14px;
+  border-top:3px solid gold;
+}
+
+footer a{
+  color:gold;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+#sharePopup{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%) scale(0);
+  background:rgba(0,0,0,0.95);
+  padding:25px;
+  border-radius:15px;
+  z-index:10000;
+  text-align:center;
+  transition: transform 0.4s;
+  border:3px solid gold;
+}
+
+#sharePopup.show{
+  display:block;
+  transform:translate(-50%, -50%) scale(1);
+}
+
+#sharePopup h3{
+  color:gold;
+  margin-bottom:15px;
+}
+
+#sharePopup button{
+  margin:5px;
+  padding:10px 15px;
+  border-radius:8px;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+  color:white;
+}
+
+#shareOverlay{
+  display:none;
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);
+  z-index:9999;
+}
+
+.top-btn{
+  position:fixed;
+  top:15px;
+  left:15px;
+  background:gold;
+  color:black;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:bold;
+  text-decoration:none;
+  z-index:10000;
+  cursor:pointer;
+}
+
+.button-group{
+  text-align:center;
+  margin-top:20px;
+}
+</style>
+<link rel="stylesheet" href="assets/interactions.css">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227"></head>
+<body>
+
+<a href="index.html" class="top-btn">Retour Retour</a>
+
+<header>
+<img src="logo.png" alt="EMPLOI INFO">
+<h1>Détails de la publicité</h1>
+</header>
+
+<div class="container">
+<div class="card" id="detailCard">
+<p style="text-align:center;">Chargement…</p>
+</div>
+<div class="community-card" id="communitySection" data-item-type="publicite"></div>
+</div>
+
+<!-- Overlay sombre -->
+<div id="shareOverlay"></div>
+
+<!-- Popup Partage -->
+<div id="sharePopup">
+<h3>Partager cette publicité</h3>
+<button style="background:#4267B2;" id="shareFB">Facebook</button>
+<button style="background:#25D366;" id="shareWA">WhatsApp</button>
+<button style="background:#1DA1F2;" id="shareTwitter">Twitter</button>
+<button style="background:#808080;" id="copyLink">Copier le lien</button>
+<button style="background:red;margin-top:10px;" id="closeShare">Fermer</button>
+</div>
+
+<footer>
+Suivez-nous :
+<a href="https://www.facebook.com/share/1DxuasNToY/" target="_blank">Facebook</a> |
+<a href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23" target="_blank">WhatsApp</a>
+</footer>
+
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const card = document.getElementById("detailCard");
+let lastHash = "";
+
+function renderPublicite(pub){
+  const hash = JSON.stringify(pub);
+  if(hash === lastHash) return;
+  lastHash = hash;
+
+  let mediaHTML = '';
+  if(pub.type === 'video') {
+    mediaHTML = `<video style="width:100%;max-height:400px;object-fit:cover;border-radius:10px;" controls><source src="${pub.fichier.startsWith('http') ? pub.fichier : 'https://emploi-info.page.gd/' + pub.fichier}"></video>`;
+  } else {
+    mediaHTML = `<img src="${pub.fichier}" alt="${pub.titre}" style="width:100%;max-height:400px;object-fit:cover;border-radius:10px;">`;
+  }
+
+  card.innerHTML = `
+    ${mediaHTML}
+    <h2>${pub.titre}</h2>
+    <p style="color:gold;font-size:14px;">Date : ${new Date(pub.date).toLocaleString()}</p>
+    <p>${pub.description}</p>
+    <div class="button-group">
+      <button id="mainShareBtn" class="btn btn-share">Partager</button>
+      ${pub.lien ? `<a href="${pub.lien}" class="btn btn-visit" target="_blank" rel="noopener">Visiter le site</a>` : ''}
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="index.html" class="btn btn-back">Retour à l'accueil</a>
+    </div>
+  `;
+
+  const mainShareBtn = card.querySelector("#mainShareBtn");
+  const sharePopup = document.getElementById("sharePopup");
+  const shareOverlay = document.getElementById("shareOverlay");
+  const closeShare = document.getElementById("closeShare");
+
+  if(mainShareBtn) {
+    mainShareBtn.onclick = () => {
+      sharePopup.classList.add("show");
+      shareOverlay.style.display = "block";
+    };
+  }
+
+  closeShare.onclick = () => {
+    sharePopup.classList.remove("show");
+    shareOverlay.style.display = "none";
+  };
+
+  shareOverlay.onclick = closeShare;
+
+  document.getElementById("shareFB").onclick = () => { 
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + location.href); 
+    closeShare.click(); 
+  };
+  
+  document.getElementById("shareWA").onclick = () => { 
+    window.open('https://wa.me/?text=' + encodeURIComponent(location.href)); 
+    closeShare.click(); 
+  };
+  
+  document.getElementById("shareTwitter").onclick = () => { 
+    window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(location.href)); 
+    closeShare.click(); 
+  };
+  
+  document.getElementById("copyLink").onclick = () => { 
+    navigator.clipboard.writeText(location.href).then(() => alert("Lien copié !"));
+    closeShare.click(); 
+  };
+}
+
+function isActivePub(pub){
+  const published = pub && (pub.publie === true || pub.publie === 1 || pub.publie === "1" || String(pub.publie).toLowerCase() === "true");
+  if(!published) return false;
+  if(!pub.expires_at) return true;
+  return new Date(pub.expires_at).getTime() >= Date.now();
+}
+
+function loadData(){
+  fetch("ads.json?ts=" + Date.now(), {cache:"no-store"})
+  .then(r => r.json())
+  .then(data => {
+    const pub = data.find(p => p.id == id && isActivePub(p));
+    if(pub) {
+      renderPublicite(pub);
+    } else {
+      card.innerHTML = '<p style="color:red;text-align:center;">Publicité non trouvée</p>';
+    }
+  })
+  .catch(e => {
+    console.error("Erreur ads.json", e);
+    card.innerHTML = '<p style="color:red;text-align:center;">Erreur de chargement</p>';
+  });
+}
+
+loadData();
+</script>
+<script src="assets/interactions.js"></script>
+<script src="assets/access-control.js"></script>
+<script src="/assets/site-menu.js"></script>
+<script src="assets/content-media.js"></script>
+</body>
+</html>
+

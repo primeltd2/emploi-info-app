@@ -1,0 +1,72 @@
+Options -Indexes
+AddDefaultCharset UTF-8
+AddType "text/html; charset=UTF-8" .html
+AddType "application/javascript; charset=UTF-8" .js
+AddType "application/json; charset=UTF-8" .json
+
+AddType application/vnd.android.package-archive .apk
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Redirect old public URLs with extensions to clean canonical URLs.
+  RewriteCond %{REQUEST_METHOD} ^(?:GET|HEAD)$ [NC]
+  RewriteCond %{REQUEST_URI} !/(download_app|download_admin_app)\.php$ [NC]
+  RewriteCond %{REQUEST_URI} !/(open-app|open-admin-app)(?:\.html)?$ [NC]
+  RewriteCond %{THE_REQUEST} \s/+(.+?)\.(html|php)(?:[?\s]|$) [NC]
+  RewriteRule ^(.+)\.(html|php)$ /$1 [R=301,L,NE]
+
+  # Serve existing files from clean URLs without changing the visible URL.
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{HTTP_ACCEPT} json [NC]
+  RewriteCond %{DOCUMENT_ROOT}/$1.json -f
+  RewriteRule ^(.+?)/?$ $1.json [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+  RewriteRule ^(.+?)/?$ $1.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+  RewriteRule ^(.+?)/?$ $1.php [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{DOCUMENT_ROOT}/$1.json -f
+  RewriteRule ^(.+?)/?$ $1.json [L]
+</IfModule>
+
+<FilesMatch "^(users|applications|login_attempts|admins|blocked_visitors|push_subscriptions|android_tokens|android_push_log|notification_sent|firebase_service_account|firebase_access_token|contact_messages|smtp_config|last_reset).*\.(json|php|txt)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^google-services\.json$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^partners\.json$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(bak|backup|old|sql|log|ini|env)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  <Files "manifest.json">
+    Header set Content-Type "application/manifest+json; charset=utf-8"
+    Header set Cache-Control "no-cache"
+  </Files>
+
+  <Files "sw.js">
+    Header set Service-Worker-Allowed "/"
+    Header set Cache-Control "no-cache"
+  </Files>
+</IfModule>

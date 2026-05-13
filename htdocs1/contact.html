@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Contact | EMPLOI INFO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@keyframes zoomIn { 0% {transform: scale(0);} 100% {transform: scale(1);} }
+@keyframes bgAnimation { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+body {
+    margin:0;
+    font-family: Arial, sans-serif;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg, #1e1e1e, #111, #222);
+    background-size: 300% 300%;
+    animation: bgAnimation 20s ease infinite;
+    overflow:hidden;
+}
+
+.contact-card {
+    background: rgba(0,0,0,0.95);
+    padding: 40px 30px;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    max-width: 450px;
+    width: 90%;
+    color: #fff;
+    animation: zoomIn 0.5s ease;
+    position: relative;
+}
+
+.contact-card h3 {
+    text-align:center;
+    margin-bottom:25px;
+    font-size:2em;
+    color: gold;
+}
+
+.contact-card input,
+.contact-card textarea {
+    width:100%;
+    padding:12px;
+    margin-bottom:14px;
+    border-radius:10px;
+    border:none;
+    outline:none;
+    font-size:1em;
+    background:#222;
+    color:#fff;
+}
+
+.contact-card input::placeholder,
+.contact-card textarea::placeholder { color:#aaa; }
+
+.contact-card button {
+    width:48%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+    color:#111;
+    margin-top:8px;
+}
+
+.contact-card button.whatsapp { background:#25D366; }
+.contact-card button.whatsapp:hover { background:#1ebe5d; }
+.contact-card button.gmail { background:#D44638; margin-left:4%; }
+.contact-card button.gmail:hover { background:#c33b2f; }
+
+.modal {
+    display:none;
+    position:fixed;
+    z-index:10;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background:#111;
+    margin: 10% auto;
+    padding:25px;
+    border-radius:14px;
+    max-width:400px;
+    text-align:left;
+    color:#fff;
+    font-size:1em;
+    box-shadow:0 6px 25px rgba(0,0,0,0.5);
+}
+
+.modal-content h4 {
+    text-align:center;
+    color:gold;
+    margin-bottom:15px;
+}
+
+.modal-content p {
+    white-space: pre-wrap;
+    background: #222;
+    padding:10px;
+    border-radius:8px;
+    line-height:1.5;
+}
+
+.modal-buttons {
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+}
+
+.modal-buttons button {
+    width:48%;
+    padding:12px 0;
+    font-weight:bold;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.modal-buttons button.confirm { background: gold; color:#111; }
+.modal-buttons button.confirm:hover { background:#ffcc00; }
+
+.modal-buttons button.modify { background:#555; color:#fff; }
+.modal-buttons button.modify:hover { background:#777; }
+</style>
+</head>
+<body>
+
+<div class="contact-card">
+    <h3>Contactez-nous</h3>
+    <input type="text" id="name" placeholder="Votre nom complet">
+    <input type="email" id="email" placeholder="Votre adresse email">
+    <input type="text" id="whatsapp" placeholder="Votre numÃ©ro WhatsApp (+229...)">
+    <textarea id="message" rows="5" placeholder="Votre message"></textarea>
+    <input type="text" id="gmailSubject" placeholder="Objet (obligatoire pour Gmail)">
+    <div style="display:flex; justify-content: space-between;">
+        <button class="whatsapp" onclick="sendWhatsApp()">WhatsApp</button>
+        <button class="gmail" onclick="sendGmail()">Gmail</button>
+    </div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h4>Message prÃªte Ã  l'envoi</h4>
+        <p id="modalMessage"></p>
+        <div class="modal-buttons">
+            <button class="confirm" onclick="confirmSend()">Confirmer et envoyer</button>
+            <button class="modify" onclick="modifyMessage()">Modifier</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const modal = document.getElementById('modal');
+const modalMessage = document.getElementById('modalMessage');
+let sendMethod = null;
+let preparedMessage = "";
+let preparedNumber = "";
+let preparedSubject = "";
+
+const adminEmail = "kodjaouelisee1234@gmail.com"; // Adresse Gmail administration
+
+function validateFields(name,email,whatsapp,message){
+    if(!name || !email || !whatsapp || !message){
+        alert("Veuillez remplir tous les champs !");
+        return false;
+    }
+    if(!/^\+\d{6,15}$/.test(whatsapp)){
+        alert("Le numÃ©ro WhatsApp doit inclure l'indicatif international (ex: +229...)");
+        return false;
+    }
+    return true;
+}
+
+function formatMessage(subject,name,email,whatsapp,message){
+    return `Objet: ${subject}\n\nMadame, Monsieur,\n\nJe me permets de vous contacter pour la raison suivante :\n\n${message}\n\nMes coordonnÃ©es sont les suivantes :\nNom: ${name}\nEmail: ${email}\nNumÃ©ro WhatsApp: ${whatsapp}\n\nJe vous remercie pour l'attention portÃ©e Ã  ma demande et reste dans lâ€™attente de votre retour.\n\nCordialement.`;
+}
+
+function sendWhatsApp(){
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const whatsapp = document.getElementById("whatsapp").value.trim();
+    const message = document.getElementById("message").value.trim();
+    if(!validateFields(name,email,whatsapp,message)) return;
+
+    preparedMessage = formatMessage("Contact via EMPLOI INFO",name,email,whatsapp,message);
+    preparedNumber = whatsapp.replace(/\D/g,'');
+    sendMethod = "whatsapp";
+    modalMessage.innerText = preparedMessage;
+    modal.style.display = "block";
+}
+
+function sendGmail(){
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const whatsapp = document.getElementById("whatsapp").value.trim();
+    const message = document.getElementById("message").value.trim();
+    const subject = document.getElementById("gmailSubject").value.trim();
+
+    if(!validateFields(name,email,whatsapp,message)) return;
+    if(!subject){
+        alert("Veuillez renseigner l'objet pour l'envoi Gmail !");
+        return;
+    }
+
+    preparedMessage = formatMessage(subject,name,email,whatsapp,message);
+    preparedSubject = subject;
+    sendMethod = "gmail";
+    modalMessage.innerText = preparedMessage;
+    modal.style.display = "block";
+}
+
+function confirmSend(){
+    if(sendMethod === "whatsapp"){
+        const phoneNumber = preparedNumber;
+        const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(preparedMessage)}`;
+        window.open(url,"_blank");
+    } else if(sendMethod === "gmail"){
+        const mailto = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(adminEmail)}&su=${encodeURIComponent(preparedSubject)}&body=${encodeURIComponent(preparedMessage)}`;
+        window.open(mailto,"_blank");
+    }
+
+    document.getElementById("name").value="";
+    document.getElementById("email").value="";
+    document.getElementById("whatsapp").value="";
+    document.getElementById("message").value="";
+    document.getElementById("gmailSubject").value="";
+    modal.style.display="none";
+    sendMethod=null;
+    preparedMessage="";
+    preparedSubject="";
+}
+
+function modifyMessage(){
+    modal.style.display="none"; // fermer le modal pour modifier
+}
+
+window.onclick = function(event){
+    if(event.target==modal){
+        modal.style.display="none";
+    }
+}
+
+fetch("track_view.php");
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

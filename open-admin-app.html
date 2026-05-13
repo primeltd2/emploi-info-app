@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#151515">
+<title>Ouvrir ADMIN EMPLOI INFO</title>
+<script>
+(function(){
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  if(isAndroid && !isIOS) return;
+  const params = new URLSearchParams(location.search);
+  const rawTarget = params.get("url") || "admin.html";
+  const target = new URL(rawTarget, location.href);
+  location.replace(target.href);
+})();
+</script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#101010,#31270b,#c9a227);color:#fff;font-family:Arial,sans-serif;padding:18px}
+.shell{width:min(600px,100%);background:rgba(17,17,17,.94);border:1px solid rgba(255,215,0,.32);border-radius:8px;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.brand img{width:64px;height:64px;border-radius:8px;object-fit:contain;background:#fff;padding:6px}
+.brand strong{display:block;font-size:22px;color:#fff}
+.brand span{display:block;color:#ffd86b;font-size:14px;margin-top:3px}
+h1{font-size:25px;line-height:1.2;margin:0 0 10px;color:#ffd86b}
+p{margin:0;color:#f4f4f4;line-height:1.55}
+.actions{display:grid;gap:10px;margin-top:22px}
+a,button{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;border:0;border-radius:8px;padding:13px 14px;font-weight:900;text-decoration:none;cursor:pointer;font-size:15px}
+.primary{background:linear-gradient(180deg,#ffdf7a,#d8a414);color:#111}
+.secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,215,0,.18)}
+.hint{margin-top:14px;padding:12px;border-radius:8px;background:rgba(255,215,0,.09);border:1px solid rgba(255,215,0,.16);color:#f4f4f4;font-size:14px;overflow-wrap:anywhere}
+.status{margin-top:12px;color:#ffd86b;font-weight:800;font-size:14px}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="brand">
+    <img src="logo.png" alt="ADMIN EMPLOI INFO">
+    <div>
+      <strong>ADMIN EMPLOI INFO</strong>
+      <span>Acces administrateur Android</span>
+    </div>
+  </div>
+  <h1>Installez l'application admin</h1>
+  <p>ADMIN EMPLOI INFO n'est pas sur Play Store. Si l'application n'est pas encore installee, le telechargement direct de l'APK admin demarre automatiquement.</p>
+  <div class="actions">
+    <a class="primary" id="downloadApk" href="downloads/admin-emploi-info.apk" download="ADMIN-EMPLOI-INFO.apk" rel="noopener">Telecharger et installer l'APK admin</a>
+    <button class="primary" id="openApp" type="button">Ouvrir ADMIN EMPLOI INFO</button>
+  </div>
+  <p class="hint">Lien a ouvrir apres installation : <span id="targetLabel"></span></p>
+  <p class="status" id="installStatus">Verification de l'application admin...</p>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const rawTarget = params.get("url") || "admin.html";
+const target = new URL(rawTarget, location.href);
+const packageName = "com.emploiinfo.admin";
+const appScheme = "adminemploiinfo";
+const apkDownloadUrl = new URL("downloads/admin-emploi-info.apk", location.href).href;
+const appUrl = appScheme + "://open?url=" + encodeURIComponent(target.href);
+const ua = navigator.userAgent || "";
+const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(ua);
+const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(location.hostname);
+const statusEl = document.getElementById("installStatus");
+const targetLabel = document.getElementById("targetLabel");
+let downloadStarted = false;
+let appOpenAttemptAt = 0;
+let autoOpenTimer = null;
+let autoOpenUntil = 0;
+
+targetLabel.textContent = target.pathname + target.search + target.hash;
+
+if(isIOS || !isAndroid){
+  location.replace(target.href);
+}else{
+  function openApp(){
+    statusEl.textContent = "Ouverture de l'application admin...";
+    appOpenAttemptAt = Date.now();
+    location.href = appUrl;
+  }
+
+  function tryOpenInstalledApp(){
+    statusEl.textContent = "Verification de l'installation, ouverture automatique...";
+    appOpenAttemptAt = Date.now();
+    location.href = appUrl;
+  }
+
+  function startAutoOpenAfterInstall(){
+    autoOpenUntil = Date.now() + 300000;
+    if(autoOpenTimer) clearInterval(autoOpenTimer);
+    autoOpenTimer = setInterval(() => {
+      if(Date.now() > autoOpenUntil){
+        clearInterval(autoOpenTimer);
+        autoOpenTimer = null;
+        statusEl.textContent = "Installation terminee ? Appuyez sur Ouvrir ADMIN EMPLOI INFO.";
+        return;
+      }
+      if(!document.hidden) tryOpenInstalledApp();
+    }, 7000);
+  }
+
+  function openWhenPageReturns(){
+    if(downloadStarted && !document.hidden && Date.now() <= autoOpenUntil){
+      setTimeout(tryOpenInstalledApp, 800);
+    }
+  }
+
+  function triggerDownload(){
+    if(downloadStarted || !isAndroid || isIOS) return;
+    downloadStarted = true;
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.href = apkDownloadUrl;
+    downloadAnchor.download = "ADMIN-EMPLOI-INFO.apk";
+    downloadAnchor.rel = "noopener";
+    downloadAnchor.style.display = "none";
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    document.body.removeChild(downloadAnchor);
+  }
+
+  async function ensureAndroidInstallFlow(){
+    openApp();
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    if(document.hidden) return;
+    statusEl.textContent = "Application admin non installee. Telechargement direct de l'APK en cours...";
+    triggerDownload();
+    startAutoOpenAfterInstall();
+    setTimeout(() => {
+      if(!document.hidden){
+        statusEl.textContent = "Installez l'APK admin. Cette page ouvrira l'application automatiquement apres l'installation.";
+      }
+    }, 2000);
+  }
+
+  document.getElementById("openApp").addEventListener("click", () => {
+    try{
+      tryOpenInstalledApp();
+    }catch(e){
+      openApp();
+    }
+  });
+  document.getElementById("downloadApk").addEventListener("click", event => {
+    event.preventDefault();
+    statusEl.textContent = "Telechargement de l'APK admin en cours...";
+    downloadStarted = false;
+    triggerDownload();
+    startAutoOpenAfterInstall();
+    setTimeout(() => {
+      if(!document.hidden){
+        statusEl.textContent = "Installez l'APK admin. Cette page ouvrira l'application automatiquement apres l'installation.";
+      }
+    }, 2000);
+  });
+
+  document.addEventListener("visibilitychange", openWhenPageReturns);
+  window.addEventListener("focus", openWhenPageReturns);
+  window.addEventListener("pageshow", openWhenPageReturns);
+
+  if(!isLocalHost) setTimeout(() => ensureAndroidInstallFlow(), 650);
+}
+</script>
+</body>
+</html>

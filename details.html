@@ -1,0 +1,994 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Détails | EMPLOI INFO</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{
+  background:linear-gradient(135deg,#000,#3a2c00,#c9a227);
+  color:white;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+header{
+  padding:15px;
+  background:rgba(0,0,0,0.6);
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+header img{
+  width:54px;
+  height:54px;
+  border-radius:12px;
+  object-fit:cover;
+  border:1px solid rgba(255,215,0,.35);
+}
+
+h1{color:gold}
+
+.card{
+  margin:20px;
+  padding:20px;
+  background:rgba(0,0,0,0.6);
+  border-radius:15px;
+  border:2px solid gold;
+}
+
+.card img,
+.card video{
+  width:100%;
+  border-radius:10px;
+  margin-bottom:10px;
+  background:#000;
+}
+
+.card h2{text-align:center;margin-bottom:10px}
+
+.card p{
+  text-align:center;
+  white-space:pre-wrap;
+  margin-bottom:10px;
+}
+.annonce-rich-content{
+  max-width:760px;
+  margin:0 auto 12px;
+  text-align:left;
+  line-height:1.75;
+  overflow-wrap:anywhere;
+}
+.annonce-rich-content h1,
+.annonce-rich-content h2,
+.annonce-rich-content h3,
+.annonce-rich-content h4{
+  color:gold;
+  margin:18px 0 10px;
+  text-align:center;
+}
+.annonce-rich-content p{white-space:normal;text-align:inherit;margin:0 0 12px}
+.annonce-rich-content ul,
+.annonce-rich-content ol{
+  margin:0 0 14px 22px;
+  text-align:left;
+}
+.annonce-rich-content li{margin:6px 0}
+.annonce-rich-content a{color:#ffe27a;font-weight:bold;word-break:break-word}
+.annonce-rich-content hr{border:0;border-top:1px solid rgba(255,215,0,.35);margin:18px 0}
+
+.recent-item{
+  min-width:200px;
+  background:rgba(255,255,255,0.1);
+  padding:10px;
+  border-radius:8px;
+  text-align:center;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.recent-item:hover{
+  background:rgba(255,255,255,0.2);
+}
+
+.recent-item img,
+.recent-item video{
+  width:100%;
+  height:100px;
+  object-fit:cover;
+  border-radius:5px;
+  margin-bottom:5px;
+  background:#000;
+}
+
+.recent-item h4{
+  font-size:14px;
+  margin-bottom:5px;
+  color:gold;
+}
+
+.recent-item p{
+  font-size:12px;
+  color:#ccc;
+}
+
+.btn,button{
+  display:inline-block;
+  margin:5px;
+  padding:8px 12px;
+  border-radius:8px;
+  text-decoration:none;
+  color:white;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+}
+
+/* Carte Zoom pour partager */
+#sharePopup{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%) scale(0);
+  background:rgba(0,0,0,0.95);
+  padding:25px;
+  border-radius:15px;
+  z-index:10000;
+  text-align:center;
+  transition: transform 0.4s cubic-bezier(0.25,0.8,0.25,1);
+}
+#sharePopup.show{
+  display:block;
+  transform:translate(-50%, -50%) scale(1);
+}
+#sharePopup button{
+  margin:5px;
+  padding:10px 15px;
+  border-radius:8px;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+}
+
+/* Overlay sombre derrière le zoom */
+#shareOverlay{
+  display:none;
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6);
+  z-index:9999;
+}
+
+footer{
+  text-align:center;
+  padding:15px;
+  background:rgba(0,0,0,0.6);
+  font-size:18px;
+}
+
+footer a{
+  color:gold;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.top-left-btn{
+  position:fixed;
+  top:15px;
+  left:15px;
+  background:gold;
+  color:black;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:bold;
+  text-decoration:none;
+  z-index:10000;
+}
+
+/* Carte NB flottante */
+.floating-card{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:gold;
+  color:red;
+  padding:15px 25px;
+  border-radius:15px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.5);
+  animation:floatY 2s ease-in-out infinite alternate;
+  z-index:9999;
+}
+.floating-card.nb-alert{
+  border:3px solid #fff200;
+  animation:floatY 2s ease-in-out infinite alternate, nbBlink .75s steps(1,end) infinite!important;
+}
+.floating-card.nb-alert.nb-red{
+  background:#d71920!important;
+  color:#fff200!important;
+  border-color:#fff200!important;
+  box-shadow:0 5px 15px rgba(0,0,0,0.5),0 0 24px rgba(255,0,0,.8)!important;
+}
+.floating-card.nb-alert.nb-yellow{
+  background:gold!important;
+  color:red!important;
+  border-color:red!important;
+  box-shadow:0 5px 15px rgba(0,0,0,0.5),0 0 20px rgba(255,215,0,.8)!important;
+}
+@keyframes nbBlink{
+  0%,100%{
+    background-color:gold;
+    color:red;
+    border-color:red;
+    box-shadow:0 5px 15px rgba(0,0,0,0.5),0 0 0 rgba(255,215,0,0);
+  }
+  50%{
+    background-color:#d71920;
+    color:#fff200;
+    border-color:#fff200;
+    box-shadow:0 5px 15px rgba(0,0,0,0.5),0 0 22px rgba(255,0,0,.7);
+  }
+}
+
+.details-welcome-overlay{
+  position:fixed;
+  inset:0;
+  z-index:130000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.72);
+}
+.details-welcome-overlay.show{display:flex}
+.details-welcome-card{
+  width:min(94vw,560px);
+  background:linear-gradient(180deg,#1b1b1b,#090909);
+  border:1px solid rgba(255,215,0,.4);
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
+  text-align:left;
+}
+.details-welcome-card h2{
+  color:gold;
+  text-align:center;
+  margin-bottom:12px;
+}
+.details-welcome-card p{
+  line-height:1.65;
+  margin-bottom:12px;
+  color:#f7f1df;
+}
+.details-warning{
+  margin:14px 0;
+  padding:14px;
+  border-radius:12px;
+  background:rgba(220,38,38,.18);
+  border:1px solid rgba(255,80,80,.55);
+  color:#ffdede;
+  font-weight:bold;
+  line-height:1.55;
+}
+.details-warning strong{
+  display:block;
+  color:#ff5b5b;
+  margin-bottom:6px;
+}
+.details-welcome-card button{
+  width:100%;
+  margin-top:8px;
+  background:gold;
+  color:#111;
+}
+
+@keyframes floatY {
+  0%{transform:translateY(0);}
+  50%{transform:translateY(-12px);}
+  100%{transform:translateY(0);}
+}
+
+/* Carte pub flottante */
+.floating-ad-card{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%) translateY(120%);
+  width:min(92vw, 420px);
+  max-height:35vh;
+  z-index:120000;
+  opacity:0;
+  pointer-events:none;
+  transition:transform .7s cubic-bezier(.22,.9,.3,1), opacity .45s ease;
+}
+
+.floating-ad-card.show{
+  transform:translateX(-50%) translateY(-15vh);
+  opacity:1;
+  pointer-events:auto;
+}
+
+.floating-ad-inner{
+  background:
+    radial-gradient(circle at top right, rgba(255,215,0,0.14), transparent 35%),
+    linear-gradient(180deg, #1b1b1b 0%, #101010 100%);
+  border:1px solid rgba(255,215,0,0.28);
+  border-left:5px solid gold;
+  border-radius:22px;
+  box-shadow:
+    0 20px 45px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,0.03) inset;
+  padding:14px;
+  color:white;
+  overflow:hidden;
+  backdrop-filter:blur(4px);
+}
+
+.floating-ad-media{
+  width:100%;
+  height:168px;
+  object-fit:cover;
+  border-radius:14px;
+  display:block;
+  background:#000;
+  margin-bottom:12px;
+  box-shadow:0 8px 20px rgba(0,0,0,.28);
+}
+
+.floating-ad-title{
+  color:#ffd54a;
+  font-size:16px;
+  font-weight:800;
+  line-height:1.25;
+  margin-bottom:8px;
+  letter-spacing:.2px;
+  text-align:left;
+}
+
+.floating-ad-desc{
+  font-size:13px;
+  line-height:1.5;
+  margin-bottom:14px;
+  color:rgba(255,255,255,0.92);
+  white-space:pre-wrap;
+  max-height:78px;
+  overflow:hidden;
+  text-align:left;
+}
+
+.floating-ad-actions{
+  display:flex;
+  gap:10px;
+}
+
+.floating-ad-actions .btn{
+  flex:1;
+  text-align:center;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:13px;
+  font-weight:700;
+  margin:0;
+  transition:transform .2s ease, opacity .2s ease;
+}
+
+.floating-ad-actions .btn:hover{
+  transform:translateY(-1px);
+  opacity:.96;
+}
+
+.floating-ad-actions .visit-btn{
+  background:linear-gradient(180deg,#ffe27a,#d9a900) !important;
+  color:#111 !important;
+}
+
+.floating-ad-close{
+  background:linear-gradient(180deg,#ff6a6a,#d63c3c) !important;
+  color:#fff !important;
+}
+
+@media(max-width:768px){
+  .floating-ad-card{
+    width:min(94vw, 360px);
+    max-height:34vh;
+  }
+
+  .floating-ad-card.show{
+    transform:translateX(-50%) translateY(-12vh);
+  }
+
+  .floating-ad-inner{
+    border-radius:20px;
+    padding:12px;
+  }
+
+  .floating-ad-media{
+    height:134px;
+    border-radius:12px;
+  }
+
+  .floating-ad-title{
+    font-size:15px;
+  }
+
+  .floating-ad-desc{
+    font-size:12px;
+    max-height:62px;
+  }
+
+  .floating-ad-actions .btn{
+    font-size:12px;
+    padding:9px 10px;
+  }
+}
+
+@media(max-width:480px){
+  .floating-ad-card{
+    width:min(95vw, 338px);
+    max-height:32vh;
+  }
+
+  .floating-ad-card.show{
+    transform:translateX(-50%) translateY(-10vh);
+  }
+
+  .floating-ad-media{
+    height:118px;
+  }
+
+  .floating-ad-title{
+    font-size:14px;
+  }
+}
+</style>
+<link rel="stylesheet" href="assets/interactions.css">
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js', {scope: '/'})
+    .then(reg => console.log('SW enregistré sur', reg.scope))
+    .catch(err => console.error('Erreur SW:', err));
+  });
+}
+</script>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227"></head>
+<body>
+
+<a href="index.html" class="top-left-btn">Retour Retour</a>
+
+<header>
+<img src="logo.png" alt="EMPLOI INFO">
+<h1>Détails de l'offre</h1>
+</header>
+
+<div class="card" id="detailCard">
+<p style="text-align:center;">Chargement…</p>
+</div>
+
+<div class="community-card" id="communitySection" data-item-type="annonce"></div>
+
+<div class="card" id="recentOffers">
+<h2>Autres offres récentes</h2>
+<div id="offersList" style="display:flex;gap:10px;overflow-x:auto;padding:10px 0;">
+<p>Chargement des offres...</p>
+</div>
+</div>
+
+<div class="card" id="recentAds">
+<h2>Publicités</h2>
+<div id="adsList" style="display:flex;gap:10px;overflow-x:auto;padding:10px 0;">
+<p>Chargement des publicités...</p>
+</div>
+</div>
+
+<div id="shareOverlay"></div>
+
+<div id="sharePopup">
+<h3>Partager cette offre</h3>
+<button style="background:#4267B2;" id="shareFB">Facebook</button>
+<button style="background:#25D366;" id="shareWA">WhatsApp</button>
+<button style="background:#0077B5;" id="shareLinkedIn">LinkedIn</button>
+<button style="background:#1DA1F2;" id="shareTwitter">Twitter</button>
+<button style="background:#808080;" id="copyLink">Copier le lien</button>
+<button style="background:red;margin-top:10px;" id="closeShare">Fermer</button>
+</div>
+
+<div id="detailsWelcomeOverlay" class="details-welcome-overlay show" style="display:flex;" role="dialog" aria-modal="true" aria-labelledby="detailsWelcomeTitle">
+  <div class="details-welcome-card">
+    <h2 id="detailsWelcomeTitle">Bienvenue chez EMPLOI INFO</h2>
+    <p>Cette page présente les détails complets de l'offre : description, conditions, contacts, boutons utiles et informations récentes liées aux opportunités disponibles.</p>
+    <p>Vous pouvez lire attentivement l'annonce, utiliser les liens de contact affichés, partager l'offre avec un proche, puis revenir à l'accueil pour consulter d'autres annonces.</p>
+    <div class="details-warning">
+      <strong>Attention</strong>
+      NB : Soyez vigilant ! Ne payez jamais pour un recrutement. Informez un proche avant de vous rendre à un entretien.
+    </div>
+    <button type="button" onclick="this.closest('.details-welcome-overlay').classList.remove('show');this.closest('.details-welcome-overlay').style.display='none';">J'ai compris</button>
+  </div>
+</div>
+
+<div id="nbFloatingCard" class="floating-card nb-alert nb-yellow">
+NB : Soyez vigilant ! Ne payez jamais pour un recrutement. Informez un proche avant de vous rendre à un entretien.
+</div>
+
+<footer>
+Suivez-nous :
+<a href="https://www.facebook.com/share/1DxuasNToY/" target="_blank">Facebook</a> |
+<a href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23" target="_blank">WhatsApp</a>
+</footer>
+
+<div id="floatingAdCard" class="floating-ad-card">
+  <div id="floatingAdInner" class="floating-ad-inner"></div>
+</div>
+
+<script src="assets/rich-content.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const card = document.getElementById("detailCard");
+let lastHash = "";
+if(id){
+  const viewed = JSON.parse(localStorage.getItem("viewedOfferIds") || "[]").map(String);
+  if(!viewed.includes(String(id))){
+    viewed.push(String(id));
+    localStorage.setItem("viewedOfferIds", JSON.stringify(viewed));
+  }
+  fetch("mark_offer_view.php?id=" + encodeURIComponent(id), {cache:"no-store"}).catch(()=>{});
+}
+
+function updateAppNotificationBadge(count){
+  const safeCount = Math.max(0, Number(count) || 0);
+  localStorage.setItem("newNotificationCount", String(safeCount));
+  if("setAppBadge" in navigator && "clearAppBadge" in navigator){
+    if(safeCount > 0) navigator.setAppBadge(safeCount).catch(() => {});
+    else navigator.clearAppBadge().catch(() => {});
+  }
+  if(window.EmploiInfoAndroid && typeof window.EmploiInfoAndroid.setNotificationBadge === "function"){
+    try{ window.EmploiInfoAndroid.setNotificationBadge(safeCount); }catch(e){}
+  }
+}
+
+let currentAds = [];
+let floatingAdsStarted = false;
+let floatingAdHideTimer = null;
+let floatingAdNextTimer = null;
+let lastFloatingAdIndex = -1;
+
+function closeDetailsWelcome(){
+  const overlay = document.getElementById("detailsWelcomeOverlay");
+  if(!overlay) return;
+  overlay.classList.remove("show");
+  overlay.style.display = "none";
+}
+
+function showDetailsWelcome(){
+  const overlay = document.getElementById("detailsWelcomeOverlay");
+  if(!overlay) return;
+  overlay.style.display = "flex";
+  overlay.classList.add("show");
+}
+
+if(document.readyState === "loading"){
+  window.addEventListener("DOMContentLoaded", showDetailsWelcome);
+}else{
+  showDetailsWelcome();
+}
+setTimeout(showDetailsWelcome, 350);
+
+// temps écoulé intelligent
+function tempsEcoule(dateString){
+  if(!dateString) return "";
+  const now = new Date();
+  const pub = new Date(dateString);
+  const diff = Math.floor((now - pub)/1000);
+  if(diff < 60) return "Publié à l'instant";
+  if(diff < 3600) return "Publié il y a " + Math.floor(diff/60) + " minute(s)";
+  if(diff < 86400) return "Publié il y a " + Math.floor(diff/3600) + " heure(s)";
+  return "Publié il y a " + Math.floor(diff/86400) + " jour(s)";
+}
+
+function cleanDisplayText(text){
+  return String(text || "")
+    .replace(/\r/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ ]+\n/g, "\n")
+    .trim();
+}
+
+function normalizeUrl(url){
+  if(!url || typeof url !== "string") return "";
+  if(/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) return url;
+  return "https://emploi-info.page.gd/" + url.replace(/^\/+/, "");
+}
+
+function isVideoFile(url){
+  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url || "");
+}
+
+function isPublished(item){
+  const value = item && item.publie;
+  return value === true || value === 1 || value === "1" || String(value).toLowerCase() === "true";
+}
+
+function isActiveAd(ad){
+  if(!isPublished(ad)) return false;
+  if(!ad.expires_at) return true;
+  return new Date(ad.expires_at).getTime() >= Date.now();
+}
+
+function getAdMedia(ad){
+  const fichier = normalizeUrl(ad.fichier || "");
+  const image = normalizeUrl(ad.image || ad.imageUrl || ad.mediaImage || ad.banniere || "");
+  const video = normalizeUrl(ad.video || ad.videoUrl || ad.mediaVideo || "");
+  const generic = normalizeUrl(ad.media || ad.src || "");
+
+  if(ad.type === "video" && fichier) return { type:"video", src:fichier };
+  if(ad.type === "image" && fichier) return { type:"image", src:fichier };
+  if(video) return { type:"video", src:video };
+  if(image) return { type:"image", src:image };
+  if(fichier) return { type:isVideoFile(fichier) ? "video" : "image", src:fichier };
+  if(generic) return { type:isVideoFile(generic) ? "video" : "image", src:generic };
+
+  return { type:"", src:"" };
+}
+
+function normalizeAd(ad){
+  const media = getAdMedia(ad);
+  return {
+    ...ad,
+    publie: isPublished(ad),
+    titre: ad.titre || "Publicité",
+    description: ad.description || "",
+    lien: ad.lien || "#",
+    type: media.type,
+    mediaType: media.type,
+    mediaSrc: media.src
+  };
+}
+
+function truncateText(text, max = 100){
+  const value = window.RichContent ? RichContent.text(text) : String(text || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return value.length > max ? value.slice(0, max) + "..." : value;
+}
+
+function buildAdDetailsUrl(ad){
+  return `publicite-details.html?id=${encodeURIComponent(ad.id)}`;
+}
+
+function clearFloatingAdTimers(){
+  clearTimeout(floatingAdHideTimer);
+  clearTimeout(floatingAdNextTimer);
+  floatingAdHideTimer = null;
+  floatingAdNextTimer = null;
+}
+
+function stopFloatingVideo(){
+  const video = document.getElementById("floatingAdVideo");
+  if(video){
+    try{ video.pause(); }catch(e){}
+  }
+}
+
+function getRandomAd(){
+  if(!currentAds.length) return null;
+  let index;
+  do{
+    index = Math.floor(Math.random() * currentAds.length);
+  }while(currentAds.length > 1 && index === lastFloatingAdIndex);
+  lastFloatingAdIndex = index;
+  return currentAds[index];
+}
+
+function hideFloatingAd(){
+  const card = document.getElementById("floatingAdCard");
+  if(card) card.classList.remove("show");
+}
+
+function scheduleNextFloatingAd(delay = 15000){
+  clearTimeout(floatingAdNextTimer);
+  floatingAdNextTimer = setTimeout(() => {
+    showFloatingAd();
+  }, delay);
+}
+
+function manualCloseFloatingAd(){
+  stopFloatingVideo();
+  hideFloatingAd();
+  scheduleNextFloatingAd(15000);
+}
+
+function showFloatingAd(){
+  const card = document.getElementById("floatingAdCard");
+  const inner = document.getElementById("floatingAdInner");
+  if(!card || !inner || !currentAds.length) return;
+
+  clearFloatingAdTimers();
+  stopFloatingVideo();
+
+  const ad = getRandomAd();
+  if(!ad) return;
+
+  const detailsUrl = buildAdDetailsUrl(ad);
+  const shortDesc = truncateText(ad.description, 100);
+
+  let mediaHtml = "";
+  if(ad.mediaType === "video" && ad.mediaSrc){
+    const videoType = ad.mediaSrc.toLowerCase().includes(".webm") ? "video/webm" :
+                      ad.mediaSrc.toLowerCase().includes(".ogg") ? "video/ogg" :
+                      ad.mediaSrc.toLowerCase().includes(".mov") ? "video/quicktime" :
+                      "video/mp4";
+
+    mediaHtml = `
+      <video
+        id="floatingAdVideo"
+        class="floating-ad-media"
+        autoplay
+        playsinline
+        webkit-playsinline
+        controls
+        preload="auto"
+      >
+        <source src="${ad.mediaSrc}" type="${videoType}">
+        Votre navigateur ne supporte pas la vidéo.
+      </video>
+    `;
+  } else if(ad.mediaSrc){
+    mediaHtml = `<img src="${ad.mediaSrc}" alt="${ad.titre}" class="floating-ad-media">`;
+  }
+
+  inner.innerHTML = `
+    ${mediaHtml}
+    <div class="floating-ad-title">${ad.titre || "Publicité"}</div>
+    ${shortDesc ? `<div class="floating-ad-desc">${shortDesc}</div>` : ""}
+    <div class="floating-ad-actions">
+      <a href="${detailsUrl}" class="btn visit-btn">En savoir plus</a>
+      <button type="button" class="btn floating-ad-close" onclick="manualCloseFloatingAd()">Fermer</button>
+    </div>
+  `;
+
+  card.classList.add("show");
+
+  if(ad.mediaType === "video" && ad.mediaSrc){
+    const video = document.getElementById("floatingAdVideo");
+    if(video){
+      video.muted = false;
+      video.volume = 1;
+
+      const playWithSound = () => {
+        const promise = video.play();
+        if(promise && typeof promise.catch === "function"){
+          promise.catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+        }
+      };
+
+      playWithSound();
+
+      video.onended = () => {
+        hideFloatingAd();
+        scheduleNextFloatingAd(15000);
+      };
+
+      video.onerror = () => {
+        floatingAdHideTimer = setTimeout(() => {
+          hideFloatingAd();
+          scheduleNextFloatingAd(15000);
+        }, 15000);
+      };
+    }
+  } else {
+    floatingAdHideTimer = setTimeout(() => {
+      hideFloatingAd();
+      scheduleNextFloatingAd(15000);
+    }, 15000);
+  }
+}
+
+function startFloatingAds(){
+  if(floatingAdsStarted || !currentAds.length) return;
+  floatingAdsStarted = true;
+  setTimeout(() => {
+    showFloatingAd();
+  }, 1500);
+}
+
+// rendu annonce
+function renderAnnonce(a){
+  const hash = JSON.stringify(a);
+  if(hash === lastHash) return;
+  lastHash = hash;
+
+  const mediaUrl = a.banniere ? normalizeUrl(a.banniere) : "";
+  const isVideo = mediaUrl && isVideoFile(mediaUrl);
+  const richText = window.RichContent ? RichContent.render(a.texte || "") : cleanDisplayText(a.texte || "");
+
+  card.innerHTML = `
+    ${mediaUrl ? (
+      isVideo
+        ? `<video controls preload="metadata"><source src="${mediaUrl}"></video>`
+        : `<img src="${mediaUrl}" alt="${a.titre}">`
+    ) : ""}
+    <h2>${a.titre}</h2>
+    <p style="color:gold;font-size:14px;">
+      Date : ${new Date(a.date).toLocaleString()}<br>
+      Plus tard ${tempsEcoule(a.date)}
+    </p>
+    <div class="annonce-rich-content">${richText}</div>
+    ${a.boutons ? a.boutons.map(b => `
+      <a class="btn"
+      style="background:${b.couleur}"
+      href="${b.lien}"
+      target="_blank">${b.texte}</a>`).join("") : ""}
+    <div class="share-buttons">
+      <button id="mainShareBtn" style="background:#1E90FF;">Partager</button>
+    </div>
+    <div data-offer-id="${a.id}" id="detailsUserActions"></div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="index.html" class="btn" style="background:gold;color:black;">Retour à l'accueil</a>
+    </div>
+  `;
+  if(window.UserFeatures && typeof window.UserFeatures.attachOfferActions === "function"){
+    window.UserFeatures.attachOfferActions(card);
+  }
+
+  const mainShareBtn = card.querySelector("#mainShareBtn");
+  const sharePopup = document.getElementById("sharePopup");
+  const shareOverlay = document.getElementById("shareOverlay");
+  const closeShare = document.getElementById("closeShare");
+
+  mainShareBtn.onclick = () => {
+    sharePopup.classList.add("show");
+    shareOverlay.style.display = "block";
+  };
+
+  closeShare.onclick = () => {
+    sharePopup.classList.remove("show");
+    shareOverlay.style.display = "none";
+  };
+
+  shareOverlay.onclick = closeShare;
+
+  const appShareUrl = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.wrap(location.href) : location.href;
+  document.getElementById("shareFB").onclick = () => { window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
+  document.getElementById("shareWA").onclick = () => { window.open('https://wa.me/?text='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
+  document.getElementById("shareLinkedIn").onclick = () => { window.open('https://www.linkedin.com/shareArticle?url='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
+  document.getElementById("shareTwitter").onclick = () => { window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
+  document.getElementById("copyLink").onclick = () => { navigator.clipboard.writeText(appShareUrl).then(()=>alert("Lien application copié !")); closeShare.onclick(); };
+}
+
+// rendu offres récentes
+function renderRecentOffers(offers){
+  const container = document.getElementById("offersList");
+  if(offers.length === 0){
+    container.innerHTML = "<p>Aucune autre offre disponible</p>";
+    return;
+  }
+
+  container.innerHTML = offers.map(a => {
+    const mediaUrl = a.banniere ? normalizeUrl(a.banniere) : "";
+    const isVideo = mediaUrl && isVideoFile(mediaUrl);
+
+    return `
+      <div class="recent-item" onclick="location.href='details.html?id=${a.id}'">
+        ${mediaUrl ? (
+          isVideo
+            ? `<video muted preload="metadata"><source src="${mediaUrl}"></video>`
+            : `<img src="${mediaUrl}" alt="${a.titre}">`
+        ) : ""}
+        <h4>${a.titre}</h4>
+        <p>${truncateText(a.texte || "", 50)}</p>
+      </div>
+    `;
+  }).join("");
+}
+
+// rendu publicités récentes
+function renderRecentAds(ads){
+  const container = document.getElementById("adsList");
+  if(ads.length === 0){
+    container.innerHTML = "<p>Aucune publicité disponible</p>";
+    return;
+  }
+
+  container.innerHTML = ads.map(ad => `
+    <div class="recent-item" onclick="location.href='publicite-details.html?id=${ad.id}'">
+      ${ad.mediaSrc ? (
+        ad.mediaType === 'video'
+          ? `<video muted preload="metadata"><source src="${ad.mediaSrc}"></video>`
+          : `<img src="${ad.mediaSrc}" alt="${ad.titre}">`
+      ) : ""}
+      <h4>${ad.titre}</h4>
+      <p>${truncateText(ad.description || "", 50)}</p>
+    </div>
+  `).join("");
+}
+
+// anti-cache + refresh
+function loadData(){
+  fetch("data.json?ts="+Date.now(),{cache:"no-store"})
+  .then(r=>r.json())
+  .then(data=>{
+    const annonce = data.find(a=>a.id==id && a.publie);
+    if(annonce) renderAnnonce(annonce);
+
+    const recentOffers = data.filter(a=>a.id != id && a.publie).slice(-5).reverse();
+    renderRecentOffers(recentOffers);
+    const viewed = JSON.parse(localStorage.getItem("viewedOfferIds") || "[]").map(String);
+    const newCount = data.filter(a=>a.publie && !viewed.includes(String(a.id))).length;
+    updateAppNotificationBadge(newCount);
+  })
+  .catch(e=>console.log("Erreur data.json",e));
+
+  fetch("ads.json?ts="+Date.now(),{cache:"no-store"})
+  .then(r=>r.json())
+  .then(ads=>{
+    currentAds = (Array.isArray(ads) ? ads : [])
+      .map(normalizeAd)
+      .filter(ad => isActiveAd(ad) && (ad.mediaSrc || cleanDisplayText(ad.description)));
+
+    renderRecentAds(currentAds.slice(-5).reverse());
+    startFloatingAds();
+  })
+  .catch(e=>console.log("Erreur ads.json",e));
+}
+
+loadData();
+setInterval(loadData,5000);
+
+// carte NB flottante
+const floatingCard = document.getElementById("nbFloatingCard");
+if(floatingCard){
+  setInterval(() => {
+    floatingCard.classList.toggle("nb-red");
+    floatingCard.classList.toggle("nb-yellow");
+  }, 700);
+  floatingCard.onclick = ()=>{
+    fetch('update_stats.php',{method:'POST',body:JSON.stringify({id:id,bouton:'NB'})});
+  };
+}
+</script>
+<script src="assets/interactions.js"></script>
+<script src="assets/access-control.js"></script>
+
+<script>
+fetch("track_view.php");
+</script>
+
+<script>
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://nexus-aid-lab.lovable.app/widget.js';
+  s.setAttribute('data-bot-id', '9f6b4bbe-5be2-41a7-9108-2a7e744d8238');
+  s.setAttribute('data-theme', '#deb81f');
+  s.async = true;
+  document.head.appendChild(s);
+})();
+</script>
+<script src="/assets/site-menu.js"></script>
+<script src="assets/content-media.js"></script>
+</body>
+</html>
+

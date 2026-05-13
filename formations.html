@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formations | EMPLOI INFO</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#111;color:#fff;min-height:100vh}header{padding:24px 16px;text-align:center;background:#050505;border-bottom:1px solid rgba(255,215,0,.25)}header img{width:56px;height:56px;border-radius:12px;vertical-align:middle;margin-right:10px}header h1{display:inline;color:gold;font-size:24px}.wrap{max-width:1000px;margin:auto;padding:22px 14px}.toolbar{display:flex;gap:10px;margin-bottom:18px}.toolbar input{flex:1;padding:12px;border-radius:8px;border:0}.card{background:#181818;border-left:5px solid gold;border-radius:8px;margin-bottom:14px;overflow:hidden}.card img{width:100%;max-height:260px;object-fit:cover}.body{padding:16px}.body h2{color:gold;margin:0 0 8px}.body pre{white-space:pre-wrap;line-height:1.55;font-family:inherit;color:#eee}.btn{display:inline-block;margin:8px 8px 0 0;padding:10px 12px;border-radius:6px;background:gold;color:#111;font-weight:bold;text-decoration:none}.btn.secondary{background:#1e90ff;color:#fff}.price{display:inline-flex;gap:8px;align-items:center;margin:6px 0 8px;padding:7px 10px;border-radius:999px;background:rgba(255,215,0,.12);color:gold;font-weight:bold}.old{text-decoration:line-through;color:#aaa}.hint{color:#8d8d8d;font-size:12px}.empty{text-align:center;color:#bbb;padding:35px}
+</style>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227"></head>
+<body>
+<header><img src="logo.png" alt="EMPLOI INFO"><h1>Formations</h1></header>
+<main class="wrap">
+  <div class="toolbar"><input id="search" placeholder="Rechercher une formation"></div>
+  <div id="items"><p class="empty">Chargement...</p></div>
+</main>
+<script src="assets/content-media.js"></script>
+<script>
+let formations=[];
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function price(f){const type=f.pricing_type||(f.prix?"payant":"gratuit");if(type==="gratuit")return'<div class="price">Gratuit</div>';if(type==="promotion")return`<div class="price">${f.prix_normal?`<span class="old">${esc(f.prix_normal)}</span>`:""}<span>${esc(f.prix_promo||f.prix||"Promotion")}</span></div>`;return`<div class="price">${esc(f.prix||f.prix_normal||"Payant")}</div>`}
+function share(id,title){const url=location.origin+location.pathname.replace("formations.html","formation-details.html")+"?id="+encodeURIComponent(id);if(navigator.share)navigator.share({title,url}).catch(()=>{});else navigator.clipboard?.writeText(url).then(()=>alert("Lien copié"))}
+function render(list){
+  const root=document.getElementById("items");
+  if(!list.length){root.innerHTML='<p class="empty">Aucune formation publiée pour le moment.</p>';return}
+  root.innerHTML=list.map(f=>`
+    <article class="card" id="${esc(f.id)}">
+      ${window.ContentMedia ? (ContentMedia.renderFile(f) + ContentMedia.renderExternal(f.lien)) : (f.img||f.image?`<img src="${esc(f.img||f.image)}" alt="">`:"")}
+      <div class="body">
+        <h2>${esc(f.titre)}</h2>
+        ${price(f)}
+        <pre>${esc(f.texte)}</pre>
+        <span class="hint">Voir détails, commentaires et signalement</span><br>
+        <a class="btn" href="formation-details.html?id=${encodeURIComponent(f.id)}">Voir détails</a>
+        <button class="btn secondary" onclick="share('${esc(f.id)}','${esc(f.titre)}')">Partager</button>
+        ${(f.boutons||[]).map(b=>`<a class="btn" href="${esc(b.lien)}" target="_blank" rel="noopener" style="background:${esc(b.couleur||'gold')}">${esc(b.texte||'Ouvrir')}</a>`).join("")}
+      </div>
+    </article>`).join("");
+}
+fetch("formations.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(data=>{formations=Array.isArray(data)?data:[];render(formations)});
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  render(formations.filter(f=>(String(f.titre)+" "+String(f.texte)).toLowerCase().includes(q)));
+});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js", {scope: "/"}).catch(()=>{}))}
+</script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>
+

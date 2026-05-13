@@ -1,0 +1,28 @@
+firebase_service_account.json
+firebase_access_token.json
+android-app/app/google-services.json
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/keystore.properties
+android-app/app/release/*.jks
+android-app/app/release/*.keystore
+smtp_config.php
+vapid_config.php
+admins.json
+
+# Dependencies and generated files
+node_modules/
+backend-api/node_modules/
+.gradle-home/
+.gradle-home2/
+android-app/.gradle-user/
+_backups/
+
+# Local environment
+.env
+backend-api/.env
+
+# Logs and temporary files
+*.log
+*.tmp

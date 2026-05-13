@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Test Chargement Données</title>
+<style>
+body { font-family: Arial; background: #111; color: white; padding: 20px; }
+.test { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; }
+.success { border-left: 5px solid #4CAF50; }
+.error { border-left: 5px solid #FF4C4C; }
+pre { background: #222; padding: 10px; border-radius: 5px; overflow-x: auto; }
+</style>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227"></head>
+<body>
+<h1>Test Chargement Données JSON</h1>
+
+<div class="test" id="test1">
+  <h3>1. Test data.json</h3>
+  <div id="result1">Chargement...</div>
+</div>
+
+<div class="test" id="test2">
+  <h3>2. Test categories.json</h3>
+  <div id="result2">Chargement...</div>
+</div>
+
+<div class="test" id="test3">
+  <h3>3. Test stats.json</h3>
+  <div id="result3">Chargement...</div>
+</div>
+
+<script>
+async function test(name, file, resultId) {
+  try {
+    const res = await fetch(file);
+    if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+    const data = await res.json();
+    document.getElementById(resultId).innerHTML = `
+      <p style="color: #4CAF50;">OK ${file} chargé avec succès</p>
+      <p>Éléments: ${Array.isArray(data) ? data.length : Object.keys(data).length}</p>
+      <pre>${JSON.stringify(data).substring(0, 500)}...</pre>
+    `;
+    document.getElementById(name).classList.add('success');
+  } catch (e) {
+    document.getElementById(resultId).innerHTML = `
+      <p style="color: #FF4C4C;">Erreur: ${e.message}</p>
+      <p>Le fichier ${file} n'est pas accessible</p>
+    `;
+    document.getElementById(name).classList.add('error');
+  }
+}
+
+test('test1', 'data.json', 'result1');
+test('test2', 'categories.json', 'result2');
+test('test3', 'stats.json', 'result3');
+</script>
+<script src="assets/content-media.js"></script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>
+

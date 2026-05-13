@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | EMPLOI INFO - Ressources</title>
+<style>
+body{font-family:Arial;background:#111;color:#fff;min-height:100vh;padding:20px}
+input,textarea,button{width:100%;padding:10px;margin-bottom:10px;border-radius:6px;border:none}
+button{background:gold;color:#000;font-weight:bold;cursor:pointer}
+.card{background:rgba(0,0,0,.6);padding:15px;border-radius:10px;margin-bottom:20px;border-left:5px solid gold}
+.action-btn{margin-right:6px;padding:6px 12px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
+.delete{background:#FF4C4C;color:white;}
+</style>
+</head>
+<body>
+<div id="loginBox" style="max-width:350px;margin:auto">
+<h2 style="color:gold;text-align:center">Admin Ressources</h2>
+<input type="password" id="password" placeholder="Mot de passe admin">
+<button onclick="login()">Connexion</button>
+<p id="error" style="color:red;text-align:center"></p>
+</div>
+
+<div id="adminPanel" style="display:none">
+<h1>Ressources | Admin</h1>
+<div class="card">
+<h3>Ajouter une ressource</h3>
+<input type="text" id="titre" placeholder="Titre">
+<textarea id="texte" placeholder="Description"></textarea>
+<input type="text" id="lien" placeholder="Lien">
+<input type="file" id="img">
+<button onclick="ajouterRessource()">Ajouter</button>
+</div>
+
+<h3>Ressources existantes</h3>
+<div id="listeResources"></div>
+</div>
+
+<script>
+const ADMIN_PASSWORD="53535353"
+function login(){
+const pwd=document.getElementById("password").value
+if(pwd===ADMIN_PASSWORD){
+document.getElementById("loginBox").style.display="none"
+document.getElementById("adminPanel").style.display="block"
+chargerResourcesAdmin()
+}else document.getElementById("error").innerText="Mot de passe incorrect"
+}
+
+async function chargerResourcesAdmin(){
+const res=await fetch("resources.json?"+Date.now())
+const data=await res.json()
+const container=document.getElementById("listeResources")
+container.innerHTML=""
+data.forEach((r,i)=>{
+const div=document.createElement("div")
+div.className="card"
+div.innerHTML=`<b>${r.titre}</b> <span style="font-size:12px;opacity:.8">${new Date(r.date).toLocaleDateString()}</span><pre>${r.texte}</pre><a href="${r.lien}" target="_blank">Lien</a> <button class="action-btn delete" onclick="supprimer(${i})">Supprimer</button>`
+container.appendChild(div)
+})
+}
+
+function ajouterRessource(){
+const titre=document.getElementById("titre").value.trim()
+const texte=document.getElementById("texte").value.trim()
+const lien=document.getElementById("lien").value.trim()
+const imgFile=document.getElementById("img").files[0]
+if(!titre||!texte) return alert("Champs obligatoires")
+const fd=new FormData()
+fd.append("titre",titre)
+fd.append("texte",texte)
+fd.append("lien",lien)
+if(imgFile) fd.append("img",imgFile)
+fetch("save_resource.php",{method:"POST",body:fd}).then(r=>r.json()).then(res=>{
+if(res.status==="success"){
+document.getElementById("titre").value=""
+document.getElementById("texte").value=""
+document.getElementById("lien").value=""
+document.getElementById("img").value=""
+chargerResourcesAdmin()
+}
+})
+}
+
+function supprimer(i){
+if(!confirm("Supprimer cette ressource ?")) return
+fetch("delete_resource.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:i})})
+.then(()=>chargerResourcesAdmin())
+}
+</script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

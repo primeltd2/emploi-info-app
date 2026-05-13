@@ -1,0 +1,303 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DÃ©tails | EMPLOI INFO</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{
+  background:linear-gradient(135deg,#000,#3a2c00,#c9a227);
+  color:white;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+header{
+  padding:15px;
+  background:rgba(0,0,0,0.6);
+  text-align:center;
+}
+
+h1{color:gold}
+
+.card{
+  margin:20px;
+  padding:20px;
+  background:rgba(0,0,0,0.6);
+  border-radius:15px;
+  border:2px solid gold;
+}
+
+.card img{
+  width:100%;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+.card h2{text-align:center;margin-bottom:10px}
+
+.card p{
+  text-align:center;
+  white-space:pre-wrap;
+  margin-bottom:10px;
+}
+
+.btn,button{
+  display:inline-block;
+  margin:5px;
+  padding:8px 12px;
+  border-radius:8px;
+  text-decoration:none;
+  color:white;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+}
+
+/* Carte Zoom pour partager */
+#sharePopup{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%) scale(0);
+  background:rgba(0,0,0,0.95);
+  padding:25px;
+  border-radius:15px;
+  z-index:10000;
+  text-align:center;
+  transition: transform 0.4s cubic-bezier(0.25,0.8,0.25,1);
+}
+#sharePopup.show{
+  display:block;
+  transform:translate(-50%, -50%) scale(1);
+}
+#sharePopup button{
+  margin:5px;
+  padding:10px 15px;
+  border-radius:8px;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+}
+
+/* Overlay sombre derriÃ¨re le zoom */
+#shareOverlay{
+  display:none;
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6);
+  z-index:9999;
+}
+
+footer{
+  text-align:center;
+  padding:15px;
+  background:rgba(0,0,0,0.6);
+  font-size:18px;
+}
+
+footer a{
+  color:gold;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.top-left-btn{
+  position:fixed;
+  top:15px;
+  left:15px;
+  background:gold;
+  color:black;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:bold;
+  text-decoration:none;
+  z-index:10000;
+}
+
+/* ðŸ”¥ Carte NB flottante */
+.floating-card{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:gold;
+  color:red;
+  padding:15px 25px;
+  border-radius:15px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.5);
+  animation:floatY 2s ease-in-out infinite alternate;
+  z-index:9999;
+}
+
+@keyframes floatY {
+0%{transform:translateY(0);}
+50%{transform:translateY(-12px);}
+100%{transform:translateY(0);}
+}
+</style>
+    <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js', {scope: '/'})
+      .then(reg => console.log('SW enregistrÃ© sur', reg.scope))
+      .catch(err => console.error('Erreur SW:', err));
+    });
+  }
+    </script>
+</head>
+<body>
+
+<a href="index.html" class="top-left-btn">â† Retour</a>
+
+<header>
+<h1>DÃ©tails de lâ€™offre</h1>
+</header>
+
+<div class="card" id="detailCard">
+<p style="text-align:center;">Chargementâ€¦</p>
+</div>
+
+<!-- Overlay sombre -->
+<div id="shareOverlay"></div>
+
+<!-- Carte de partage Zoom -->
+<div id="sharePopup">
+<h3>Partager cette offre</h3>
+<button style="background:#4267B2;" id="shareFB">Facebook</button>
+<button style="background:#25D366;" id="shareWA">WhatsApp</button>
+<button style="background:#0077B5;" id="shareLinkedIn">LinkedIn</button>
+<button style="background:#1DA1F2;" id="shareTwitter">Twitter</button>
+<button style="background:#808080;" id="copyLink">Copier le lien</button>
+<button style="background:red;margin-top:10px;" id="closeShare">Fermer</button>
+</div>
+
+<footer>
+Suivez-nous :
+<a href="https://www.facebook.com/share/1DxuasNToY/" target="_blank">Facebook</a> |
+<a href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23" target="_blank">WhatsApp</a>
+</footer>
+
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const card = document.getElementById("detailCard");
+let lastHash="";
+
+// ðŸ”¥ temps Ã©coulÃ© intelligent
+function tempsEcoule(dateString){
+  if(!dateString) return "";
+  const now = new Date();
+  const pub = new Date(dateString);
+  const diff = Math.floor((now - pub)/1000);
+  if(diff < 60) return "PubliÃ© Ã  l'instant";
+  if(diff < 3600) return "PubliÃ© il y a " + Math.floor(diff/60) + " minute(s)";
+  if(diff < 86400) return "PubliÃ© il y a " + Math.floor(diff/3600) + " heure(s)";
+  return "PubliÃ© il y a " + Math.floor(diff/86400) + " jour(s)";
+}
+
+// ðŸ”¥ rendu annonce
+function renderAnnonce(a){
+  const hash = JSON.stringify(a);
+  if(hash===lastHash) return;
+  lastHash=hash;
+
+  card.innerHTML=`
+    ${a.banniere ? `<img src="${a.banniere}">` : ""}
+    <h2>${a.titre}</h2>
+    <p style="color:gold;font-size:14px;">
+      ðŸ“… ${new Date(a.date).toLocaleString()}<br>
+      â³ ${tempsEcoule(a.date)}
+    </p>
+    <p>${a.texte}</p>
+    ${a.notice ? `<p><i>${a.notice}</i></p>` : ""}
+    ${a.boutons ? a.boutons.map(b=>`
+      <a class="btn"
+      style="background:${b.couleur}"
+      href="${b.lien}"
+      target="_blank">${b.texte}</a>`).join("") : ""}
+    <div class="share-buttons">
+      <button id="mainShareBtn" style="background:#1E90FF;">Partager</button>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="index.html" class="btn" style="background:gold;color:black;">Retour Ã  l'accueil</a>
+    </div>
+  `;
+
+  const mainShareBtn = card.querySelector("#mainShareBtn");
+  const sharePopup = document.getElementById("sharePopup");
+  const shareOverlay = document.getElementById("shareOverlay");
+  const closeShare = document.getElementById("closeShare");
+
+  mainShareBtn.onclick = () => {
+    sharePopup.classList.add("show");
+    shareOverlay.style.display = "block";
+  };
+
+  closeShare.onclick = () => {
+    sharePopup.classList.remove("show");
+    shareOverlay.style.display = "none";
+  };
+
+  shareOverlay.onclick = closeShare;
+
+  // ðŸ”¥ partage des boutons
+  document.getElementById("shareFB").onclick = () => { window.open('https://www.facebook.com/sharer/sharer.php?u='+location.href); closeShare.onclick(); };
+  document.getElementById("shareWA").onclick = () => { window.open('https://wa.me/?text='+encodeURIComponent(location.href)); closeShare.onclick(); };
+  document.getElementById("shareLinkedIn").onclick = () => { window.open('https://www.linkedin.com/shareArticle?url='+encodeURIComponent(location.href)); closeShare.onclick(); };
+  document.getElementById("shareTwitter").onclick = () => { window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(location.href)); closeShare.onclick(); };
+  document.getElementById("copyLink").onclick = () => { navigator.clipboard.writeText(location.href).then(()=>alert("Lien copiÃ© !")); closeShare.onclick(); };
+}
+
+// ðŸ”¥ anti-cache + refresh
+function loadData(){
+  fetch("data.json?ts="+Date.now(),{cache:"no-store"})
+  .then(r=>r.json())
+  .then(data=>{
+    const annonce = data.find(a=>a.id==id && a.publie);
+    if(annonce) renderAnnonce(annonce);
+  })
+  .catch(e=>console.log("Erreur data.json",e));
+}
+
+loadData();
+setInterval(loadData,5000);
+
+// ðŸ”¥ carte NB flottante
+const floatingCard = document.createElement("div");
+floatingCard.className="floating-card";
+floatingCard.innerText="NB : Soyez vigilant ! Ne payez jamais pour un recrutement. Informez un proche avant de vous rendre Ã  un entretien.";
+document.body.appendChild(floatingCard);
+floatingCard.onclick = ()=>{
+  fetch('update_stats.php',{method:'POST',body:JSON.stringify({id:id,bouton:'NB'})});
+};
+</script>
+    <script>
+fetch("track_view.php");
+</script>
+    <!-- BotFactory Widget - Assistant virtuel EMPLOI INFO  -->
+<script>
+  (function() {
+    var s = document.createElement('script');
+    s.src = 'https://nexus-aid-lab.lovable.app/widget.js';
+    s.setAttribute('data-bot-id', '9f6b4bbe-5be2-41a7-9108-2a7e744d8238');
+    s.setAttribute('data-theme', '#deb81f');
+    s.async = true;
+    document.head.appendChild(s);
+  })();
+</script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

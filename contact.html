@@ -1,0 +1,318 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Contact et assistance | EMPLOI INFO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Centre d'assistance EMPLOI INFO avec FAQ, contact administration et historique des conversations.">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{min-height:100vh;background:#101114;color:#fff;display:flex;flex-direction:column}
+a{text-decoration:none;color:inherit}
+header{display:flex;align-items:center;justify-content:center;gap:14px;padding:18px 16px;background:linear-gradient(90deg,#c9a227,#ffd84a,#c9a227);color:#111;border-bottom:2px solid #111}
+header img{width:54px;height:54px;border-radius:12px;object-fit:cover;background:#111}
+header h1{font-size:25px}
+.page{width:min(1180px,100%);margin:0 auto;padding:26px 16px 34px;flex:1}
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px;align-items:stretch;margin-bottom:20px}
+.hero-main,.support-card,.panel{background:rgba(255,255,255,.055);border:1px solid rgba(255,215,0,.18);border-radius:10px;padding:20px;box-shadow:0 14px 32px rgba(0,0,0,.28)}
+.hero-main{border-left:5px solid gold}
+.hero-main h2{color:gold;font-size:30px;margin-bottom:10px}
+.hero-main p,.support-card p{color:#e6e6e6;line-height:1.65}
+.support-card strong{display:block;color:gold;margin-bottom:8px}
+.search-box{margin-top:16px;display:flex;gap:10px}
+.search-box input{width:100%;height:44px;border:1px solid rgba(255,215,0,.22);border-radius:8px;background:#fff;color:#111;padding:0 12px;font-size:15px}
+.grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(320px,1.05fr);gap:18px;align-items:start}
+.panel h3{color:gold;margin-bottom:12px;font-size:21px}
+.faq-list{display:grid;gap:10px}
+details{background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:13px}
+summary{cursor:pointer;color:gold;font-weight:800}
+details p{margin-top:10px;line-height:1.6;color:#f0f0f0}
+.hidden{display:none!important}
+label{display:block;color:#f4d86b;font-weight:700;margin:12px 0 6px}
+input,select,textarea{width:100%;border:1px solid rgba(255,215,0,.18);border-radius:8px;background:#fff;color:#111;padding:12px;font-size:15px}
+textarea{min-height:130px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.button-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+button,.btn{border:0;border-radius:8px;padding:12px 16px;font-weight:900;cursor:pointer;background:gold;color:#111;display:inline-flex;align-items:center;justify-content:center}
+button.secondary,.btn.secondary{background:#222;color:gold;border:1px solid rgba(255,215,0,.35)}
+button:disabled{opacity:.65;cursor:not-allowed}
+.status{margin-top:12px;border-radius:8px;padding:12px;display:none}
+.status.ok{display:block;background:rgba(47,191,113,.16);border:1px solid rgba(47,191,113,.4);color:#bdf5d4}
+.status.error{display:block;background:rgba(239,89,89,.16);border:1px solid rgba(239,89,89,.4);color:#ffd0d0}
+.history{display:grid;gap:14px;margin-top:12px}
+.conversation{overflow:hidden;background:#0b141a;border:0;border-radius:0;padding:0}
+.conversation-head{min-height:58px;display:flex;justify-content:space-between;gap:10px;align-items:center;background:#202c33;padding:10px 14px}
+.conversation h4{color:#e9edef;font-size:16px}
+.tag{font-size:12px;border-radius:999px;padding:5px 8px;background:rgba(233,237,239,.08);color:#e9edef;white-space:nowrap}
+.thread{min-height:160px;display:grid;align-content:end;gap:6px;background:#0b141a;padding:14px}
+.message-line{width:max-content;max-width:min(76%,620px);min-width:0;padding:7px 9px 6px;border-radius:8px 8px 8px 0;background:#202c33;justify-self:start;overflow-wrap:anywhere;box-shadow:0 1px 1px rgba(0,0,0,.18)}
+.message-line.mine{justify-self:end;border-radius:8px 8px 0 8px;background:#005c4b}
+.message-author{display:inline-block;color:#53bdeb;font-weight:900;margin-bottom:3px;font-size:13px}
+.message-line.mine .message-author{color:#9de8d7}
+.message-date{color:#8696a0;font-size:11px;float:right;margin:6px 0 0 10px}
+.message-text{color:#e9edef;line-height:1.38;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+.message-media{display:block;max-width:100%;max-height:260px;margin-top:8px;border-radius:12px;background:#050505}
+.meta{display:block;margin-top:4px;color:#8696a0;font-size:12px}
+footer{padding:20px 16px;text-align:center;background:rgba(0,0,0,.65);border-top:1px solid rgba(255,215,0,.2)}
+footer a{color:gold;font-weight:800}
+@media(max-width:820px){.hero,.grid,.form-row{grid-template-columns:1fr}.hero-main h2{font-size:25px}}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" style="display:flex;align-items:center;gap:14px;color:#111">
+    <img src="logo.png" alt="EMPLOI INFO">
+    <h1>EMPLOI INFO</h1>
+  </a>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <div class="hero-main">
+      <h2>Centre d'assistance</h2>
+      <p>Consultez d'abord les réponses rapides. Si votre problème n'est pas résolu, envoyez une demande à l'administration depuis le formulaire sécurisé. Votre historique restera disponible sur cet appareil.</p>
+      <div class="search-box">
+        <input id="faqSearch" placeholder="Rechercher dans la FAQ..." oninput="filterFaq()">
+      </div>
+    </div>
+    <div class="support-card">
+      <strong>Avant de contacter l'administration</strong>
+      <p>Les demandes les plus courantes concernent les candidatures, la publication d'offres, les formations, les actualités, les publicités, les signalements et les problèmes d'affichage. Les réponses ci-dessous peuvent vous aider immédiatement.</p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="panel">
+      <h3>Questions fréquentes</h3>
+      <div class="faq-list" id="faqList">
+        <details open data-faq>
+          <summary>Comment postuler à une offre ?</summary>
+          <p>Ouvrez l'offre, lisez les détails, puis suivez les instructions de candidature indiquées par le recruteur. EMPLOI INFO diffuse les annonces, mais chaque recruteur définit son canal de candidature.</p>
+        </details>
+        <details data-faq>
+          <summary>Comment publier une offre ?</summary>
+          <p>Depuis l'accueil, cliquez sur "Transmettre une offre", remplissez le formulaire, ajoutez les pièces utiles, puis envoyez. L'administration vérifie l'annonce avant publication.</p>
+        </details>
+        <details data-faq>
+          <summary>Pourquoi mon offre n'apparaît pas encore ?</summary>
+          <p>Les offres en attente sont relues avant publication. Cela permet d'éviter les doublons, les informations incomplètes et les annonces suspectes.</p>
+        </details>
+        <details data-faq>
+          <summary>Comment signaler une annonce suspecte ?</summary>
+          <p>Utilisez le formulaire ci-contre avec la catégorie "Signalement". Décrivez l'annonce concernée, le lien si possible, et la raison du signalement.</p>
+        </details>
+        <details data-faq>
+          <summary>Comment demander une publicité ?</summary>
+          <p>Choisissez la catégorie "Publicité / partenariat" dans le formulaire, expliquez votre besoin et laissez un contact fiable. L'administration vous répondra dans l'historique.</p>
+        </details>
+        <details data-faq>
+          <summary>Comment signaler une actualité ou une formation ?</summary>
+          <p>Ouvrez la page détail de l'actualité ou de la formation, puis utilisez les commentaires ou le bouton de signalement. Vous pouvez aussi envoyer une demande ici avec le lien concerné.</p>
+        </details>
+        <details data-faq>
+          <summary>Où voir la réponse de l'administration ?</summary>
+          <p>Après envoi, revenez sur cette page avec le même navigateur et le même appareil. Vos conversations et les réponses apparaissent dans la section "Historique de vos demandes".</p>
+        </details>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Contacter l'administration</h3>
+      <form id="contactForm">
+        <div class="form-row">
+          <div>
+            <label for="name">Nom complet</label>
+            <input id="name" autocomplete="name" required>
+          </div>
+          <div>
+            <label for="category">Sujet</label>
+            <select id="category">
+              <option value="general">Question générale</option>
+              <option value="offre">Offre ou candidature</option>
+              <option value="publication">Publication d'annonce</option>
+              <option value="publicite">Publicité / partenariat</option>
+              <option value="formation">Formation</option>
+              <option value="actualite">Actualité</option>
+              <option value="signalement">Signalement</option>
+              <option value="technique">Problème technique</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" placeholder="email@example.com">
+          </div>
+          <div>
+            <label for="whatsapp">WhatsApp</label>
+            <input id="whatsapp" autocomplete="tel" placeholder="+229...">
+          </div>
+        </div>
+
+        <label for="subject">Objet</label>
+        <input id="subject" placeholder="Résumé de votre demande">
+
+        <label for="message">Message</label>
+        <textarea id="message" required placeholder="Expliquez votre problème ou votre demande avec les détails utiles."></textarea>
+
+        <label for="media">Capture d'écran ou photo</label>
+        <input id="media" type="file" accept="image/*">
+
+        <div class="button-row">
+          <button id="sendBtn" type="submit">Envoyer à l'administration</button>
+          <button class="secondary" type="button" onclick="loadVisitorHistory()">Actualiser l'historique</button>
+        </div>
+        <div id="formStatus" class="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-top:18px">
+    <h3>Historique de vos demandes</h3>
+    <p style="color:#ddd;line-height:1.6">Les conversations sont conservées pendant 30 jours et peuvent être supprimées plus tôt par l'administration.</p>
+    <div id="visitorHistory" class="history"></div>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2026 EMPLOI INFO - <a href="index.html">Retour aux offres</a></p>
+</footer>
+
+<script>
+const visitorIdKey = "emploiInfoContactVisitorId";
+const visitorId = localStorage.getItem(visitorIdKey) || ("visitor_" + Date.now() + "_" + Math.random().toString(16).slice(2));
+localStorage.setItem(visitorIdKey, visitorId);
+
+function escapeHtml(value){
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function setStatus(type, text){
+  const box = document.getElementById("formStatus");
+  box.className = "status " + type;
+  box.textContent = text;
+}
+
+function filterFaq(){
+  const q = document.getElementById("faqSearch").value.toLowerCase().trim();
+  document.querySelectorAll("[data-faq]").forEach(item=>{
+    const match = item.textContent.toLowerCase().includes(q);
+    item.classList.toggle("hidden", !match);
+  });
+}
+
+function formatDate(value){
+  const date = value ? new Date(value) : null;
+  return date && !isNaN(date) ? date.toLocaleString() : "";
+}
+
+function renderHistory(items){
+  const target = document.getElementById("visitorHistory");
+  if(!items.length){
+    target.innerHTML = '<div class="conversation">Aucune conversation pour le moment.</div>';
+    return;
+  }
+  target.innerHTML = items.map(conv=>`
+    <article class="conversation">
+      <div class="conversation-head">
+        <div>
+          <h4>${escapeHtml(conv.subject || "Demande d'assistance")}</h4>
+          <span class="meta">${escapeHtml(conv.category || "general")} - Dernière mise à jour : ${formatDate(conv.updated_at)}</span>
+        </div>
+        <span class="tag">${conv.status === "answered" ? "Répondu" : conv.status === "closed" ? "Fermé" : "Ouvert"}</span>
+      </div>
+      <div class="thread">
+        ${(conv.messages || []).map(msg=>`
+          <div class="message-line ${msg.sender === "admin" ? "" : "mine"}">
+            <span class="message-author">${msg.sender === "admin" ? "Administration" : "Vous"}</span>
+            <span class="message-date">${formatDate(msg.created_at)}</span>
+            ${msg.text ? `<div class="message-text">${escapeHtml(msg.text)}</div>` : ""}
+            ${msg.media ? `<img class="message-media" src="${escapeHtml(msg.media)}" alt="Image jointe">` : ""}
+          </div>
+        `).join("")}
+      </div>
+    </article>
+  `).join("");
+}
+
+async function loadVisitorHistory(){
+  try{
+    const res = await fetch("send_contact?action=visitor&visitor_id=" + encodeURIComponent(visitorId) + "&ts=" + Date.now(), {cache:"no-store"});
+    const data = await res.json();
+    if(data.status !== "success") throw new Error(data.message || "Chargement impossible");
+    renderHistory(data.messages || []);
+  }catch(e){
+    document.getElementById("visitorHistory").innerHTML = '<div class="conversation">Historique momentanément indisponible.</div>';
+  }
+}
+
+document.getElementById("contactForm").addEventListener("submit", async event=>{
+  event.preventDefault();
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const whatsapp = document.getElementById("whatsapp").value.trim();
+  const subject = document.getElementById("subject").value.trim();
+  const category = document.getElementById("category").value;
+  const message = document.getElementById("message").value.trim();
+  const media = document.getElementById("media").files[0];
+  if(!name || !message){
+    setStatus("error", "Veuillez renseigner votre nom et votre message.");
+    return;
+  }
+  if(!email && !whatsapp){
+    setStatus("error", "Ajoutez au moins un email ou un numéro WhatsApp.");
+    return;
+  }
+
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  setStatus("ok", "Envoi en cours...");
+  try{
+    const fd = new FormData();
+    fd.append("action", "submit");
+    fd.append("visitor_id", visitorId);
+    fd.append("name", name);
+    fd.append("email", email);
+    fd.append("whatsapp", whatsapp);
+    fd.append("subject", subject);
+    fd.append("category", category);
+    fd.append("message", message);
+    if(media) fd.append("media", media);
+    const res = await fetch("send_contact.php", {method:"POST", body:fd});
+    const data = await res.json();
+    if(data.status !== "success") throw new Error(data.message || "Envoi impossible");
+    document.getElementById("message").value = "";
+    document.getElementById("subject").value = "";
+    document.getElementById("media").value = "";
+    setStatus("ok", data.message || "Message envoyé.");
+    loadVisitorHistory();
+  }catch(e){
+    setStatus("error", e.message || "Erreur lors de l'envoi.");
+  }
+  btn.disabled = false;
+});
+
+fetch("track_view.php").catch(function(){});
+loadVisitorHistory();
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("/sw.js", {scope: "/"}).catch(function(){});
+  });
+}
+</script>
+<script src="assets/access-control.js"></script>
+<script src="/assets/site-menu.js"></script>
+<script src="assets/content-media.js"></script>
+</body>
+</html>

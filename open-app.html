@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<title>Ouvrir EMPLOI INFO</title>
+<script>
+(function(){
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  if(isAndroid && !isIOS) return;
+  const params = new URLSearchParams(location.search);
+  const rawTarget = params.get("url") || localStorage.getItem("emploiInfoPendingUrl") || "/index.html";
+  const target = new URL(rawTarget, location.origin);
+  localStorage.setItem("emploiInfoAppGateDone", "true");
+  localStorage.removeItem("emploiInfoPendingUrl");
+  location.replace(target.href);
+})();
+</script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#111,#2a2108,#c9a227);color:#fff;font-family:Arial,sans-serif;padding:18px}
+.shell{width:min(600px,100%);background:rgba(17,17,17,.94);border:1px solid rgba(255,215,0,.32);border-radius:8px;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.brand img{width:64px;height:64px;border-radius:8px;object-fit:contain;background:#fff;padding:6px}
+.brand strong{display:block;font-size:22px;color:#fff}
+.brand span{display:block;color:#ffd86b;font-size:14px;margin-top:3px}
+h1{font-size:25px;line-height:1.2;margin:0 0 10px;color:#ffd86b}
+p{margin:0;color:#f4f4f4;line-height:1.55}
+.actions{display:grid;gap:10px;margin-top:22px}
+a,button{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;border:0;border-radius:8px;padding:13px 14px;font-weight:900;text-decoration:none;cursor:pointer;font-size:15px}
+.primary{background:linear-gradient(180deg,#ffdf7a,#d8a414);color:#111}
+.secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,215,0,.18)}
+.steps{margin-top:16px;padding:14px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.steps strong{display:block;color:#ffd86b;margin-bottom:8px}
+.steps ol{margin:0;padding-left:20px;color:#f4f4f4;line-height:1.55}
+.hint{margin-top:14px;padding:12px;border-radius:8px;background:rgba(255,215,0,.09);border:1px solid rgba(255,215,0,.16);color:#f4f4f4;font-size:14px;overflow-wrap:anywhere}
+.status{margin-top:12px;color:#ffd86b;font-weight:800;font-size:14px}
+.legal{margin-top:18px;font-size:13px;color:#d8d8d8}
+.legal a{display:inline;padding:0;border:0;background:transparent;color:#ffdf7a;text-decoration:underline;font-weight:700;font-size:13px}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="brand">
+    <img src="/logo.png" alt="EMPLOI INFO">
+    <div>
+      <strong>EMPLOI INFO</strong>
+      <span>Acces securise via l'application</span>
+    </div>
+  </div>
+  <h1>Installez l'application EMPLOI INFO</h1>
+  <p>EMPLOI INFO n'est pas sur Play Store. Pour acceder au contenu, telechargez directement l'APK Android, installez-le, puis cette page ouvrira l'application automatiquement.</p>
+  <div class="actions">
+    <a class="primary" id="downloadApk" href="downloads/emploi-info.apk" download="EMPLOI-INFO.apk" rel="noopener">Telecharger et installer l'APK Android</a>
+    <button class="primary" id="openApp" type="button">Ouvrir l'application</button>
+    <button class="primary" id="installPwa" type="button">Installer l'application EMPLOI INFO</button>
+  </div>
+  <section class="steps">
+    <strong>Comment installer</strong>
+    <ol>
+      <li>Appuyez sur <b>Installer l'application EMPLOI INFO</b>.</li>
+      <li>Si le navigateur affiche une fenetre, validez avec <b>Installer</b>.</li>
+      <li>Telechargez l'APK Android, ouvrez le fichier, puis acceptez l'installation.</li>
+      <li>Une fois l'installation terminee, cette page essaie d'ouvrir l'application automatiquement.</li>
+    </ol>
+  </section>
+  <p class="hint" id="installHint">Lien a ouvrir apres installation : <span id="targetLabel"></span></p>
+  <p class="status" id="installStatus">Verification de l'application...</p>
+  <p class="legal">
+    En utilisant EMPLOI INFO, vous acceptez nos
+    <a href="/conditions-utilisation.html" target="_blank" rel="noopener">conditions d'utilisation</a>
+    et notre
+    <a href="/politique-confidentialite.html" target="_blank" rel="noopener">politique de confidentialite</a>.
+  </p>
+</main>
+<script>
+let deferredInstallPrompt = null;
+const params = new URLSearchParams(location.search);
+const rawTarget = params.get("url") || localStorage.getItem("emploiInfoPendingUrl") || "/index.html";
+const target = new URL(rawTarget, location.origin);
+const path = target.pathname + target.search + target.hash;
+const packageName = "com.emploiinfo.app";
+const appScheme = "emploiinfo";
+const apkDownloadUrl = new URL("downloads/emploi-info.apk", location.href).href;
+const appUrl = appScheme + "://open?url=" + encodeURIComponent(target.href);
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+const isNative = navigator.userAgent.includes("EmploiInfoAndroid");
+const ua = navigator.userAgent || "";
+const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(ua);
+const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(location.hostname);
+const statusEl = document.getElementById("installStatus");
+const targetLabel = document.getElementById("targetLabel");
+let autoOpenTimer = null;
+let autoOpenUntil = 0;
+let downloadStarted = false;
+let appOpenAttemptAt = 0;
+
+localStorage.setItem("emploiInfoPendingUrl", target.href);
+targetLabel.textContent = path || "/index.html";
+
+if(isIOS || !isAndroid){
+  localStorage.setItem("emploiInfoAppGateDone", "true");
+  localStorage.removeItem("emploiInfoPendingUrl");
+  location.replace(target.href);
+}else if(isStandalone || isNative){
+  localStorage.setItem("emploiInfoAppGateDone", "true");
+  localStorage.removeItem("emploiInfoPendingUrl");
+  location.replace(target.href);
+}else{
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  statusEl.textContent = "Votre navigateur peut installer EMPLOI INFO directement.";
+});
+
+function openApp(){
+  statusEl.textContent = "Ouverture de l'application...";
+  appOpenAttemptAt = Date.now();
+  location.href = appUrl;
+}
+
+function openAppSilently(){
+  openApp();
+}
+
+async function isRelatedAppInstalled(){
+  if(!navigator.getInstalledRelatedApps) return false;
+  try{
+    const apps = await navigator.getInstalledRelatedApps();
+    return apps.some(app => app.id === packageName || app.url);
+  }catch(e){
+    return false;
+  }
+}
+
+function startAutoOpenLoop(){
+  autoOpenUntil = Date.now() + 120000;
+  if(autoOpenTimer) clearInterval(autoOpenTimer);
+  statusEl.textContent = "Verification silencieuse de l'application en cours...";
+  autoOpenTimer = setInterval(async () => {
+  if(Date.now() > autoOpenUntil){
+      clearInterval(autoOpenTimer);
+      statusEl.textContent = "Si l'application ne s'ouvre pas, appuyez sur Ouvrir l'application.";
+      return;
+    }
+    if(document.hidden) return;
+    if(Date.now() - appOpenAttemptAt > 8000) openApp();
+  }, 4000);
+}
+
+function triggerDownload(){
+  if(downloadStarted || !isAndroid || isIOS) return;
+  downloadStarted = true;
+  const downloadAnchor = document.createElement("a");
+  downloadAnchor.href = apkDownloadUrl;
+  downloadAnchor.download = "EMPLOI-INFO.apk";
+  downloadAnchor.rel = "noopener";
+  downloadAnchor.style.display = "none";
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  document.body.removeChild(downloadAnchor);
+}
+
+async function installPwa(){
+  statusEl.textContent = "Telechargement APK lance. Apres installation, l'ouverture sera retentee automatiquement.";
+  startAutoOpenLoop();
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+    if(choice && choice.outcome === "accepted"){
+      localStorage.setItem("emploiInfoAppGateDone", "true");
+    }
+    deferredInstallPrompt = null;
+  }
+  triggerDownload();
+}
+
+async function ensureAndroidInstallFlow(){
+  openApp();
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  if(document.hidden) return;
+  if(await isRelatedAppInstalled()){
+    startAutoOpenLoop();
+    return;
+  }
+  statusEl.textContent = "Application non installee. Telechargement direct de l'APK en cours...";
+  startAutoOpenLoop();
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+    if(choice && choice.outcome === "accepted"){
+      localStorage.setItem("emploiInfoAppGateDone", "true");
+    }
+    deferredInstallPrompt = null;
+  }
+  triggerDownload();
+}
+
+window.addEventListener("appinstalled", () => {
+  localStorage.setItem("emploiInfoAppGateDone", "true");
+  startAutoOpenLoop();
+});
+
+document.getElementById("openApp").addEventListener("click", openApp);
+document.getElementById("installPwa").addEventListener("click", installPwa);
+document.getElementById("downloadApk").addEventListener("click", event => {
+  event.preventDefault();
+  statusEl.textContent = "APK telecharge. Installez-le, puis cette page tentera d'ouvrir l'application.";
+  startAutoOpenLoop();
+  downloadStarted = false;
+  triggerDownload();
+});
+
+setInterval(async () => {
+  if(!isAndroid || isIOS || document.hidden) return;
+  if(await isRelatedAppInstalled()) openApp();
+}, 4000);
+
+if(!isLocalHost){
+  if(isAndroid){
+    setTimeout(() => ensureAndroidInstallFlow(), 650);
+  } else {
+    setTimeout(openApp, 650);
+  }
+}
+}
+</script>
+</body>
+</html>

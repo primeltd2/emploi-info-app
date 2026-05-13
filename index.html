@@ -1,0 +1,1643 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script>
+(function(){
+  const ua = navigator.userAgent || "";
+  const isAndroid = /Android/i.test(ua);
+  const isAdminApp = ua.includes("AdminEmploiInfoAndroid");
+  const isPublicApp = ua.includes("EmploiInfoAndroid") && !isAdminApp;
+  if(isAndroid && !isAdminApp && !isPublicApp && !sessionStorage.getItem("emploiInfoOpenAttempted")){
+    sessionStorage.setItem("emploiInfoOpenAttempted", "true");
+    const target = new URL(location.pathname + location.search + location.hash, location.origin);
+    location.replace("/open-app.html?url=" + encodeURIComponent(target.href));
+    return;
+  }
+
+  if(!document.cookie.includes("visitor=")){
+    const id = "user_" + Date.now() + "_" + Math.random();
+    document.cookie = "visitor=" + id + "; path=/; max-age=86400; SameSite=None; Secure";
+  }
+
+  if(!localStorage.getItem("visitor")){
+    localStorage.setItem("visitor", "user_" + Date.now());
+  }
+})();
+</script>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="robots" content="index, follow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMPLOI INFO</title>
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<meta property="og:title" content="EMPLOI INFO - Offres d'emploi et formations">
+<meta property="og:description" content="Découvrez les dernières offres d'emploi, stages et formations. Publiez vos annonces facilement sur EMPLOI INFO.">
+<meta property="og:image" content="https://emploi-info.page.gd/banner.png">
+<meta property="og:url" content="https://emploi-info.page.gd/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EMPLOI INFO">
+<meta name="twitter:description" content="Les meilleures opportunités d'emploi et formations en un seul endroit.">
+<meta name="twitter:image" content="https://emploi-info.page.gd/banner.png">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{min-height:100vh;display:flex;flex-direction:column;background:#111;color:white;}
+a{text-decoration:none;color:inherit;}
+
+nav{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  padding:10px 16px;
+  background:linear-gradient(90deg,#171717,#222,#171717);
+  border-bottom:1px solid rgba(255,215,0,0.18);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+nav a{
+  color:gold;
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:14px;
+  transition:0.3s;
+  background:rgba(255,215,0,0.06);
+  border:1px solid rgba(255,215,0,0.16);
+}
+nav a:hover{
+  background:gold;
+  color:black;
+  transform:translateY(-1px);
+}
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  padding:18px 16px 14px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.72),rgba(0,0,0,0.38));
+  border-bottom:1px solid rgba(255,215,0,0.12);
+  text-align:center;
+}
+header a{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  color:inherit;
+}
+header img{
+  width:52px;
+  height:52px;
+  border-radius:12px;
+  object-fit:cover;
+  box-shadow:0 6px 18px rgba(0,0,0,0.35);
+  border:2px solid rgba(255,215,0,0.25);
+}
+header h1{
+  font-size:24px;
+  color:gold;
+  letter-spacing:1px;
+  font-weight:800;
+  text-shadow:0 2px 12px rgba(255,215,0,0.18);
+}
+
+.container{padding:20px;flex:1;}
+
+.app-start-screen{
+  position:fixed;
+  inset:0;
+  z-index:200000;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:
+    linear-gradient(rgba(8,8,8,.78),rgba(8,8,8,.9)),
+    url("banner.jpg") center/cover no-repeat;
+}
+.app-start-screen.hidden{display:none}
+.app-start-content{
+  width:min(860px,100%);
+  text-align:center;
+  padding:24px;
+}
+.app-start-content img{
+  width:88px;
+  height:88px;
+  border-radius:18px;
+  object-fit:cover;
+  border:2px solid rgba(255,215,0,.45);
+  box-shadow:0 14px 32px rgba(0,0,0,.42);
+  margin-bottom:20px;
+}
+.app-start-content h2{
+  color:gold;
+  font-size:clamp(30px,8vw,54px);
+  line-height:1.08;
+  margin:0 auto 16px;
+  max-width:820px;
+}
+.app-start-content p{
+  color:#f4f4f4;
+  font-size:18px;
+  line-height:1.65;
+  max-width:760px;
+  margin:0 auto;
+}
+.app-start-actions{
+  display:flex;
+  justify-content:center;
+  margin-top:28px;
+}
+.app-start-continue{
+  border:0;
+  border-radius:8px;
+  background:gold;
+  color:#111;
+  font-size:17px;
+  font-weight:900;
+  padding:14px 24px;
+  cursor:pointer;
+  box-shadow:0 12px 28px rgba(0,0,0,.35);
+}
+.app-start-continue:focus-visible{
+  outline:3px solid #fff;
+  outline-offset:4px;
+}
+.news-toast{
+  position:fixed;
+  right:16px;
+  top:92px;
+  z-index:130000;
+  width:min(360px,calc(100vw - 32px));
+  background:#141414;
+  border:1px solid rgba(255,215,0,.32);
+  border-left:5px solid gold;
+  border-radius:10px;
+  box-shadow:0 18px 42px rgba(0,0,0,.42);
+  padding:14px;
+  display:none;
+}
+.news-toast.show{display:block}
+.news-toast strong{display:block;color:gold;margin-bottom:6px}
+.news-toast p{font-size:13px;line-height:1.45;color:#eee;margin-bottom:10px}
+.news-toast-actions{display:flex;gap:8px}
+.news-toast-actions a,.news-toast-actions button{flex:1;border:0;border-radius:7px;padding:9px 10px;font-weight:800;cursor:pointer}
+.news-toast-actions a{background:gold;color:#111;text-align:center}
+.news-toast-actions button{background:#2a2a2a;color:#fff}
+
+.topbar{
+  display:grid;
+  grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) auto auto;
+  gap:10px;
+  margin-bottom:20px;
+  align-items:center;
+}
+.topbar input,
+.topbar select{
+  width:100%;
+  min-width:0;
+  height:42px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid rgba(255,215,0,0.14);
+  background:#fff;
+  color:#111;
+  font-size:14px;
+}
+.publish-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:42px;
+  padding:0 14px;
+  border-radius:10px;
+  background:gold;
+  color:black;
+  font-weight:700;
+  font-size:14px;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:0.25s;
+}
+.publish-btn:hover{
+  transform:translateY(-1px);
+}
+.notification-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:42px;
+  padding:0 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,215,0,0.35);
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+  font-weight:700;
+  font-size:14px;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:0.25s;
+}
+.notification-btn:hover{transform:translateY(-1px);}
+.notification-btn.active{background:rgba(37,211,102,0.18);border-color:#25d366;color:#d8ffe6;}
+.notification-btn.blocked{background:rgba(255,80,80,0.15);border-color:#ff6b6b;color:#ffd6d6;}
+
+.card{background:rgba(0,0,0,0.55);border-left:5px solid gold;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 4px 10px rgba(0,0,0,.4);position:relative;transition:transform 0.3s;}
+.card.new{animation:flash 1.2s ease-in-out 3;border-left-color:#00ffcc;}
+.card.urgent{border-left-color:#ff4c4c;}
+@keyframes flash{0%{transform:scale(.97);opacity:.5}50%{transform:scale(1.02);opacity:1}100%{transform:scale(1);opacity:1}}
+.badge{position:absolute;top:10px;right:10px;background:red;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
+.badge.urgent{background:#ff4c4c;}
+.badge.new{background:#00c2a8;color:#04110f;right:auto;left:10px;}
+.card img{width:100%;border-radius:10px;margin-bottom:10px;}
+.card video{width:100%;border-radius:10px;margin-bottom:10px;background:#000;}
+.card h2{color:gold;font-size:18px;margin-bottom:8px;}
+.card pre{font-size:14px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px;}
+.card .date{font-size:12px;opacity:.8;margin-bottom:8px;}
+.card .btn{margin:5px;padding:10px 14px;border-radius:8px;color:white;font-weight:bold;display:inline-block;}
+
+#container{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding:20px;}
+
+#followOverlayBg{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  z-index:200000;
+}
+#followOverlay{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:linear-gradient(135deg,#111,#000);
+  color:white;
+  padding:25px;
+  border-radius:16px;
+  width:90%;
+  max-width:360px;
+  text-align:center;
+  z-index:200001;
+  box-shadow:0 0 40px rgba(255,215,0,0.5);
+  transition:0.4s ease;
+}
+#followOverlay.show{transform:translate(-50%,-50%) scale(1);}
+#followOverlay h2{color:gold;margin-bottom:10px;}
+.follow-actions{display:flex;gap:10px;margin:15px 0;}
+.follow-btn{flex:1;padding:12px;border-radius:10px;font-weight:bold;color:white;}
+.follow-btn.fb{background:#4267B2;}
+.follow-btn.wa{background:#25D366;}
+.follow-later{
+  background:transparent;
+  border:1px solid #ccc;
+  color:#555;
+  padding:10px 18px;
+  border-radius:30px;
+  font-size:14px;
+  cursor:pointer;
+  transition:all .3s ease;
+}
+.follow-later:hover{background:#f1f1f1;color:#000;border-color:#999;}
+
+footer{background:rgba(20,20,20,0.9);padding:30px 15px;margin-top:20px;border-top:3px solid gold;}
+.footer-main{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;max-width:1200px;margin:auto;}
+.footer-section{flex:1;min-width:220px;}
+.footer-section h2,.footer-section h3{color:gold;margin-bottom:10px;}
+.footer-section p,.footer-section ul{font-size:14px;line-height:1.6;}
+.footer-section ul{list-style:none;padding:0;}
+.footer-section ul li{margin-bottom:8px;}
+.footer-section ul li a{color:white;transition:0.3s;}
+.footer-section ul li a:hover{color:gold;text-shadow:0 0 6px gold;}
+.terms-notice{max-width:1200px;margin:12px auto 0;padding:12px 14px;border:1px solid rgba(255,215,0,0.25);border-radius:8px;background:rgba(255,215,0,0.08);color:#f5f5f5;font-size:13px;line-height:1.5;text-align:center;}
+.terms-notice a{color:gold;font-weight:bold;text-decoration:underline;}
+.form-terms{font-size:12px;line-height:1.45;color:#ddd;margin:0 0 10px;text-align:center;}
+.form-terms a{color:gold;font-weight:bold;}
+.footer-socials a{margin-right:10px;color:white;font-weight:bold;padding:6px 12px;border-radius:6px;transition:0.3s;}
+.footer-socials .social-facebook:hover{background:#4267B2;}
+.footer-socials .social-whatsapp:hover{background:#25D366;}
+.footer-ia{margin-top:30px;text-align:center;}
+.footer-ai-cards{display:flex;flex-wrap:wrap;justify-content:center;gap:15px;}
+.footer-ai-cards div{background:rgba(255,255,255,0.05);padding:12px 15px;border-radius:8px;min-width:200px;text-align:center;}
+
+#formOverlayBg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:900;}
+#formOverlay{position:fixed;left:50%;top:50%;transform:translate(-50%, -50%) scale(0);background:rgba(0,0,0,0.95);padding:20px;border-radius:12px;z-index:1000;transition:transform 0.4s ease-out;width:90%;max-width:400px;}
+#formOverlay.show{transform:translate(-50%, -50%) scale(1);}
+#formOverlay input,#formOverlay textarea,#formOverlay select,#formOverlay button{width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;}
+#formOverlay button{background:gold;color:black;font-weight:bold;cursor:pointer;}
+
+#previewOverlayBg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:950;}
+#previewOverlay{position:fixed;left:50%;top:50%;transform:translate(-50%, -50%) scale(0);background:rgba(0,0,0,0.95);padding:20px;border-radius:12px;z-index:951;transition:transform 0.4s ease-out;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;}
+#previewOverlay.show{transform:translate(-50%, -50%) scale(1);}
+#previewOverlay h3{color:gold;margin-bottom:15px;}
+#previewOverlay button{width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;}
+#confirmPublishBtn{background:gold;color:black;}
+#closePreviewBtn{background:red;color:white;}
+
+.floating-ad-card{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%) translateY(120%);
+  width:min(92vw, 420px);
+  max-height:35vh;
+  z-index:120000;
+  opacity:0;
+  pointer-events:none;
+  transition:transform .7s cubic-bezier(.22,.9,.3,1), opacity .45s ease;
+}
+.floating-ad-card.show{
+  transform:translateX(-50%) translateY(-15vh);
+  opacity:1;
+  pointer-events:auto;
+}
+.floating-ad-inner{
+  background:
+    radial-gradient(circle at top right, rgba(255,215,0,0.14), transparent 35%),
+    linear-gradient(180deg, #1b1b1b 0%, #101010 100%);
+  border:1px solid rgba(255,215,0,0.28);
+  border-left:5px solid gold;
+  border-radius:22px;
+  box-shadow:
+    0 20px 45px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,0.03) inset;
+  padding:14px;
+  color:white;
+  overflow:hidden;
+  backdrop-filter:blur(4px);
+}
+.floating-ad-media{
+  width:100%;
+  height:168px;
+  object-fit:cover;
+  border-radius:14px;
+  display:block;
+  background:#000;
+  margin-bottom:12px;
+  box-shadow:0 8px 20px rgba(0,0,0,.28);
+}
+.floating-ad-title{
+  color:#ffd54a;
+  font-size:16px;
+  font-weight:800;
+  line-height:1.25;
+  margin-bottom:8px;
+  letter-spacing:.2px;
+}
+.floating-ad-desc{
+  font-size:13px;
+  line-height:1.5;
+  margin-bottom:14px;
+  color:rgba(255,255,255,0.92);
+  white-space:pre-wrap;
+  max-height:78px;
+  overflow:hidden;
+}
+.floating-ad-actions{
+  display:flex;
+  gap:10px;
+}
+.floating-ad-actions .btn{
+  flex:1;
+  text-align:center;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:13px;
+  font-weight:700;
+  margin:0;
+  transition:transform .2s ease, opacity .2s ease;
+}
+.floating-ad-actions .btn:hover{
+  transform:translateY(-1px);
+  opacity:.96;
+}
+.floating-ad-actions .visit-btn{
+  background:linear-gradient(180deg,#ffe27a,#d9a900) !important;
+  color:#111 !important;
+}
+.floating-ad-close{
+  background:linear-gradient(180deg,#ff6a6a,#d63c3c) !important;
+  color:#fff !important;
+}
+
+#contactBtn{position:fixed;top:50%;right:0;transform:translateY(-50%);background:gold;color:black;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;z-index:100001;box-shadow:0 4px 10px rgba(0,0,0,0.4);animation:floatContact 2s ease-in-out infinite alternate;}
+@keyframes floatContact{0%{transform:translateY(-50%) translateX(0);}50%{transform:translateY(-50%) translateX(-8px);}100%{transform:translateY(-50%) translateX(0);}}
+
+@media(max-width:768px){
+  nav{gap:8px;padding:8px 10px;flex-wrap:wrap;}
+  nav a{padding:7px 12px;font-size:13px;}
+  header{flex-direction:row;justify-content:center;gap:10px;padding:12px 10px;}
+  header img{width:40px;height:40px;border-radius:10px;}
+  header h1{font-size:18px;line-height:1.2;letter-spacing:0.5px;}
+
+  .topbar{
+    grid-template-columns:1fr;
+    gap:9px;
+    background:rgba(255,255,255,0.04);
+    padding:10px;
+    border:1px solid rgba(255,215,0,0.12);
+    border-radius:14px;
+  }
+  .topbar input,
+  .topbar select,
+  .notification-btn,
+  .publish-btn{
+    width:100%;
+    height:44px;
+    font-size:14px;
+    border-radius:10px;
+  }
+  .publish-btn{
+    padding:0 12px;
+  }
+
+  #container{grid-template-columns:1fr;gap:15px;padding:15px;}
+  .card{padding:12px;}
+  .card h2{font-size:16px;}
+  .card pre{font-size:13px;}
+  .card .btn{padding:8px 10px;font-size:12px;}
+  .footer-main{flex-direction:column;align-items:center;}
+  .footer-section{text-align:center;width:100%;margin-bottom:20px;}
+  .footer-socials{justify-content:center;display:flex;}
+  #contactBtn{width:45px;height:45px;font-size:12px;}
+
+  .floating-ad-card{
+    width:min(94vw, 360px);
+    max-height:34vh;
+  }
+  .floating-ad-card.show{
+    transform:translateX(-50%) translateY(-12vh);
+  }
+  .floating-ad-inner{
+    border-radius:20px;
+    padding:12px;
+  }
+  .floating-ad-media{
+    height:134px;
+    border-radius:12px;
+  }
+  .floating-ad-title{
+    font-size:15px;
+  }
+  .floating-ad-desc{
+    font-size:12px;
+    max-height:62px;
+  }
+  .floating-ad-actions .btn{
+    font-size:12px;
+    padding:9px 10px;
+  }
+  .news-toast{top:auto;bottom:14px;right:10px;left:10px;width:auto}
+}
+@media(max-width:480px){
+  nav{justify-content:center;padding:8px;}
+  nav a{font-size:12px;padding:6px 10px;}
+  header{padding:10px 8px;gap:8px;}
+  header img{width:34px;height:34px;}
+  header h1{font-size:16px;}
+
+  .topbar{
+    padding:9px;
+    gap:8px;
+  }
+  .topbar input,
+  .topbar select,
+  .notification-btn,
+  .publish-btn{
+    height:42px;
+    font-size:13px;
+  }
+
+  .card{margin-bottom:10px;}
+  .badge{font-size:10px;padding:3px 6px;}
+  footer{padding:20px 10px;}
+  .footer-section{min-width:unset;}
+
+  .floating-ad-card{
+    width:min(95vw, 338px);
+    max-height:32vh;
+  }
+  .floating-ad-card.show{
+    transform:translateX(-50%) translateY(-10vh);
+  }
+  .floating-ad-media{
+    height:118px;
+  }
+  .floating-ad-title{
+    font-size:14px;
+  }
+}
+@media(min-width:769px) and (max-width:1024px){
+  #container{grid-template-columns:repeat(2,1fr);gap:15px;}
+  .card{padding:15px;}
+}
+@media(min-width:1025px){
+  #container{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
+}
+
+#container p{text-align:center;}
+#successMsg{display:none;text-align:center;background:#00ff66;color:black;padding:15px;border-radius:12px;margin-bottom:15px;}
+#closeFormBtn{background:red;color:white;}
+</style>
+<link rel="stylesheet" href="assets/pub-card.css">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227"></head>
+<body>
+<section class="app-start-screen" id="appStartScreen" aria-label="Démarrage EMPLOI INFO">
+  <div class="app-start-content">
+    <img src="logo.png" alt="EMPLOI INFO">
+    <h2>Une plateforme qui rapproche les opportunités des bonnes personnes</h2>
+    <p>EMPLOI INFO aide les visiteurs à trouver des offres, stages, formations, publicités utiles et actualités en un seul espace. Cette page présente l'impact public de la plateforme et les raisons de lui faire confiance.</p>
+    <div class="app-start-actions">
+      <button class="app-start-continue" id="appStartContinue" type="button">Continuer</button>
+    </div>
+  </div>
+</section>
+
+<nav>
+  <a href="index.html">Accueil</a>
+  <a href="actualites.html">Actualités</a>
+  <a href="publicites.html">Publicités</a>
+  <a href="formations.html">Formations</a>
+  <a href="statistiques.html">Statistiques</a>
+  <a href="comment-ca-marche.html">Comment ça marche</a>
+  <a href="faq.html">FAQ</a>
+  <a href="devenir-partenaire.html">Devenir partenaire</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<header>
+  <a href="index.html" id="homeLogoLink" title="Retour à l'accueil">
+    <img src="logo.png" alt="Logo">
+    <h1>EMPLOI INFO</h1>
+  </a>
+</header>
+
+<div class="container">
+  <div class="topbar">
+    <input id="search" placeholder="Rechercher une offre...">
+    <select id="filtre" title="Filtre par catégorie">
+      <option value="">Toutes catégories</option>
+    </select>
+    <select id="villeFiltre" title="Filtre par ville">
+      <option value="">Toutes les villes</option>
+    </select>
+    <button class="notification-btn" id="enableNotificationsBtn" type="button">Activer notifications</button>
+    <a class="publish-btn" id="openFormBtn">Transmettre une offre</a>
+  </div>
+
+  <div id="container"><p>Chargement…</p></div>
+</div>
+
+<div id="formOverlayBg"></div>
+<div id="formOverlay">
+  <h3>Transmettre une offre</h3>
+  <div id="successMsg">OK Offre envoyée à l'administration pour validation.</div>
+  <input type="text" id="nom" placeholder="Votre nom complet">
+  <input type="text" id="whatsapp" placeholder="Numéro WhatsApp (ex:+22955555555)">
+  <input type="email" id="emailForm" placeholder="Email (optionnel si WhatsApp renseigné)">
+  <input type="text" id="titreForm" placeholder="Titre de l'offre">
+  <select id="categorieForm" title="Choisir une catégorie"></select>
+  <select id="villeForm" title="Choisir une ville"></select>
+  <textarea id="texteForm" rows="5" placeholder="Description de l'offre"></textarea>
+  <input type="text" id="noticeForm" placeholder="Notice (optionnelle)">
+  <input type="file" id="banniereForm" accept="image/*,video/*,audio/*,application/pdf,.doc,.docx,.txt" multiple title="Télécharger des fichiers">
+  <p class="form-terms">
+    En envoyant une offre sur EMPLOI INFO, vous acceptez les
+    <a href="conditions-utilisation.html" target="_blank" rel="noopener">conditions d'utilisation</a>.
+  </p>
+  <button id="previewOfferBtn" type="button">Prévisualiser Prévisualiser</button>
+  <button id="sendOfferBtn">Envoyer à l'administration</button>
+  <button id="closeFormBtn">Fermer</button>
+</div>
+
+<div id="previewOverlayBg"></div>
+<div id="previewOverlay">
+  <h3>Prévisualisation de l'offre</h3>
+  <div id="previewContent" style="background:rgba(0,0,0,0.55);border-left:5px solid gold;border-radius:12px;padding:15px;margin-bottom:15px;max-height:400px;overflow-y:auto;"></div>
+  <button id="confirmPublishBtn" style="background:gold;color:black;">Envoyer à l'administration</button>
+  <button id="closePreviewBtn" style="background:red;color:white;">Retour Retour au formulaire</button>
+</div>
+
+<footer class="footer-pro">
+  <div class="footer-main container-flex">
+    <div class="footer-section">
+      <h2>EMPLOI INFO</h2>
+      <p>Votre plateforme fiable pour les offres d'emploi, stages et formations.</p>
+      <p>En utilisant EMPLOI INFO, vous acceptez nos conditions d'utilisation.</p>
+      <a href="devenir-partenaire.html" class="footer-btn">Devenir partenaire</a>
+    </div>
+    <div class="footer-section">
+      <h3>Navigation</h3>
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="actualites.html">Actualités</a></li>
+        <li><a href="publicites.html">Publicités</a></li>
+        <li><a href="formations.html">Formations</a></li>
+        <li><a href="statistiques.html">Statistiques</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="ressources.html">Ressources</a></li>
+        <li><a href="comment-ca-marche.html">Comment ça marche</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="devenir-partenaire.html">Devenir partenaire</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h3>Contact</h3>
+      <p>Email : <a href="mailto:kodjaouelisee1234@gmail.com">kodjaouelisee1234@gmail.com</a></p>
+      <p>Téléphone : <a href="tel:+22953876853">+229 53876853</a></p>
+      <div class="footer-socials">
+        <a href="https://www.facebook.com/share/1DxuasNToY/" target="_blank" rel="noopener" class="social-facebook">Facebook</a>
+        <a href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23" target="_blank" rel="noopener" class="social-whatsapp">WhatsApp</a>
+      </div>
+    </div>
+    <div class="footer-section">
+      <h3>Infos légales</h3>
+      <ul>
+        <li><a href="conditions-utilisation.html">Conditions d'utilisation</a></li>
+        <li><a href="mentions-legales.html">Mentions légales</a></li>
+        <li><a href="politique-confidentialite.html">Politique de confidentialité</a></li>
+        <li>&copy; 2026 EMPLOI INFO</li>
+      </ul>
+    </div>
+  </div>
+  <div class="terms-notice">
+    En utilisant EMPLOI INFO, vous acceptez les
+    <a href="conditions-utilisation.html">conditions d'utilisation</a>
+    et la politique de confidentialité.
+  </div>
+  <div class="footer-ia">
+    <h3>Annonces populaires</h3>
+    <div id="footerAIContainer" class="footer-ai-cards"></div>
+  </div>
+</footer>
+
+<a id="contactBtn" href="contact.html" title="Contact">Contact</a>
+
+<div id="followOverlayBg"></div>
+<div id="followOverlay">
+  <h2>Suivez EMPLOI INFO</h2>
+  <p>Recevez les meilleures offres d’emploi et formations en avant-première.</p>
+  <div class="follow-actions">
+    <a href="https://www.facebook.com/share/1DxuasNToY/" target="_blank" rel="noopener" class="follow-btn fb">Facebook</a>
+    <a href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23" target="_blank" rel="noopener" class="follow-btn wa">WhatsApp</a>
+  </div>
+  <button onclick="closeFollow()" class="follow-later">Plus tard</button>
+</div>
+
+<div id="floatingAdCard" class="floating-ad-card">
+  <div id="floatingAdInner" class="floating-ad-inner"></div>
+</div>
+
+<div id="newsToast" class="news-toast" aria-live="polite"></div>
+
+<script src="assets/rich-content.js"></script>
+<script>
+const appStartScreen = document.getElementById("appStartScreen");
+const appStartContinue = document.getElementById("appStartContinue");
+function enterEmploiInfoApp(){
+  if(!appStartScreen) return;
+  appStartScreen.classList.add("hidden");
+  sessionStorage.setItem("emploiInfoStartSeen", "1");
+}
+if(appStartScreen && sessionStorage.getItem("emploiInfoStartSeen") === "1"){
+  appStartScreen.classList.add("hidden");
+}
+if(appStartContinue){
+  appStartContinue.addEventListener("click", enterEmploiInfoApp);
+}
+
+let annonces = [];
+let categories = [];
+let villes = [];
+const container = document.getElementById("container");
+const search = document.getElementById("search");
+const filtre = document.getElementById("filtre");
+const villeFiltre = document.getElementById("villeFiltre");
+const categorieForm = document.getElementById("categorieForm");
+const villeForm = document.getElementById("villeForm");
+const enableNotificationsBtn = document.getElementById("enableNotificationsBtn");
+
+let lastViewedDate = localStorage.getItem("lastViewedDate") || new Date().toISOString();
+let pollingInterval = 15000;
+let pollingTimer;
+let pushSubscription = null;
+let notificationSoundUrl = "";
+let viewedOfferIds = JSON.parse(localStorage.getItem("viewedOfferIds") || "[]").map(String);
+let notifiedOfferIds = JSON.parse(localStorage.getItem("notifiedOfferIds") || "[]").map(String);
+
+let currentAds = [];
+let floatingAdsStarted = false;
+let floatingAdHideTimer = null;
+let floatingAdNextTimer = null;
+let lastFloatingAdIndex = -1;
+
+function playNotificationSound() {
+  try {
+    if(notificationSoundUrl){
+      const audio = new Audio(notificationSoundUrl);
+      audio.play().catch(() => {});
+      return;
+    }
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = "sine";
+    osc2.type = "triangle";
+
+    osc1.frequency.setValueAtTime(880, ctx.currentTime);
+    osc2.frequency.setValueAtTime(1320, ctx.currentTime);
+
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(ctx.currentTime);
+    osc2.start(ctx.currentTime + 0.02);
+
+    osc1.stop(ctx.currentTime + 0.55);
+    osc2.stop(ctx.currentTime + 0.6);
+  } catch (e) {
+    console.log("Son non joué :", e);
+  }
+}
+
+function tempsDepuis(date){
+  const now = new Date();
+  const then = new Date(date);
+  const options = {weekday:"long", year:"numeric", month:"long", day:"numeric"};
+  const diff = Math.floor((now - then) / 1000);
+  if(diff < 60) return "à l’instant";
+  if(diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
+  if(diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
+  return then.toLocaleDateString("fr-FR", options);
+}
+
+function isPublished(item){
+  const value = item && item.publie;
+  return value === true || value === 1 || value === "1" || String(value).toLowerCase() === "true";
+}
+
+function isActiveAd(ad){
+  if(!isPublished(ad)) return false;
+  if(!ad.expires_at) return true;
+  return new Date(ad.expires_at).getTime() >= Date.now();
+}
+
+function normalizeUrl(url){
+  if(!url || typeof url !== "string") return "";
+  if(/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) return url;
+  return "https://emploi-info.page.gd/" + url.replace(/^\/+/, "");
+}
+
+function isVideoFile(url){
+  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url || "");
+}
+
+function cleanDisplayText(text){
+  return String(text || "")
+    .replace(/\r/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ ]+\n/g, "\n")
+    .trim();
+}
+
+function hasNotifiedOffer(id){
+  return id && notifiedOfferIds.includes(String(id));
+}
+
+function rememberNotifiedOffer(id){
+  if(!id) return;
+  const key = String(id);
+  if(notifiedOfferIds.includes(key)) return;
+  notifiedOfferIds.unshift(key);
+  notifiedOfferIds = notifiedOfferIds.slice(0, 200);
+  localStorage.setItem("notifiedOfferIds", JSON.stringify(notifiedOfferIds));
+}
+
+function updateAppNotificationBadge(count){
+  const safeCount = Math.max(0, Number(count) || 0);
+  localStorage.setItem("newNotificationCount", String(safeCount));
+
+  if("setAppBadge" in navigator && "clearAppBadge" in navigator){
+    if(safeCount > 0){
+      navigator.setAppBadge(safeCount).catch(() => {});
+    }else{
+      navigator.clearAppBadge().catch(() => {});
+    }
+  }
+
+  if(window.EmploiInfoAndroid && typeof window.EmploiInfoAndroid.setNotificationBadge === "function"){
+    try{
+      window.EmploiInfoAndroid.setNotificationBadge(safeCount);
+    }catch(e){}
+  }
+}
+
+function getAdMedia(ad){
+  const fichier = normalizeUrl(ad.fichier || "");
+  const image = normalizeUrl(ad.image || ad.imageUrl || ad.mediaImage || ad.banniere || "");
+  const video = normalizeUrl(ad.video || ad.videoUrl || ad.mediaVideo || "");
+  const generic = normalizeUrl(ad.media || ad.src || "");
+  if(ad.type === "video" && fichier) return { type:"video", src:fichier };
+  if(ad.type === "image" && fichier) return { type:"image", src:fichier };
+  if(video) return { type:"video", src:video };
+  if(image) return { type:"image", src:image };
+  if(fichier) return { type:isVideoFile(fichier) ? "video" : "image", src:fichier };
+  if(generic) return { type:isVideoFile(generic) ? "video" : "image", src:generic };
+  return { type:"", src:"" };
+}
+
+function normalizeAd(ad){
+  const media = getAdMedia(ad);
+  return {
+    ...ad,
+    publie: isPublished(ad),
+    titre: ad.titre || "Publicité",
+    description: ad.description || "",
+    lien: ad.lien || "#",
+    type: media.type,
+    mediaType: media.type,
+    mediaSrc: media.src,
+    image: media.type === "image" ? media.src : "",
+    video: media.type === "video" ? media.src : ""
+  };
+}
+
+function truncateText(text, max = 100){
+  const value = window.RichContent ? RichContent.text(text) : String(text || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return value.length > max ? value.slice(0, max) + "..." : value;
+}
+
+function showNewsToast(news){
+  const box = document.getElementById("newsToast");
+  if(!box || !news) return;
+  const already = localStorage.getItem("lastNewsToastId") === String(news.id);
+  if(already) return;
+  localStorage.setItem("lastNewsToastId", String(news.id));
+  const summary = truncateText(news.summary || news.content || "", 135);
+  box.innerHTML = `
+    <strong>${news.title || "Nouvelle actualité"}</strong>
+    <p>${summary || "Une nouvelle actualité est disponible sur EMPLOI INFO."}</p>
+    <div class="news-toast-actions">
+      <a href="actualite-details.html?id=${encodeURIComponent(news.id)}">Voir détails</a>
+      <button type="button" onclick="document.getElementById('newsToast').classList.remove('show')">Fermer</button>
+    </div>
+  `;
+  box.classList.add("show");
+  setTimeout(()=>box.classList.remove("show"), 12000);
+}
+
+async function loadLatestNewsToast(){
+  try{
+    const res = await fetch("news_feed.php?ts=" + Date.now(), {cache:"no-store"});
+    const data = await res.json();
+    const latest = (Array.isArray(data.items) ? data.items : [])[0];
+    if(latest) setTimeout(()=>showNewsToast(latest), 2500);
+  }catch(e){}
+}
+
+function afficherAnnonces(){
+  const recherche = search.value.toLowerCase();
+  const filtreTexte = filtre.value.toLowerCase();
+  const villeTexte = villeFiltre.value.toLowerCase();
+  container.innerHTML = "";
+  let hasNew = false;
+  let renderedCount = 0;
+
+  annonces
+    .filter(a => isPublished(a))
+    .filter(a => {
+      const texteComplet = (
+        (a.titre || "") + " " +
+        (window.RichContent ? RichContent.text(a.texte || "") : cleanDisplayText(a.texte || "")) + " " +
+        (a.categorie || "") + " " +
+        (a.ville || "")
+      ).toLowerCase();
+
+      const searchMatch = !recherche || texteComplet.includes(recherche);
+      const filtreMatch = !filtreTexte || texteComplet.includes(filtreTexte);
+      const villeMatch = !villeTexte || String(a.ville || "").toLowerCase() === villeTexte || texteComplet.includes(villeTexte);
+      return searchMatch && filtreMatch && villeMatch;
+    })
+    .sort((a,b) => new Date(b.date) - new Date(a.date))
+    .forEach(a => {
+      const div = document.createElement("div");
+      const isNew = !viewedOfferIds.includes(String(a.id));
+      const isUrgent = a.urgent;
+      const texteNettoye = window.RichContent ? RichContent.text(a.texte || "") : cleanDisplayText(a.texte || "");
+      const preview = texteNettoye.length > 150 ? texteNettoye.slice(0,150) + "…" : texteNettoye;
+      const mediaUrl = a.banniere ? normalizeUrl(a.banniere) : "";
+      const isVideo = mediaUrl && isVideoFile(mediaUrl);
+      div.dataset.offerId = a.id || "";
+
+      if(isNew){
+        div.className = "card new";
+        hasNew = true;
+      } else if(isUrgent){
+        div.className = "card urgent";
+      } else {
+        div.className = "card";
+      }
+
+      div.innerHTML = `
+        ${mediaUrl ? (
+          isVideo
+            ? `<video controls preload="metadata"><source src="${mediaUrl}"></video>`
+            : `<img src="${mediaUrl}" alt="${a.titre || "Annonce"}">`
+        ) : ""}
+        ${isUrgent ? '<div class="badge urgent">URGENT</div>' : ""}
+        ${isNew ? '<div class="badge new">NOUVEAU</div>' : ""}
+        <h2>${a.titre || ""}</h2>
+        <div class="date">${tempsDepuis(a.date)}</div>
+        ${a.ville ? `<p style="text-align:center;color:gold;"><strong>Ville :</strong> ${a.ville}</p>` : ""}
+        ${preview ? `<pre>${preview}</pre>` : ""}
+        ${a.notice ? `<p style="text-align:center;"><i>${window.RichContent ? RichContent.text(a.notice) : cleanDisplayText(a.notice)}</i></p>` : ""}
+        <div class="card-buttons">
+          ${Array.isArray(a.boutons) ? a.boutons.map(b => b.texte ? `<a class="btn" style="background:${b.couleur}" href="${b.lien}" target="_blank" rel="noopener">${b.texte}</a>` : "").join("") : ""}
+        </div>
+        <a href="details.html?id=${a.id}" class="btn" style="background:gold;color:black;">Voir détails</a>
+      `;
+      container.appendChild(div);
+      renderedCount++;
+    });
+
+  if(!renderedCount){
+    container.innerHTML = '<p style="text-align:center;color:gold;padding:18px;">Aucune annonce disponible pour le moment.</p>';
+  }
+
+  if(window.UserFeatures && typeof window.UserFeatures.attachOfferActions === "function"){
+    window.UserFeatures.attachOfferActions(container);
+  }
+
+  if(hasNew) localStorage.setItem("hasUnseenOffers", "1");
+}
+
+function buildAdDetailsUrl(ad){
+  if(ad.kind === "formation") return ad.lien || `formation-details.html?id=${encodeURIComponent(ad.id)}`;
+  return `publicite-details.html?id=${encodeURIComponent(ad.id)}`;
+}
+
+function clearFloatingAdTimers(){
+  clearTimeout(floatingAdHideTimer);
+  clearTimeout(floatingAdNextTimer);
+  floatingAdHideTimer = null;
+  floatingAdNextTimer = null;
+}
+
+function getRandomAd(){
+  if(!currentAds.length) return null;
+  let index;
+  do{
+    index = Math.floor(Math.random() * currentAds.length);
+  }while(currentAds.length > 1 && index === lastFloatingAdIndex);
+  lastFloatingAdIndex = index;
+  return currentAds[index];
+}
+
+function hideFloatingAd(){
+  const card = document.getElementById("floatingAdCard");
+  if(card) card.classList.remove("show");
+}
+
+function scheduleNextFloatingAd(delay = 15000){
+  clearTimeout(floatingAdNextTimer);
+  floatingAdNextTimer = setTimeout(() => {
+    showFloatingAd();
+  }, delay);
+}
+
+function stopFloatingVideo(){
+  const video = document.getElementById("floatingAdVideo");
+  if(video){
+    try{ video.pause(); }catch(e){}
+  }
+}
+
+function manualCloseFloatingAd(){
+  stopFloatingVideo();
+  hideFloatingAd();
+  scheduleNextFloatingAd(15000);
+}
+
+function showFloatingAd(){
+  const card = document.getElementById("floatingAdCard");
+  const inner = document.getElementById("floatingAdInner");
+  if(!card || !inner || !currentAds.length) return;
+
+  clearFloatingAdTimers();
+  stopFloatingVideo();
+
+  const ad = getRandomAd();
+  if(!ad) return;
+
+  const detailsUrl = buildAdDetailsUrl(ad);
+  const shortDesc = truncateText(ad.description, 100);
+
+  let mediaHtml = "";
+  if(ad.mediaType === "video" && ad.mediaSrc){
+    const videoType = ad.mediaSrc.toLowerCase().includes(".webm") ? "video/webm" :
+                      ad.mediaSrc.toLowerCase().includes(".ogg") ? "video/ogg" :
+                      ad.mediaSrc.toLowerCase().includes(".mov") ? "video/quicktime" :
+                      "video/mp4";
+
+    mediaHtml = `
+      <video
+        id="floatingAdVideo"
+        class="floating-ad-media"
+        autoplay
+        playsinline
+        webkit-playsinline
+        controls
+        preload="auto"
+      >
+        <source src="${ad.mediaSrc}" type="${videoType}">
+        Votre navigateur ne supporte pas la vidéo.
+      </video>
+    `;
+  } else if(ad.mediaSrc){
+    mediaHtml = `<img src="${ad.mediaSrc}" alt="${ad.titre}" class="floating-ad-media">`;
+  }
+
+  inner.innerHTML = `
+    ${mediaHtml}
+    <div class="floating-ad-title">${ad.kind === "formation" ? "Formation : " : ""}${ad.titre || "Publicité"}</div>
+    ${shortDesc ? `<div class="floating-ad-desc">${shortDesc}</div>` : ""}
+    <div class="floating-ad-actions">
+      <a href="${detailsUrl}" class="btn visit-btn">En savoir plus</a>
+      <button type="button" class="btn floating-ad-close" onclick="manualCloseFloatingAd()">Fermer</button>
+    </div>
+  `;
+
+  card.classList.add("show");
+
+  if(ad.mediaType === "video" && ad.mediaSrc){
+    const video = document.getElementById("floatingAdVideo");
+    if(video){
+      video.muted = false;
+      video.volume = 1;
+
+      const playWithSound = () => {
+        const promise = video.play();
+        if(promise && typeof promise.catch === "function"){
+          promise.catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+        }
+      };
+
+      playWithSound();
+
+      video.onended = () => {
+        hideFloatingAd();
+        scheduleNextFloatingAd(15000);
+      };
+
+      video.onerror = () => {
+        floatingAdHideTimer = setTimeout(() => {
+          hideFloatingAd();
+          scheduleNextFloatingAd(15000);
+        }, 15000);
+      };
+    }
+  } else {
+    floatingAdHideTimer = setTimeout(() => {
+      hideFloatingAd();
+      scheduleNextFloatingAd(15000);
+    }, 15000);
+  }
+}
+
+function startFloatingAds(){
+  if(!currentAds.length) return;
+  if(floatingAdsStarted) return;
+  clearFloatingAdTimers();
+  floatingAdsStarted = true;
+  setTimeout(() => {
+    showFloatingAd();
+  }, 1500);
+}
+
+async function loadHomeAds(){
+  try{
+    const [ads, formations] = await Promise.all([
+      fetch("ads.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json()).catch(()=>[]),
+      fetch("formations.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json()).catch(()=>[])
+    ]);
+    const normalizedAds = (Array.isArray(ads) ? ads : [])
+      .map(normalizeAd)
+      .filter(ad => isActiveAd(ad) && (ad.mediaSrc || cleanDisplayText(ad.description)));
+    const normalizedFormations = (Array.isArray(formations) ? formations : [])
+      .filter(f => f.publie !== false)
+      .map(f => normalizeAd({
+        ...f,
+        kind:"formation",
+        titre:f.titre || "Formation",
+        description:[
+          f.texte || "",
+          f.date_debut ? "Début : " + new Date(f.date_debut).toLocaleDateString() : "",
+          f.promo_until ? "Promotion jusqu'au " + new Date(f.promo_until).toLocaleDateString() : "",
+          f.promo_places ? "Promotion limitée à " + f.promo_places + " personne(s)" : ""
+        ].filter(Boolean).join("\n"),
+        lien:"formation-details.html?id=" + encodeURIComponent(f.id || ""),
+        fichier:f.fichier || f.img || f.image || "",
+        publie:true
+      }));
+    currentAds = normalizedAds.concat(normalizedFormations)
+      .sort((a,b)=>new Date(b.date || 0) - new Date(a.date || 0));
+
+    window.publications = currentAds;
+    if(typeof window.refreshPublicationsFromWindow === "function"){
+      window.refreshPublicationsFromWindow();
+    }
+
+    if(currentAds.length){
+      startFloatingAds();
+    }else{
+      clearFloatingAdTimers();
+      hideFloatingAd();
+      floatingAdsStarted = false;
+    }
+  }catch(e){
+    console.log("Pas de pubs", e);
+    if(!currentAds.length){
+      window.publications = [];
+      clearFloatingAdTimers();
+      hideFloatingAd();
+      floatingAdsStarted = false;
+    }
+  }
+}
+
+async function chargerData(){
+  try{
+    const [res, resCat, resVilles] = await Promise.all([
+      fetch("data.json?ts=" + Date.now(), {cache:"no-store"}),
+      fetch("categories.json?ts=" + Date.now(), {cache:"no-store"}),
+      fetch("villes.json?ts=" + Date.now(), {cache:"no-store"})
+    ]);
+
+    const newAnnonces = await res.json();
+    categories = await resCat.json();
+    villes = await resVilles.json();
+    annonces = Array.isArray(newAnnonces) ? newAnnonces : [];
+    fetch("params.json?ts=" + Date.now(), {cache:"no-store"})
+      .then(r=>r.json())
+      .then(params=>{
+        const sound = params.notification_sound || "";
+        const version = params.notification_sound_updated_at || Date.now();
+        notificationSoundUrl = sound ? `${sound}${sound.includes("?") ? "&" : "?"}v=${version}` : "";
+      })
+      .catch(()=>{});
+
+    const latestNewOffer = annonces
+      .filter(a => isPublished(a) && !viewedOfferIds.includes(String(a.id)) && !hasNotifiedOffer(a.id))
+      .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+
+    const newCount = annonces.filter(a => isPublished(a) && !viewedOfferIds.includes(String(a.id))).length;
+    updateAppNotificationBadge(newCount);
+    const filtreSelection = filtre.value;
+    const villeSelection = villeFiltre.value;
+
+    filtre.innerHTML = '<option value="">Toutes catégories</option>';
+    villeFiltre.innerHTML = '<option value="">Toutes les villes</option>';
+    categorieForm.innerHTML = '';
+    villeForm.innerHTML = '<option value="">-- Ville --</option>';
+
+    categories.forEach(c => {
+      const opt1 = document.createElement("option");
+      opt1.value = c;
+      opt1.textContent = c;
+      filtre.appendChild(opt1);
+
+      const opt2 = document.createElement("option");
+      opt2.value = c;
+      opt2.textContent = c;
+      categorieForm.appendChild(opt2);
+    });
+
+    (Array.isArray(villes) ? villes : []).forEach(v => {
+      const opt1 = document.createElement("option");
+      opt1.value = v;
+      opt1.textContent = v;
+      villeFiltre.appendChild(opt1);
+
+      const opt2 = document.createElement("option");
+      opt2.value = v;
+      opt2.textContent = v;
+      villeForm.appendChild(opt2);
+    });
+
+    if(filtreSelection) filtre.value = filtreSelection;
+    if(villeSelection) villeFiltre.value = villeSelection;
+
+    afficherAnnonces();
+
+    if(latestNewOffer && document.visibilityState === "visible"){
+      const notifTitle = latestNewOffer.titre || "Nouvelle offre";
+      const notifBody = window.RichContent ? RichContent.text(latestNewOffer.texte || latestNewOffer.notice || "Une nouvelle offre est disponible.") : cleanDisplayText(latestNewOffer.texte || latestNewOffer.notice || "Une nouvelle offre est disponible.");
+      const notifImage = latestNewOffer.banniere ? normalizeUrl(latestNewOffer.banniere) : "logo.png";
+
+      showBrowserNotification(
+        notifTitle,
+        notifBody.length > 120 ? notifBody.slice(0,120) + "..." : notifBody,
+        notifImage,
+        latestNewOffer.id
+      );
+    }
+
+    const sorted = annonces
+      .filter(a => isPublished(a))
+      .sort((a,b) => new Date(b.date) - new Date(a.date))
+      .slice(0,6);
+
+    const footerAI = document.getElementById("footerAIContainer");
+    footerAI.innerHTML = "";
+    sorted.forEach(a => {
+      const div = document.createElement("div");
+      div.innerHTML = `<a href="details.html?id=${a.id}">${cleanDisplayText(a.titre)}</a>`;
+      footerAI.appendChild(div);
+    });
+
+    await loadHomeAds();
+
+    pollingInterval = newCount > 0 ? 15000 : Math.min(pollingInterval * 1.5, 60000);
+    clearInterval(pollingTimer);
+    pollingTimer = setInterval(chargerData, pollingInterval);
+  }catch(e){
+    console.error("Erreur chargement data:", e);
+    container.innerHTML = '<p style="text-align:center;color:gold;padding:18px;">Impossible de charger les annonces. Ouvrez la page depuis le serveur du site, puis réessayez.</p>';
+    loadHomeAds();
+  }
+}
+
+function showBrowserNotification(title, body, imageUrl = "", offerId = ""){
+  if("Notification" in window && Notification.permission === "granted"){
+    if(hasNotifiedOffer(offerId)) return;
+
+    const options = {
+      body: body || "",
+      icon: imageUrl || "logo.png",
+      badge: "logo.png",
+      image: imageUrl || undefined,
+      vibrate: [200, 100, 200],
+      tag: offerId ? "offer-" + offerId : undefined,
+      renotify: false
+    };
+
+    const notification = new Notification(title || "EMPLOI INFO", options);
+    rememberNotifiedOffer(offerId);
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+
+    playNotificationSound();
+  }
+}
+
+chargerData();
+loadLatestNewsToast();
+
+search.addEventListener("input", afficherAnnonces);
+filtre.addEventListener("change", afficherAnnonces);
+villeFiltre.addEventListener("change", afficherAnnonces);
+
+const formOverlay = document.getElementById("formOverlay");
+const formOverlayBg = document.getElementById("formOverlayBg");
+
+document.getElementById("openFormBtn").onclick = () => {
+  formOverlayBg.style.display = "block";
+  formOverlay.classList.add("show");
+};
+
+if(new URLSearchParams(location.search).get("publish") === "1"){
+  setTimeout(()=>document.getElementById("openFormBtn").click(), 250);
+}
+
+document.getElementById("closeFormBtn").onclick = () => {
+  formOverlay.classList.remove("show");
+  formOverlayBg.style.display = "none";
+};
+
+const previewOverlay = document.getElementById("previewOverlay");
+const previewOverlayBg = document.getElementById("previewOverlayBg");
+
+document.getElementById("previewOfferBtn").onclick = () => {
+  const nom = document.getElementById("nom").value.trim();
+  const whatsapp = document.getElementById("whatsapp").value.trim();
+  const email = document.getElementById("emailForm").value.trim();
+  const titre = document.getElementById("titreForm").value.trim();
+  const texte = document.getElementById("texteForm").value.trim();
+  const categorie = document.getElementById("categorieForm").value;
+  const ville = document.getElementById("villeForm").value;
+  const notice = document.getElementById("noticeForm").value.trim();
+
+  if(!nom || (!whatsapp && !email) || !titre || !texte || !ville){
+    alert("Veuillez remplir le nom, un contact WhatsApp ou email, le titre, la ville et la description.");
+    return;
+  }
+
+  const preview = `
+    <div style="background:rgba(255,215,0,0.1);padding:10px;border-radius:6px;margin-bottom:10px;">
+      <p><strong style="color:gold;">De :</strong> ${nom}</p>
+      <p><strong style="color:gold;">Contact :</strong> ${whatsapp || email}</p>
+      <p><strong style="color:gold;">Titre :</strong> ${titre}</p>
+      <p><strong style="color:gold;">Catégorie :</strong> ${categorie || "Non spécifiée"}</p>
+      <p><strong style="color:gold;">Ville :</strong> ${ville}</p>
+    </div>
+    <div>
+      <h4 style="color:gold;margin-bottom:10px;">Contenu :</h4>
+      <p style="white-space:pre-wrap;line-height:1.6;">${texte}</p>
+    </div>
+    ${notice ? `<div style="background:rgba(255,215,0,0.2);padding:10px;border-radius:6px;margin-top:10px;">
+      <p><strong style="color:gold;">Notice :</strong></p>
+      <p style="white-space:pre-wrap;">${notice}</p>
+    </div>` : ""}
+  `;
+
+  document.getElementById("previewContent").innerHTML = preview;
+  previewOverlayBg.style.display = "block";
+  previewOverlay.classList.add("show");
+};
+
+document.getElementById("closePreviewBtn").onclick = () => {
+  previewOverlay.classList.remove("show");
+  previewOverlayBg.style.display = "none";
+};
+
+document.getElementById("confirmPublishBtn").onclick = () => {
+  previewOverlay.classList.remove("show");
+  previewOverlayBg.style.display = "none";
+  document.getElementById("sendOfferBtn").click();
+};
+
+document.getElementById("sendOfferBtn").onclick = async () => {
+  const nom = document.getElementById("nom").value.trim();
+  const whatsapp = document.getElementById("whatsapp").value.trim();
+  const email = document.getElementById("emailForm").value.trim();
+  const titre = document.getElementById("titreForm").value.trim();
+  const texte = document.getElementById("texteForm").value.trim();
+  const categorie = document.getElementById("categorieForm").value;
+  const ville = document.getElementById("villeForm").value;
+  const notice = document.getElementById("noticeForm").value.trim();
+  const banniere = document.getElementById("banniereForm").files[0];
+
+  if(!nom || (!whatsapp && !email) || !titre || !texte || !ville){
+    alert("Veuillez remplir le nom, un contact WhatsApp ou email, le titre, la ville et la description.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("nom", nom);
+  formData.append("whatsapp", whatsapp);
+  formData.append("email", email);
+  formData.append("titre", titre);
+  formData.append("texte", texte);
+  formData.append("categorie", categorie);
+  formData.append("ville", ville);
+  formData.append("notice", notice);
+  if(banniere) formData.append("banniere", banniere);
+
+  const csrfToken = await fetch("get_csrf.php").then(r => r.text());
+  formData.append("csrf_token", csrfToken);
+
+  try{
+    const res = await fetch("submit_offer.php", {method:"POST", body:formData});
+    if(res.ok){
+      document.getElementById("successMsg").style.display = "block";
+      setTimeout(() => {
+        formOverlay.classList.remove("show");
+        formOverlayBg.style.display = "none";
+        document.getElementById("successMsg").style.display = "none";
+      }, 3000);
+      chargerData();
+    }else{
+      alert("Erreur lors de l'envoi. Réessayez.");
+    }
+  }catch(e){
+    console.error(e);
+    alert("Erreur lors de l'envoi. Réessayez.");
+  }
+};
+
+(function showFollow(){
+  const followOverlay = document.getElementById("followOverlay");
+  const followOverlayBg = document.getElementById("followOverlayBg");
+  const lastFollow = localStorage.getItem("lastFollow");
+  if(!lastFollow || Date.now() - Number(lastFollow) > 24 * 60 * 60 * 1000){
+    if(followOverlay && followOverlayBg){
+      followOverlayBg.style.display = "block";
+      followOverlay.classList.add("show");
+    }
+    localStorage.setItem("lastFollow", String(Date.now()));
+  }
+})();
+
+function closeFollow(){
+  const followOverlay = document.getElementById("followOverlay");
+  const followOverlayBg = document.getElementById("followOverlayBg");
+  if(followOverlay && followOverlayBg){
+    followOverlay.classList.remove("show");
+    followOverlayBg.style.display = "none";
+  }
+}
+
+function updateNotificationButton(statusText = ""){
+  if(!enableNotificationsBtn) return;
+
+  enableNotificationsBtn.classList.remove("active", "blocked");
+  enableNotificationsBtn.style.display = "";
+
+  if(navigator.userAgent.includes("EmploiInfoAndroid")){
+    enableNotificationsBtn.style.display = "none";
+    return;
+  }
+
+  if(!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)){
+    enableNotificationsBtn.style.display = "none";
+    enableNotificationsBtn.disabled = true;
+    return;
+  }
+
+  if(Notification.permission === "granted"){
+    enableNotificationsBtn.style.display = "none";
+    enableNotificationsBtn.disabled = true;
+    return;
+  }
+
+  if(Notification.permission === "denied"){
+    enableNotificationsBtn.textContent = "Notifications bloquées";
+    enableNotificationsBtn.classList.add("blocked");
+    enableNotificationsBtn.disabled = false;
+    return;
+  }
+
+  enableNotificationsBtn.textContent = statusText || "Activer notifications";
+  enableNotificationsBtn.disabled = false;
+}
+
+async function requestNotificationPermission(){
+  if(!("Notification" in window)) return "unsupported";
+  const permission = await Notification.requestPermission();
+  console.log(permission === "granted" ? "Notifications autorisées" : "Notifications refusées");
+  updateNotificationButton();
+  return permission;
+}
+
+async function registerServiceWorker(autoSubscribe = true){
+  if("serviceWorker" in navigator){
+    try{
+      const registration = await navigator.serviceWorker.register("/sw.js", {scope: "/"});
+      console.log("SW enregistré:", registration);
+      if(autoSubscribe && "Notification" in window && Notification.permission === "granted"){
+        await subscribeToPush();
+      }
+      updateNotificationButton();
+      return registration;
+    }catch(e){
+      console.error("Erreur SW:", e);
+      updateNotificationButton("Erreur notifications");
+    }
+  }
+  return null;
+}
+
+async function subscribeToPush(){
+  if(!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  try{
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    if(!subscription){
+      subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array("BKT-eMQPLO-yz12kmMXHm9zIHKJxgXVOSWIsBU_LqIM_DclBekRomP22cGlM-ORZWHzyqqSVIDYzsuf4Jij6-WQ")
+      });
+    }
+    pushSubscription = subscription;
+
+    await fetch("subscribe_push.php", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({subscription: subscription.toJSON()})
+    });
+
+    console.log("Abonné push");
+    updateNotificationButton("Notifications activées");
+    return true;
+  }catch(e){
+    console.error("Erreur abonnement push:", e);
+    updateNotificationButton("Erreur abonnement");
+    return false;
+  }
+}
+
+async function enablePhoneNotifications(){
+  updateNotificationButton("Activation...");
+
+  if(!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)){
+    updateNotificationButton();
+    alert("Ce navigateur ne supporte pas les notifications web push.");
+    return;
+  }
+
+  if(location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1"){
+    updateNotificationButton("HTTPS requis");
+    alert("Les notifications téléphone nécessitent le site en HTTPS.");
+    return;
+  }
+
+  const permission = Notification.permission === "granted"
+    ? "granted"
+    : await requestNotificationPermission();
+
+  if(permission !== "granted"){
+    updateNotificationButton();
+    alert("Autorisez les notifications dans les réglages du navigateur pour recevoir les alertes sur le téléphone.");
+    return;
+  }
+
+  await registerServiceWorker(false);
+  const subscribed = await subscribeToPush();
+  if(subscribed){
+    playNotificationSound();
+  }
+}
+
+function urlBase64ToUint8Array(base64String){
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for(let i = 0; i < rawData.length; ++i){
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+window.addEventListener("load", () => {
+  registerServiceWorker();
+});
+
+if(enableNotificationsBtn){
+  enableNotificationsBtn.addEventListener("click", enablePhoneNotifications);
+  updateNotificationButton();
+}
+
+document.getElementById("contactBtn").onclick = () => {};
+
+document.getElementById("homeLogoLink").addEventListener("click", function(e){
+  e.preventDefault();
+  window.location.href = "index.html?ts=" + Date.now();
+});
+</script>
+
+<script src="assets/pub-card.js"></script>
+<script src="assets/access-control.js"></script>
+<script>
+fetch("track_view.php");
+</script>
+<script>
+(function() {
+  var s = document.createElement("script");
+  s.src = "https://nexus-aid-lab.lovable.app/widget.js";
+  s.setAttribute("data-bot-id", "9f6b4bbe-5be2-41a7-9108-2a7e744d8238");
+  s.setAttribute("data-theme", "#deb81f");
+  s.async = true;
+  document.head.appendChild(s);
+})();
+</script>
+<script src="/assets/site-menu.js"></script>
+<script src="assets/content-media.js"></script>
+</body>
+</html>
+

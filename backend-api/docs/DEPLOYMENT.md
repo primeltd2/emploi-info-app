@@ -1,0 +1,42 @@
+# Deploiement backend
+
+Le backend est pret pour Render ou Railway, mais le compte doit etre cree au nom du proprietaire du projet.
+
+## Variables d'environnement
+
+```text
+NODE_ENV=production
+PORT=10000
+APP_ORIGIN=https://emploi-info.page.gd
+DATA_DIR=..
+API_KEY=
+```
+
+## Render
+
+1. Creer un compte Render au nom du proprietaire.
+2. Connecter le depot Git du projet.
+3. Utiliser `backend-api/render.yaml` ou creer un Web Service :
+   - Root directory : `backend-api`
+   - Build command : `npm install`
+   - Start command : `npm start`
+4. Configurer les variables d'environnement.
+5. Tester `https://.../api/v1/health`.
+
+## Railway
+
+1. Creer un compte Railway au nom du proprietaire.
+2. Creer un service depuis le depot Git.
+3. Root directory : `backend-api`.
+4. Railway peut utiliser `backend-api/railway.json`.
+5. Tester `/api/v1/health`, `/api/v1/offers`, `/api/v1/catalog`.
+
+## Important donnees
+
+Aujourd'hui l'API lit les JSON depuis le dossier parent. Pour un deploiement cloud reel, il faudra soit :
+
+- synchroniser/importer les JSON dans une base de donnees ;
+- soit embarquer temporairement les JSON en lecture seule ;
+- soit garder une etape intermediaire avec un stockage persistant.
+
+La solution recommandee pour la suite est Firestore ou MongoDB Atlas afin d'eviter les pertes et les conflits d'ecriture.

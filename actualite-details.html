@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Détails Actualité | EMPLOI INFO</title>
+<link rel="stylesheet" href="assets/interactions.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#050505,#2b2508,#8b711c);color:#fff;min-height:100vh}header{text-align:center;padding:22px;background:rgba(0,0,0,.65);border-bottom:2px solid gold}header img{width:54px;height:54px;border-radius:12px;vertical-align:middle;margin-right:10px}header h1{display:inline;color:gold}.wrap{max-width:980px;margin:auto;padding:22px 14px}.card{background:rgba(0,0,0,.72);border-left:5px solid gold;border-radius:10px;padding:22px}.banner{width:100%;max-height:460px;object-fit:cover;border-radius:10px;margin-bottom:16px;background:#050505}.source{color:gold;font-weight:800}.card h2{font-size:30px;margin:10px 0}.article-body h1,.article-body h2,.article-body h3,.article-body h4{color:gold;margin:22px 0 10px}.article-body p{line-height:1.82;white-space:pre-wrap;margin:0 0 14px}.article-body blockquote{border-left:4px solid gold;margin:16px 0;padding:10px 14px;background:rgba(255,215,0,.08);color:#f7f7f7}.article-body .caption{color:#bbb;font-size:13px;margin-top:-6px}.article-body img,.article-body video{width:100%;max-height:520px;object-fit:cover;border-radius:10px;background:#000;margin:14px 0}.media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}.media-grid img,.media-grid video{width:100%;height:190px;object-fit:cover;border-radius:8px;background:#000}.doc-link{display:block;padding:11px 12px;border-radius:7px;background:#222;color:gold;margin:8px 0;text-decoration:none;font-weight:bold}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-block;padding:11px 14px;border-radius:7px;background:gold;color:#111;text-decoration:none;font-weight:900;border:0;cursor:pointer}.btn.secondary{background:#1e90ff;color:#fff}.muted{color:#aaa;font-size:13px}
+</style>
+</head>
+<body>
+<header><img src="logo.png" alt="EMPLOI INFO"><h1>Détails de l'actualité</h1></header>
+<main class="wrap">
+  <article class="card" id="detail">Chargement...</article>
+  <section class="card" style="margin-top:14px" id="moreNews"></section>
+  <div class="community-card" id="communitySection" data-item-type="actualite"></div>
+</main>
+<script>
+const id=new URLSearchParams(location.search).get("id")||"";
+const root=document.getElementById("detail");
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function share(title){
+  const url=location.href;
+  const appUrl = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.wrap(url) : url;
+  if(navigator.share) navigator.share({title,url:appUrl}).catch(()=>{});
+  else navigator.clipboard?.writeText(appUrl).then(()=>alert("Lien application copié"));
+}
+function mediaList(item,type){return (Array.isArray(item.media)?item.media:[]).filter(m=>m.type===type)}
+function textBlocksFromContent(text){
+  return String(text||"").split(/\n{2,}|\r?\n/).map(t=>t.trim()).filter(Boolean).map(t=>({type:"paragraph",text:t}));
+}
+function renderBlock(block){
+  if(!block) return "";
+  if(block.type==="heading") return `<h${Math.min(Math.max(block.level||2,1),4)}>${esc(block.text)}</h${Math.min(Math.max(block.level||2,1),4)}>`;
+  if(block.type==="quote") return `<blockquote>${esc(block.text)}</blockquote>`;
+  if(block.type==="caption") return `<p class="caption">${esc(block.text)}</p>`;
+  if(block.type==="image") return `<img src="${esc(block.url)}" alt="${esc(block.alt||"Actualité")}">`;
+  if(block.type==="video") return `<video controls preload="metadata"><source src="${esc(block.url)}"></video>`;
+  if(block.type==="document") return `<a class="doc-link" href="${esc(block.url)}" target="_blank" rel="noopener">${esc(block.label||"Ouvrir le document")}</a>`;
+  return `<p>${esc(block.text||"")}</p>`;
+}
+function renderItem(item, all){
+  all = all || [];
+  if(!item){root.innerHTML="Actualité introuvable.";return}
+  const images=mediaList(item,"image");
+  const videos=mediaList(item,"video");
+  const docs=mediaList(item,"document");
+  const banner=item.image || images[0]?.url || "";
+  const blocks=Array.isArray(item.blocks)&&item.blocks.length?item.blocks:textBlocksFromContent(item.content||item.summary);
+  root.innerHTML=`
+    ${banner?`<img class="banner" src="${esc(banner)}" alt="${esc(item.title)}">`:""}
+    <div class="source">${esc(item.source_name||"Actualité")}</div>
+    <h2>${esc(item.title)}</h2>
+    <div class="muted">${item.date?new Date(item.date).toLocaleString():""}</div>
+    <div class="article-body">${blocks.length?blocks.map(renderBlock).join(""):`<p>${esc(item.content||item.summary)}</p>`}</div>
+    ${images.length>1||videos.length?`<div class="media-grid">${images.slice(1).map(m=>`<img src="${esc(m.url)}" alt="${esc(item.title)}">`).join("")}${videos.map(m=>`<video controls preload="metadata"><source src="${esc(m.url)}"></video>`).join("")}</div>`:""}
+    ${docs.length?`<h3 style="color:gold">Documents associés</h3>${docs.map(m=>`<a class="doc-link" href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.label||"Ouvrir le document")}</a>`).join("")}`:""}
+    <div class="actions">
+      <button class="btn secondary" onclick="share('${esc(item.title)}')">Partager l'actualité</button>
+      ${item.url?`<a class="btn" href="${esc(item.url)}" target="_blank" rel="noopener">Source originale</a>`:""}
+      <a class="btn" href="actualites.html">Retour</a>
+    </div>`;
+  const more=all.filter(n=>n.id!==id).slice(0,4);
+  document.getElementById("moreNews").innerHTML=more.length?`
+    <h2 style="color:gold;margin-top:0">Découvrir d'autres actualités</h2>
+    ${more.map(n=>`<p><a href="actualite-details.html?id=${encodeURIComponent(n.id)}" style="color:gold;font-weight:bold">${esc(n.title)}</a><br><span class="muted">${esc(n.source_name||"")}</span></p>`).join("")}
+  `:"";
+}
+fetch("news_feed.php?ts="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(res=>{
+  const all=res.items||[];
+  const item=all.find(n=>n.id===id);
+  if(!item){root.innerHTML="Actualité introuvable.";return}
+  renderItem(item, all);
+  fetch("news_sources.php?action=public_detail&id="+encodeURIComponent(id)+"&ts="+Date.now(),{cache:"no-store"})
+    .then(r=>r.json())
+    .then(detail=>{
+      if(detail.status==="success" && detail.item) renderItem(detail.item, all.map(n=>n.id===id?detail.item:n));
+    })
+    .catch(()=>{});
+});
+</script>
+<script src="assets/interactions.js"></script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

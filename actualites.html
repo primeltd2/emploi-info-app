@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actualités | EMPLOI INFO</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#101010;color:#fff;min-height:100vh}header{padding:24px 16px;text-align:center;background:#050505;border-bottom:1px solid rgba(255,215,0,.25)}header img{width:56px;height:56px;border-radius:12px;vertical-align:middle;margin-right:10px}header h1{display:inline;color:gold;font-size:24px}.wrap{max-width:1100px;margin:auto;padding:22px 14px}.toolbar{display:flex;gap:10px;margin-bottom:18px}.toolbar input{flex:1;padding:12px;border-radius:8px;border:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}.card{background:#181818;border:1px solid rgba(255,215,0,.2);border-radius:8px;overflow:hidden;min-width:0}.news-media{width:100%;height:180px;object-fit:cover;background:#050505;display:block}.body{padding:16px}.source{color:gold;font-size:12px;font-weight:800;text-transform:uppercase}.card h2{font-size:18px;line-height:1.25;margin:8px 0;color:#fff}.card p{color:#ddd;line-height:1.45}.muted{color:#999;font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{display:inline-block;padding:10px 12px;border-radius:6px;background:gold;color:#111;text-decoration:none;font-weight:bold;border:0;cursor:pointer}.btn.secondary{background:#262626;color:#fff;border:1px solid rgba(255,255,255,.14)}.details-hint{display:block;margin-top:8px;color:#8d8d8d;font-size:12px}.empty{text-align:center;color:#bbb;padding:35px}
+</style>
+</head>
+<body>
+<header><img src="logo.png" alt="EMPLOI INFO"><h1>Actualités</h1></header>
+<main class="wrap">
+  <div class="toolbar"><input id="search" placeholder="Rechercher une actualité"></div>
+  <div id="items" class="grid"><p class="empty">Chargement...</p></div>
+</main>
+<script>
+let allNews=[];
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function clean(s){return String(s||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim()}
+function share(id,title){
+  const url = location.origin + location.pathname.replace("actualites.html","actualite-details.html") + "?id=" + encodeURIComponent(id);
+  const appUrl = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.wrap(url) : url;
+  if(navigator.share) navigator.share({title, url:appUrl}).catch(()=>{});
+  else navigator.clipboard?.writeText(appUrl).then(()=>alert("Lien application copié"));
+}
+function firstMedia(n,type){return (Array.isArray(n.media)?n.media:[]).find(m=>m.type===type)?.url || ""}
+function render(list){
+  const root=document.getElementById("items");
+  if(!list.length){root.innerHTML='<p class="empty">Aucune actualité disponible.</p>';return}
+  root.innerHTML=list.map(n=>`
+    <article class="card">
+      ${n.image||firstMedia(n,"image")?`<img class="news-media" src="${esc(n.image||firstMedia(n,"image"))}" alt="${esc(n.title)}">`:""}
+      <div class="body">
+        <span class="source">${esc(n.source_name||"Actualité")}</span>
+        <h2>${esc(n.title)}</h2>
+        <p>${esc(clean(n.summary||n.content).slice(0,260))}${clean(n.summary||n.content).length>260?"...":""}</p>
+        <div class="muted">${n.date?new Date(n.date).toLocaleString():""}</div>
+        <span class="details-hint">Voir détails, commentaires et signalement</span>
+        <div class="actions">
+          <a class="btn" href="actualite-details.html?id=${encodeURIComponent(n.id)}">Voir détails</a>
+          <button class="btn secondary" onclick="share('${esc(n.id)}','${esc(n.title)}')">Partager</button>
+        </div>
+      </div>
+    </article>`).join("");
+}
+fetch("news_feed.php?ts="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(res=>{allNews=Array.isArray(res.items)?res.items:[];render(allNews)});
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  render(allNews.filter(n=>(clean(n.title)+" "+clean(n.summary)+" "+clean(n.source_name)).toLowerCase().includes(q)));
+});
+</script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Détails Formation | EMPLOI INFO</title>
+<link rel="stylesheet" href="assets/interactions.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#000,#2b2406,#c9a227);color:#fff;min-height:100vh}header{text-align:center;padding:22px;background:rgba(0,0,0,.65);border-bottom:2px solid gold}header img{width:54px;height:54px;border-radius:12px;vertical-align:middle;margin-right:10px}header h1{display:inline;color:gold}.wrap{max-width:900px;margin:auto;padding:22px 14px}.card{background:rgba(0,0,0,.72);border-left:5px solid gold;border-radius:10px;padding:22px}.card img,.card video{width:100%;max-height:420px;object-fit:cover;border-radius:10px;margin-bottom:16px}.card h2{color:gold;font-size:28px}.card p{line-height:1.65;white-space:pre-wrap}.price{display:inline-flex;gap:10px;align-items:center;margin:10px 0;padding:9px 12px;border-radius:999px;background:rgba(255,215,0,.12);color:gold;font-weight:900}.old{text-decoration:line-through;color:#bbb}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-block;padding:11px 14px;border-radius:7px;background:gold;color:#111;text-decoration:none;font-weight:900;border:0;cursor:pointer}.btn.secondary{background:#1e90ff;color:#fff}.muted{color:#aaa;font-size:13px}
+</style>
+</head>
+<body>
+<header><img src="logo.png" alt="EMPLOI INFO"><h1>Détails de la formation</h1></header>
+<main class="wrap">
+  <article class="card" id="detail">Chargement...</article>
+  <div class="community-card" id="communitySection" data-item-type="formation"></div>
+</main>
+<script src="assets/content-media.js"></script>
+<script>
+const id=new URLSearchParams(location.search).get("id")||"";
+const root=document.getElementById("detail");
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function price(f){
+  const type=f.pricing_type || (f.prix ? "payant" : "gratuit");
+  if(type==="gratuit") return '<div class="price">Gratuit</div>';
+  if(type==="promotion") return `<div class="price">${f.prix_normal?`<span class="old">${esc(f.prix_normal)}</span>`:""}<span>${esc(f.prix_promo||f.prix||"Promotion")}</span></div><div class="muted">${f.promo_mode==="places"&&f.promo_places?`Offre limitée à ${esc(f.promo_places)} personne(s)`:f.promo_mode==="temps"&&f.promo_until?`Offre valable jusqu'au ${new Date(f.promo_until).toLocaleDateString()}`:f.promo_mode==="total"?"Formation totalement promotionnelle":""}</div>`;
+  return `<div class="price">${esc(f.prix||f.prix_normal||"Payant")}</div>`;
+}
+function share(title){
+  if(navigator.share) navigator.share({title,url:location.href}).catch(()=>{});
+  else navigator.clipboard?.writeText(location.href).then(()=>alert("Lien copié"));
+}
+fetch("formations.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(list=>{
+  const f=(Array.isArray(list)?list:[]).find(x=>x.id===id);
+  if(!f){root.innerHTML="Formation introuvable.";return}
+  root.innerHTML=`
+    ${window.ContentMedia ? (ContentMedia.renderFile(f)+ContentMedia.renderExternal(f.lien)) : ""}
+    <h2>${esc(f.titre)}</h2>
+    ${price(f)}
+    <div class="muted">${f.categorie?esc(f.categorie)+" - ":""}${f.lieu?esc(f.lieu):""}${f.date_debut?" - début "+new Date(f.date_debut).toLocaleDateString():""}</div>
+    <p>${esc(f.texte)}</p>
+    <div class="actions">
+      <button class="btn secondary" onclick="share('${esc(f.titre)}')">Partager</button>
+      ${f.lien?`<a class="btn" href="${esc(f.lien)}" target="_blank" rel="noopener">S'inscrire</a>`:""}
+      <a class="btn" href="formations.html">Retour</a>
+    </div>`;
+});
+</script>
+<script src="assets/interactions.js"></script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

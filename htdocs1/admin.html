@@ -1,0 +1,309 @@
+﻿<?php
+session_start();
+$adminRole = $_SESSION['admin_role'] ?? '';
+$isLogged  = isset($_SESSION['admin_role']);
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | EMPLOI INFO</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{background:linear-gradient(135deg,#111,#3a2c00,#c9a227);color:white;min-height:100vh;}
+input,textarea,select,button{width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:none;font-size:14px;}
+button{background:gold;color:black;font-weight:bold;cursor:pointer;transition:0.3s;}
+button:hover{opacity:0.9;}
+button.delete{background:#ff4c4c;color:white;}
+button.validate{background:#4CAF50;color:white;}
+.card{background:rgba(0,0,0,.6);padding:15px;border-radius:15px;margin-bottom:20px;border-left:5px solid gold;}
+.action-btn{margin-right:6px;padding:6px 12px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+.cards{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:20px;}
+header{display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.6);padding:10px 20px;border-radius:10px;margin-bottom:20px;}
+nav a{color:#fff;margin-left:15px;text-decoration:none;font-weight:bold;cursor:pointer;}
+nav a:hover{opacity:.8;}
+.section-title{margin-top:30px;margin-bottom:10px;font-size:18px;color:#FFD700;}
+ul{list-style:none;padding-left:0;}
+li{background:rgba(255,215,0,0.1);padding:8px;border-radius:6px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+#loginBox input, #loginBox button{width:100%;margin-bottom:10px;}
+#loginBox h2{margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<div id="loginBox" style="max-width:350px;margin:100px auto;background:rgba(0,0,0,.7);padding:25px;border-radius:15px;border:2px solid gold;display:none;">
+  <h2 style="text-align:center;color:gold;">ADMIN EMPLOI INFO</h2>
+  <input type="password" id="password" placeholder="Mot de passe admin">
+  <button onclick="login()">Connexion</button>
+  <p id="error" style="color:red;text-align:center;"></p>
+</div>
+
+<div id="adminPanel" style="display:none;padding:20px;">
+
+<header>
+  <strong>EMPLOI INFO â€“ Admin</strong>
+  <nav>
+    <a onclick="showPage('dashboard')">Dashboard</a>
+    <a onclick="showPage('annonces')">CrÃ©er annonce</a>
+    <a onclick="showPage('categories')">CatÃ©gories</a>
+    <a onclick="showPage('entreprises')">Entreprises</a>
+    <a onclick="showPage('parametres')">ParamÃ¨tres</a>
+    <a onclick="logout()">DÃ©connexion</a>
+  </nav>
+</header>
+
+<div id="contenuPrincipal">
+
+<div id="dashboard" style="display:none;">
+  <h1 style="text-align:center;margin-bottom:20px;">Dashboard | EMPLOI INFO</h1>
+  <div class="cards">
+    <div class="card"><h3>Total annonces</h3><p id="totalAnnonces">0</p></div>
+    <div class="card"><h3>Annonces publiÃ©es</h3><p id="publieesCount">0</p></div>
+    <div class="card"><h3>Annonces en attente</h3><p id="attenteCount">0</p></div>
+    <div class="card"><h3>Annonces urgentes</h3><p id="urgentAnnonces">0</p></div>
+  </div>
+  <h3 class="section-title">Statistiques (7 derniers jours)</h3>
+  <canvas id="statsCanvas" width="400" height="200"></canvas>
+</div>
+
+<div id="annonces" style="display:none;">
+  <h1 style="text-align:center;margin-bottom:20px;">CrÃ©er une annonce</h1>
+  <div class="card">
+    <h3>Formulaire annonce</h3>
+    <input type="text" id="titre" placeholder="Titre" required>
+    <select id="categorie"></select>
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <button type="button" onclick="mettreGras()">Gras</button>
+      <button type="button" onclick="mettreItalic()">Italique</button>
+      <select id="alignement" onchange="updateApercu()">
+        <option value="left">Gauche</option>
+        <option value="center">CentrÃ©</option>
+        <option value="right">Droite</option>
+      </select>
+    </div>
+    <textarea id="texte" rows="6" placeholder="Description de l'annonce" required oninput="updateApercu()"></textarea>
+    <input type="text" id="notice" placeholder="Notice (optionnelle)" oninput="updateApercu()">
+    <input type="file" id="banniere" onchange="updateApercu()">
+    <h4>Boutons d'action</h4>
+    <div id="boutonsContainer">
+      <div>
+        <input type="text" id="btn1_text" placeholder="Texte bouton 1" oninput="updateApercu()">
+        <select id="btn1_color" onchange="updateApercu()">
+          <option value="#FFD700">Gold</option>
+          <option value="#FF4C4C">Red</option>
+          <option value="#4CAF50">Green</option>
+          <option value="#2196F3">Blue</option>
+        </select>
+        <input type="text" id="btn1_link" placeholder="Lien bouton 1" oninput="updateApercu()">
+      </div>
+      <div>
+        <input type="text" id="btn2_text" placeholder="Texte bouton 2" oninput="updateApercu()">
+        <select id="btn2_color" onchange="updateApercu()">
+          <option value="#FFD700">Gold</option>
+          <option value="#FF4C4C">Red</option>
+          <option value="#4CAF50">Green</option>
+          <option value="#2196F3">Blue</option>
+        </select>
+        <input type="text" id="btn2_link" placeholder="Lien bouton 2" oninput="updateApercu()">
+      </div>
+      <div>
+        <input type="text" id="btn3_text" placeholder="Texte bouton 3" oninput="updateApercu()">
+        <select id="btn3_color" onchange="updateApercu()">
+          <option value="#FFD700">Gold</option>
+          <option value="#FF4C4C">Red</option>
+          <option value="#4CAF50">Green</option>
+          <option value="#2196F3">Blue</option>
+        </select>
+        <input type="text" id="btn3_link" placeholder="Lien bouton 3" oninput="updateApercu()">
+      </div>
+    </div>
+    <button type="button" onclick="publier()">Publier</button>
+  </div>
+  <h3 class="section-title">AperÃ§u annonce</h3>
+  <div id="apercuAnnonce" class="card"></div>
+  <h3 class="section-title">Annonces publiÃ©es</h3>
+  <div id="listePubliÃ©es"></div>
+  <h3 class="section-title">Annonces en attente</h3>
+  <div id="listeAttente"></div>
+</div>
+
+<div id="categories" style="display:none;">
+  <h1>Gestion des catÃ©gories</h1>
+  <div class="card">
+    <h3>Ajouter une catÃ©gorie</h3>
+    <input type="text" id="newCat" placeholder="Nom de la catÃ©gorie">
+    <button onclick="ajouterCategorie()">Ajouter</button>
+  </div>
+  <div class="card">
+    <h3>CatÃ©gories existantes</h3>
+    <ul id="listeCategories"></ul>
+  </div>
+</div>
+
+<div id="entreprises" style="display:none;">
+  <h1 style="text-align:center;margin-bottom:20px;">Entreprises & Recruteurs</h1>
+  <div class="card">
+    <h3>ðŸš€ Pourquoi recruter avec EMPLOI INFO ?</h3>
+    <ul>
+      <li>Diffusion rapide de vos annonces</li>
+      <li>Tri intelligent par IA</li>
+      <li>Mise en avant des annonces urgentes</li>
+      <li>Statistiques de performance</li>
+      <li>Compatible mobile / APK</li>
+      <li>ModÃ©ration & sÃ©curitÃ©</li>
+    </ul>
+  </div>
+</div>
+
+<div id="parametres" style="display:none;">
+  <h1>ParamÃ¨tres du site</h1>
+  <div class="card">
+    <h3>Changer mot de passe admin</h3>
+    <input type="password" id="oldPwd" placeholder="Mot de passe actuel">
+    <input type="password" id="newPwd" placeholder="Nouveau mot de passe">
+    <button onclick="changerMotDePasse()">Valider</button>
+  </div>
+  <div class="card">
+    <h3>Informations du site</h3>
+    <input type="text" id="siteName" placeholder="Nom du site">
+    <input type="text" id="siteEmail" placeholder="Email contact">
+    <button onclick="sauvegarderParametres()">Sauvegarder</button>
+  </div>
+</div>
+
+<h3>âž• Ajouter un administrateur</h3>
+<input type="password" id="adminPass" placeholder="Mot de passe" autocomplete="new-password">
+<select id="adminRole">
+  <option value="admin">Administrateur</option>
+  <option value="super" id="roleSuperOption">Super administrateur</option>
+</select>
+<button id="addAdminBtn">Ajouter</button>
+
+</div>
+
+<script>
+const currentAdminRole = "<?php echo $adminRole; ?>";
+
+async function login(){
+  const pwd = document.getElementById("password").value.trim();
+  const error = document.getElementById("error");
+  if(!pwd){ error.innerText="Mot de passe requis"; return; }
+  const res = await fetch("login_admin.php",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({password:pwd}) });
+  const data = await res.json();
+  if(data.status==="ok") location.reload();
+  else error.innerText = data.msg || "AccÃ¨s refusÃ©";
+}
+
+function logout(){ fetch("logout.php").then(()=>location.reload()); }
+
+function showPage(page){
+  ['dashboard','annonces','categories','entreprises','parametres'].forEach(p=>document.getElementById(p).style.display='none');
+  document.getElementById(page).style.display='block';
+  if(page==='dashboard') chargerStats();
+  if(page==='annonces'){ chargerCategories(); updateApercu(); chargerAnnonces(); }
+  if(page==='categories') chargerCategories();
+}
+
+function chargerStats(){
+  fetch("data.json").then(r=>r.json()).then(data=>{
+    const total = data.length;
+    const publiees = data.filter(a=>a.publie).length;
+    const attente = data.filter(a=>!a.publie).length;
+    const urgent = data.filter(a=>a.urgent).length;
+    document.getElementById("totalAnnonces").innerText=total;
+    document.getElementById("publieesCount").innerText=publiees;
+    document.getElementById("attenteCount").innerText=attente;
+    document.getElementById("urgentAnnonces").innerText=urgent;
+    fetch("stats.json").then(r=>r.json()).then(stats=>{
+      const ctx=document.getElementById("statsCanvas").getContext("2d");
+      if(window.chart) window.chart.destroy();
+      window.chart = new Chart(ctx,{ type:'line', data:{ labels:Object.keys(stats.vues_7_jours||{}), datasets:[{ label:"Vues", data:Object.values(stats.vues_7_jours||{}), borderColor:"#FFD700", backgroundColor:"rgba(255,215,0,0.2)", tension:0.4 }] }, options:{responsive:true} });
+    });
+  });
+}
+setInterval(chargerStats,30000);
+
+function mettreGras(){ const t=document.getElementById("texte"); const s=t.selectionStart,e=t.selectionEnd; if(s===e){ alert("SÃ©lectionne un texte"); return; } t.value=t.value.substring(0,s)+"<b>"+t.value.substring(s,e)+"</b>"+t.value.substring(e); updateApercu(); }
+function mettreItalic(){ const t=document.getElementById("texte"); const s=t.selectionStart,e=t.selectionEnd; if(s===e){ alert("SÃ©lectionne un texte"); return; } t.value=t.value.substring(0,s)+"<i>"+t.value.substring(s,e)+"</i>"+t.value.substring(e); updateApercu(); }
+function getBoutons(){ let b=[]; for(let i=1;i<=3;i++){ const t=document.getElementById(`btn${i}_text`).value,c=document.getElementById(`btn${i}_color`).value,l=document.getElementById(`btn${i}_link`).value; if(t) b.push({texte:t,couleur:c,lien:l}); } return b; }
+function updateApercu(){ const t=document.getElementById("titre").value,texte=document.getElementById("texte").value,notice=document.getElementById("notice").value,align=document.getElementById("alignement").value,banniere=document.getElementById("banniere").files[0],btns=getBoutons(); let imgHTML=banniere?`<img src="${URL.createObjectURL(banniere)}" style="max-width:100%;margin-bottom:10px;">`:""; let btnHTML=btns.map(b=>`<a class="action-btn" style="background:${b.couleur};color:white;margin-right:5px;" href="${b.lien}" target="_blank">${b.texte}</a>`).join(''); document.getElementById("apercuAnnonce").style.textAlign=align; document.getElementById("apercuAnnonce").innerHTML=`${imgHTML}<b>${t}</b><p>${texte}</p>${notice?`<i>${notice}</i>`:""}<div style="margin-top:10px;">${btnHTML}</div>`; }
+function publier(){ const titreV=document.getElementById("titre").value, texteV=document.getElementById("texte").value; if(!titreV||!texteV){ alert("Champs obligatoires !"); return; } const fd=new FormData(); fd.append("titre",titreV); fd.append("texte",texteV); fd.append("notice",document.getElementById("notice").value); fd.append("categorie",document.getElementById("categorie").value); fd.append("alignement",document.getElementById("alignement").value); fd.append("boutons",JSON.stringify(getBoutons())); const b=document.getElementById("banniere").files[0]; if(b) fd.append("banniere",b); fetch("save.php",{method:"POST",body:fd}).then(r=>r.json()).then(res=>{ if(res.status==="success"){ alert("Annonce publiÃ©e !"); document.querySelectorAll("input,textarea").forEach(el=>el.value=""); document.getElementById("banniere").value=""; updateApercu(); chargerAnnonces(); } }); }
+
+function chargerAnnonces(){ fetch("data.json").then(r=>r.json()).then(data=>{ let pub="", att=""; data.forEach(a=>{ const styleAlign=a.alignement||'left'; const html=`<div class="card" style="text-align:${styleAlign}"><b>${a.titre}</b> <span style="font-size:12px;opacity:.8">${new Date(a.date).toLocaleString()}</span><p>${a.texte}</p>${a.notice?`<i>${a.notice}</i>`:""}${a.boutons?a.boutons.map(b=>`<a class="action-btn" style="background:${b.couleur};color:white;margin-right:5px;" href="${b.lien}" target="_blank">${b.texte}</a>`).join(''):""}<div style="margin-top:10px;">${!a.publie?`<button class="action-btn validate" onclick="valider('${a.id}')">Valider</button>`:""}<button class="action-btn delete" onclick="supprimer('${a.id}')">Supprimer</button></div></div>`; if(a.publie) pub+=html; else att+=html; }); document.getElementById("listePubliÃ©es").innerHTML=pub; document.getElementById("listeAttente").innerHTML=att; }); }
+
+function valider(id){ fetch("update_publish.php",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({id:id,publie:true})}).then(()=>{ chargerAnnonces(); chargerStats(); }); }
+function supprimer(id){ if(!confirm("Supprimer cette annonce ?")) return; fetch("update_publish.php",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({id:id,supprimer:true})}).then(()=>{ chargerAnnonces(); chargerStats(); }); }
+
+function chargerCategories(){ fetch("categories.json").then(r=>r.json()).then(data=>{ const select=document.getElementById("categorie"); select.innerHTML=""; data.forEach(c=>{ const opt=document.createElement("option"); opt.value=c;
+opt.textContent=c; 
+select.appendChild(opt); }); const ul=document.getElementById("listeCategories"); ul.innerHTML=""; data.forEach((c,i)=>{ const li=document.createElement("li"); li.textContent=c; const del=document.createElement("button"); del.textContent="Supprimer"; del.className="delete"; del.onclick=()=>supprimerCategorie(i); li.appendChild(del); ul.appendChild(li); }); }); }
+
+function ajouterCategorie(){ const val=document.getElementById("newCat").value.trim(); if(!val){ alert("Nom requis"); return; } fetch("categories.json").then(r=>r.json()).then(data=>{ data.push(val); fetch("save_categories.php",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data) }).then(()=>{ document.getElementById("newCat").value=""; chargerCategories(); }); }); }
+
+function supprimerCategorie(i){ fetch("categories.json").then(r=>r.json()).then(data=>{ data.splice(i,1); fetch("save_categories.php",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data) }).then(()=>chargerCategories()); }); }
+
+function changerMotDePasse(){ const oldP=document.getElementById("oldPwd").value.trim(); const newP=document.getElementById("newPwd").value.trim(); if(!oldP||!newP){ alert("Remplir tous les champs"); return; } fetch("change_pwd.php",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({old:oldP,new:newP}) }).then(r=>r.json()).then(res=>alert(res.message)); }
+
+function sauvegarderParametres(){ const nom=document.getElementById("siteName").value.trim(); const email=document.getElementById("siteEmail").value.trim(); fetch("save_params.php",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({nom,email}) }).then(r=>r.json()).then(res=>alert(res.message)); }
+
+const roleSuperOption=document.getElementById("roleSuperOption"); 
+const addAdminBtn=document.getElementById("addAdminBtn");
+
+if(currentAdminRole!=="super"){ 
+    roleSuperOption.style.display="none"; 
+    addAdminBtn.disabled=true; 
+    addAdminBtn.textContent="Seul le super administrateur peut ajouter"; 
+    addAdminBtn.style.opacity="0.6"; 
+    addAdminBtn.style.cursor="not-allowed"; 
+}
+
+addAdminBtn.onclick=async function(){ 
+    if(currentAdminRole!=="super") return; 
+    const password=document.getElementById("adminPass").value.trim(); 
+    const role=document.getElementById("adminRole").value; 
+    if(!password){ alert("Veuillez entrer un mot de passe !"); return; } 
+    try{ 
+        const res=await fetch("add_admin.php",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({password,role}) }); 
+        const data=await res.json(); 
+        if(data.status==="ok"){ 
+            alert("Administrateur ajoutÃ© avec succÃ¨s !"); 
+            document.getElementById("adminPass").value=""; 
+            document.getElementById("adminRole").value="admin"; 
+        } else{ 
+            alert(data.msg || "Erreur lors de l'ajout"); 
+        } 
+    }catch(e){ 
+        console.error(e); 
+        alert("Erreur rÃ©seau, rÃ©essayez."); 
+    } 
+}
+
+document.addEventListener("DOMContentLoaded",()=>{ 
+    if("<?php echo $isLogged; ?>"=="1"){ 
+        document.getElementById("adminPanel").style.display="block"; 
+        showPage('dashboard'); 
+    } else{ 
+        document.getElementById("loginBox").style.display="block"; 
+    } 
+    chargerCategories(); 
+});
+</script>
+
+<!-- NewsFlow Widget -->
+<div id="newsflow-widget-86c9e1a5-753e-47e6-a793-1163d4cecffa"></div>
+<script>
+(function(){
+  var w=document.getElementById('newsflow-widget-86c9e1a5-753e-47e6-a793-1163d4cecffa');
+  var iframe=document.createElement('iframe');
+  iframe.src='https://smart-subscribers.lovable.app/embed/86c9e1a5-753e-47e6-a793-1163d4cecffa';
+  iframe.style.border='none';
+  iframe.style.width='100%';
+  iframe.style.minHeight='200px';
+  w.appendChild(iframe);
+})();
+</script>
+<script src="/assets/site-menu.js"></script>
+</body>
+    </html>

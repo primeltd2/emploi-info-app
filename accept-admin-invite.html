@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invitation administrateur | EMPLOI INFO</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#050505,#1c1605,#9d7a13);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}.card{width:min(520px,100%);background:rgba(0,0,0,.78);border:1px solid rgba(255,215,0,.25);border-left:5px solid gold;border-radius:10px;padding:22px;box-shadow:0 18px 45px rgba(0,0,0,.45)}h1{color:gold;margin:0 0 12px}p{line-height:1.55;color:#eee}label{display:block;color:gold;font-weight:800;margin:12px 0 6px}input,select,button{width:100%;padding:12px;border-radius:8px;border:0;margin-bottom:10px}button{background:gold;color:#111;font-weight:900;cursor:pointer}.status{margin-top:10px;padding:12px;border-radius:8px;display:none}.status.show{display:block}.ok{background:rgba(47,191,113,.18);border:1px solid rgba(47,191,113,.35)}.err{background:rgba(239,89,89,.18);border:1px solid rgba(239,89,89,.35)}
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>Créer votre accès administrateur</h1>
+  <p id="inviteInfo">Vérification de l'invitation...</p>
+  <form id="inviteForm" style="display:none">
+    <label for="username">Nom administrateur</label>
+    <input id="username" autocomplete="username" required>
+    <label for="password">Mot de passe</label>
+    <input id="password" type="password" autocomplete="new-password" minlength="8" required>
+    <label for="country">Pays africain de partenariat</label>
+    <select id="country" required></select>
+    <label for="whatsapp">WhatsApp</label>
+    <input id="whatsapp" autocomplete="tel">
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email">
+    <button type="submit">Créer mon compte</button>
+  </form>
+  <div id="status" class="status"></div>
+</main>
+<script>
+const AFRICAN_COUNTRIES=["Afrique du Sud","Algérie","Angola","Bénin","Botswana","Burkina Faso","Burundi","Cameroun","Cap-Vert","Comores","Congo","Côte d'Ivoire","Djibouti","Égypte","Érythrée","Éthiopie","Gabon","Gambie","Ghana","Guinée","Guinée-Bissau","Guinée équatoriale","Kenya","Lesotho","Liberia","Libye","Madagascar","Malawi","Mali","Maroc","Maurice","Mauritanie","Mozambique","Namibie","Niger","Nigeria","Ouganda","République centrafricaine","République démocratique du Congo","Rwanda","Sao Tomé-et-Principe","Sénégal","Seychelles","Sierra Leone","Somalie","Soudan","Soudan du Sud","Tanzanie","Tchad","Togo","Tunisie","Zambie","Zimbabwe"];
+const token=new URLSearchParams(location.search).get("token")||"";
+const country=document.getElementById("country");
+country.innerHTML='<option value="">Choisir un pays</option>'+AFRICAN_COUNTRIES.map(c=>`<option value="${c}">${c}</option>`).join("");
+function show(type,text){const s=document.getElementById("status");s.className="status show "+type;s.textContent=text}
+fetch("accept_admin_invite.php?token="+encodeURIComponent(token),{cache:"no-store"}).then(r=>r.json()).then(res=>{
+  if(res.status!=="success"){document.getElementById("inviteInfo").textContent=res.message||"Invitation invalide";return}
+  const invite=res.invite||{};
+  document.getElementById("inviteInfo").textContent="Votre lien définit déjà votre rôle et vos fonctions. Complétez seulement vos informations personnelles.";
+  if(invite.country_hint) country.value=invite.country_hint;
+  document.getElementById("whatsapp").value=invite.whatsapp_hint||"";
+  document.getElementById("email").value=invite.email_hint||"";
+  document.getElementById("inviteForm").style.display="block";
+});
+document.getElementById("inviteForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  fetch("accept_admin_invite.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+    token,
+    username:document.getElementById("username").value.trim(),
+    password:document.getElementById("password").value,
+    country:country.value,
+    whatsapp:document.getElementById("whatsapp").value.trim(),
+    email:document.getElementById("email").value.trim()
+  })}).then(r=>r.json()).then(res=>{
+    if(res.status==="success"){
+      document.getElementById("inviteForm").style.display="none";
+      show("ok","Compte créé. Veuillez vous connecter. Redirection vers le panel administrateur...");
+      setTimeout(()=>{ window.location.href = "admin.html"; }, 2200);
+      return;
+    }
+    show("err",res.message||"Action terminée");
+  }).catch(()=>show("err","Erreur lors de la création du compte"));
+});
+</script>
+</body>
+</html>

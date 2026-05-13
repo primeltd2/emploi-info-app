@@ -1,0 +1,734 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script>
+
+// -------- cookies + session navigateur --------
+
+(function(){
+
+// crÃ©er cookie visiteur sÃ©curisÃ©
+
+if(!document.cookie.includes("visitor=")){
+
+const id="user_"+Date.now()+"_"+Math.random();
+
+document.cookie =
+
+"visitor="+id+
+
+"; path=/; max-age=86400; SameSite=None; Secure";
+
+}
+
+// sauvegarde backup localStorage
+
+if(!localStorage.getItem("visitor")){
+
+localStorage.setItem(
+
+"visitor",
+
+"user_"+Date.now()
+
+);
+
+}
+
+})();
+
+</script>
+<meta charset="UTF-8">
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="robots" content="index, follow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMPLOI INFO</title>
+
+<!-- PWA & META -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+<meta property="og:title" content="EMPLOI INFO - Offres d'emploi et formations">
+<meta property="og:description" content="DÃ©couvrez les derniÃ¨res offres d'emploi, stages et formations. Publiez vos annonces facilement sur EMPLOI INFO.">
+<meta property="og:image" content="https://emploi-info.page.gd/banner.png">
+<meta property="og:url" content="https://emploi-info.page.gd/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EMPLOI INFO">
+<meta name="twitter:description" content="Les meilleures opportunitÃ©s d'emploi et formations en un seul endroit.">
+<meta name="twitter:image" content="https://emploi-info.page.gd/banner.png">
+
+<!-- STYLES -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{min-height:100vh;display:flex;flex-direction:column;background:#111;color:white;}
+a{text-decoration:none;color:inherit;}
+header{display:flex;align-items:center;gap:12px;padding:15px;background:rgba(0,0,0,0.5);}
+header img{width:45px;height:45px;border-radius:8px;}
+header h1{font-size:22px;color:gold;}
+.container{padding:20px;flex:1;}
+
+/* TOPBAR */
+.topbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+.topbar input, .topbar select{padding:10px;border-radius:8px;border:none;flex:1;}
+.publish-btn{background:gold;color:black;font-weight:bold;padding:10px 14px;border-radius:8px;cursor:pointer;transition:0.3s;}
+.publish-btn:hover{transform:scale(1.05);}
+
+/* CARDS */
+.card{background:rgba(0,0,0,0.55);border-left:5px solid gold;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 4px 10px rgba(0,0,0,.4);position:relative;transition:transform 0.3s;}
+.card.new{animation:flash 1.2s ease-in-out 3;border-left-color:#00ffcc;}
+@keyframes flash{0%{transform:scale(.97);opacity:.5}50%{transform:scale(1.02);opacity:1}100%{transform:scale(1);opacity:1}}
+.badge{position:absolute;top:10px;right:10px;background:red;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
+.card img{width:100%;border-radius:10px;margin-bottom:10px;}
+.card h2{color:gold;font-size:18px;margin-bottom:8px;}
+.card pre{font-size:14px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px;}
+.card .date{font-size:12px;opacity:.8;margin-bottom:8px;}
+.card .btn{margin:5px;padding:10px 14px;border-radius:8px;color:white;font-weight:bold;display:inline-block;}
+
+    /* FOLLOW 24H */
+#followOverlayBg{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  z-index:200000;
+}
+
+#followOverlay{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:linear-gradient(135deg,#111,#000);
+  color:white;
+  padding:25px;
+  border-radius:16px;
+  width:90%;
+  max-width:360px;
+  text-align:center;
+  z-index:200001;
+  box-shadow:0 0 40px rgba(255,215,0,0.5);
+  transition:0.4s ease;
+}
+
+#followOverlay.show{
+  transform:translate(-50%,-50%) scale(1);
+}
+
+#followOverlay h2{
+  color:gold;
+  margin-bottom:10px;
+}
+
+.follow-actions{
+  display:flex;
+  gap:10px;
+  margin:15px 0;
+}
+
+.follow-btn{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  font-weight:bold;
+  color:white;
+}
+
+.follow-btn.fb{background:#4267B2;}
+.follow-btn.wa{background:#25D366;}
+
+.follow-later{
+  background: transparent;
+  border: 1px solid #ccc;
+  color: #555;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .3s ease;
+}
+
+.follow-later:hover{
+  background: #f1f1f1;
+  color: #000;
+  border-color: #999;
+    }
+/* FOOTER */
+footer{background:rgba(20,20,20,0.9);padding:30px 15px;margin-top:20px;border-top:3px solid gold;}
+.footer-main{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;max-width:1200px;margin:auto;}
+.footer-section{flex:1;min-width:220px;}
+.footer-section h2, .footer-section h3{color:gold;margin-bottom:10px;}
+.footer-section p, .footer-section ul{font-size:14px;line-height:1.6;}
+.footer-section ul{list-style:none;padding:0;}
+.footer-section ul li{margin-bottom:8px;}
+.footer-section ul li a{color:white;transition:0.3s;}
+.footer-section ul li a:hover{color:gold;text-shadow:0 0 6px gold;}
+.footer-socials a{margin-right:10px;color:white;font-weight:bold;padding:6px 12px;border-radius:6px;transition:0.3s;}
+.footer-socials .social-facebook:hover{background:#4267B2;}
+.footer-socials .social-whatsapp:hover{background:#25D366;}
+.footer-ia{margin-top:30px;text-align:center;}
+.footer-ai-cards{display:flex;flex-wrap:wrap;justify-content:center;gap:15px;}
+.footer-ai-cards div{background:rgba(255,255,255,0.05);padding:12px 15px;border-radius:8px;min-width:200px;text-align:center;}
+
+/* OVERLAYS */
+#formOverlayBg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:900;}
+#formOverlay{position:fixed;left:50%;top:50%;transform:translate(-50%, -50%) scale(0);background:rgba(0,0,0,0.95);padding:20px;border-radius:12px;z-index:1000;transition:transform 0.4s ease-out;width:90%;max-width:400px;}
+#formOverlay.show{transform:translate(-50%, -50%) scale(1);}
+#formOverlay input,#formOverlay textarea,#formOverlay select,#formOverlay button{width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;}
+#formOverlay button{background:gold;color:black;font-weight:bold;cursor:pointer;}
+
+
+/* CONTACT BUTTON FLOTANT */
+#contactBtn{position:fixed;top:50%;right:0;transform:translateY(-50%);background:gold;color:black;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;z-index:100001;box-shadow:0 4px 10px rgba(0,0,0,0.4);animation: floatContact 2s ease-in-out infinite alternate;}
+@keyframes floatContact{0% { transform:translateY(-50%) translateX(0);} 50% { transform:translateY(-50%) translateX(-8px);} 100% { transform:translateY(-50%) translateX(0);}}
+
+/* RESPONSIVE */
+@media(max-width:900px){.footer-main{flex-direction:column;align-items:center;}.footer-section{text-align:center;}.footer-socials{justify-content:center;display:flex;}}
+</style>
+    <link rel="stylesheet" href="assets/pub-card.css">
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="Logo">
+  <h1>EMPLOI INFO</h1>
+</header>
+
+    <div id="pubCard"></div> 
+    
+<div class="container">
+  <div class="topbar">
+    <input id="search" placeholder="Rechercher une offre...">
+    <select id="filtre"><option value="">Toutes catÃ©gories</option></select>
+    <a class="publish-btn" id="openFormBtn">Publier une offre</a>
+  </div>
+
+  <div id="container"><p style="text-align:center;">Chargementâ€¦</p></div>
+</div>
+
+<!-- FORMULAIRE -->
+<div id="formOverlayBg"></div>
+<div id="formOverlay">
+  <h3>Publier une Offre</h3>
+  <div id="successMsg" style="display:none;text-align:center;background:#00ff66;color:black;padding:15px;border-radius:12px;margin-bottom:15px;">âœ… Message envoyÃ© avec succÃ¨s.</div>
+  <input type="text" id="nom" placeholder="Votre nom complet">
+  <input type="text" id="whatsapp" placeholder="NumÃ©ro WhatsApp (ex:+22955555555)">
+  <input type="text" id="titreForm" placeholder="Titre de l'offre">
+  <select id="categorieForm"></select>
+  <textarea id="texteForm" rows="5" placeholder="Description de l'offre"></textarea>
+  <input type="text" id="noticeForm" placeholder="Notice (optionnelle)">
+  <input type="file" id="banniereForm" accept="image/*">
+  <button id="sendOfferBtn">Envoyer Ã  l'administration</button>
+  <button id="closeFormBtn" style="background:red;color:white;">Fermer</button>
+</div>
+
+<footer class="footer-pro">
+  <div class="footer-main container-flex">
+    <div class="footer-section">
+      <h2>EMPLOI INFO</h2>
+      <p>Votre plateforme fiable pour les offres d'emploi, stages et formations.</p>
+      <a href="#openFormBtn" class="footer-btn">Devenir partenaire</a>
+    </div>
+    <div class="footer-section">
+      <h3>Navigation</h3>
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="ressources.html">Ressources</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h3>Contact</h3>
+      <p>Email : <a href="mailto:kodjaouelisee1234@gmail.com">kodjaouelisee1234@gmail.com</a></p>
+      <p>TÃ©lÃ©phone : <a href="tel:+22953876853">+229 53876853</a></p>
+      <div class="footer-socials">
+        <a href="https://www.facebook.com/share/1DxuasNToY/" target="_blank" class="social-facebook">Facebook</a>
+        <a href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23" target="_blank" class="social-whatsapp">WhatsApp</a>
+      </div>
+    </div>
+    <div class="footer-section">
+      <h3>Infos lÃ©gales</h3>
+      <ul>
+        <li><a href="mentions-legales.html">Mentions lÃ©gales</a></li>
+        <li><a href="politique-confidentialite.html">Politique de confidentialitÃ©</a></li>
+        <li>&copy; 2026 EMPLOI INFO</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-ia">
+    <h3>Annonces populaires</h3>
+    <div id="footerAIContainer" class="footer-ai-cards"></div>
+  </div>
+</footer>
+
+<!-- BOUTON CONTACT FLOTANT -->
+<a id="contactBtn" href="contact.html" title="Contact">ðŸ“ž</a>
+
+    <!-- FOLLOW 24H OVERLAY -->
+<div id="followOverlayBg"></div>
+<div id="followOverlay">
+  <h2>ðŸ“¢ Suivez EMPLOI INFO</h2>
+  <p>Recevez les meilleures offres dâ€™emploi et formations en avant-premiÃ¨re.</p>
+
+  <div class="follow-actions">
+    <a href="https://www.facebook.com/share/1DxuasNToY/" target="_blank" class="follow-btn fb">Facebook</a>
+    <a href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23" target="_blank" class="follow-btn wa">WhatsApp</a>
+  </div>
+
+  <button onclick="closeFollow()" class="follow-later">
+  â³ Plus tard
+    </button>
+    </div>
+    <script src="assets/pub-card.js"></script>
+<script>
+// ===== VARIABLES =====
+let annonces=[];
+let categories=[];
+const container=document.getElementById("container");
+const search=document.getElementById("search");
+const filtre=document.getElementById("filtre");
+const categorieForm=document.getElementById("categorieForm");
+
+// ===== TEMPS Ã‰COULÃ‰ =====
+function tempsDepuis(date){
+  const now=new Date();
+  const then=new Date(date);
+  const options={weekday:'long', year:'numeric', month:'long', day:'numeric'};
+  const diff=Math.floor((now-then)/1000);
+  if(diff<60)return "Ã  lâ€™instant";
+  if(diff<3600)return `il y a ${Math.floor(diff/60)} min`;
+  if(diff<86400)return `il y a ${Math.floor(diff/3600)} h`;
+  return then.toLocaleDateString('fr-FR',options);
+}
+
+// ===== AFFICHER ANNONCES =====
+function afficherAnnonces(){
+  const recherche = search.value.toLowerCase();
+  const filtreTexte = filtre.value.toLowerCase();
+  container.innerHTML="";
+  annonces.filter(a=>a.publie)
+          .filter(a=>{
+            const texteComplet = (a.titre+" "+a.texte+" "+a.categorie).toLowerCase();
+            const searchMatch = !recherche || texteComplet.includes(recherche);
+            const filtreMatch = !filtreTexte || texteComplet.includes(filtreTexte);
+            return searchMatch && filtreMatch;
+          })
+          .sort((a,b)=>new Date(b.date)-new Date(a.date))
+          .forEach(a=>{
+            const div=document.createElement("div");
+            div.className="card";
+            const preview=a.texte.length>150?a.texte.slice(0,150)+'â€¦':a.texte;
+            div.innerHTML=`
+              ${a.banniere?`<img src="${a.banniere}">`:''}
+              <h2>${a.titre}</h2>
+              <div class="date">${tempsDepuis(a.date)}</div>
+              <pre>${preview}</pre>
+              ${a.notice?`<p style="text-align:center;"><i>${a.notice}</i></p>`:''}
+              <div class="card-buttons">
+                ${a.boutons.map(b=>b.texte?`<a class="btn" style="background:${b.couleur}" href="${b.lien}" target="_blank">${b.texte}</a>`:'').join('')}
+              </div>
+              <a href="details.html?id=${a.id}" class="btn" style="background:gold;color:black;">Voir dÃ©tails</a>
+            `;
+            container.appendChild(div);
+          });
+}
+
+// ===== CHARGER DATA & CATEGORIES =====
+async function chargerData(){
+  try{
+    const [res, resCat] = await Promise.all([
+      fetch("data.json?ts="+Date.now(),{cache:"no-store"}),
+      fetch("categories.json?ts="+Date.now(),{cache:"no-store"})
+    ]);
+    annonces=await res.json();
+    categories=await resCat.json();
+
+    // ðŸ”¹ mÃ©moriser la sÃ©lection actuelle
+    const filtreSelection = filtre.value;
+
+    // remplir filtre et formulaire
+    filtre.innerHTML='<option value="">Toutes catÃ©gories</option>';
+    categorieForm.innerHTML='';
+    categories.forEach(c=>{
+      const opt1=document.createElement("option");
+      opt1.value=c; opt1.textContent=c; filtre.appendChild(opt1);
+      const opt2=document.createElement("option");
+      opt2.value=c; opt2.textContent=c; categorieForm.appendChild(opt2);
+    });
+
+    // ðŸ”¹ rÃ©appliquer la sÃ©lection prÃ©cÃ©dente
+    if(filtreSelection) filtre.value = filtreSelection;
+
+    afficherAnnonces();
+
+    // Footer AI
+    const sorted=annonces.filter(a=>a.publie).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+    const footerAI=document.getElementById("footerAIContainer");
+    footerAI.innerHTML="";
+    sorted.forEach(a=>{
+      const div=document.createElement("div");
+      div.innerHTML=`<a href="details.html?id=${a.id}">${a.titre}</a>`;
+      footerAI.appendChild(div);
+    });
+
+  }catch(e){console.error(e);}
+}
+
+chargerData();
+setInterval(chargerData,15000);
+
+// ===== SEARCH & FILTRE =====
+search.addEventListener("input",afficherAnnonces);
+filtre.addEventListener("change",afficherAnnonces);
+
+// ===== OVERLAYS FORM =====
+const formOverlay=document.getElementById("formOverlay");
+const formOverlayBg=document.getElementById("formOverlayBg");
+document.getElementById("openFormBtn").onclick=()=>{
+ formOverlayBg.style.display="block";
+ formOverlay.classList.add("show");
+};
+document.getElementById("closeFormBtn").onclick=()=>{
+ formOverlay.classList.remove("show");
+ formOverlayBg.style.display="none";
+};
+
+// ===== ENVOI FORMULAIRE =====
+document.getElementById("sendOfferBtn").onclick=async()=>{
+    const nom=document.getElementById("nom").value.trim();
+    const whatsapp=document.getElementById("whatsapp").value.trim();
+    const titre=document.getElementById("titreForm").value.trim();
+    const texte=document.getElementById("texteForm").value.trim();
+    const categorie=document.getElementById("categorieForm").value;
+    const notice=document.getElementById("noticeForm").value.trim();
+    const banniere=document.getElementById("banniereForm").files[0];
+    if(!nom||!whatsapp||!titre||!texte){alert("Veuillez remplir tous les champs obligatoires.");return;}
+    const formData=new FormData();
+    formData.append("nom",nom);
+    formData.append("whatsapp",whatsapp);
+    formData.append("titre",titre);
+    formData.append("texte",texte);
+    formData.append("categorie",categorie);
+    formData.append("notice",notice);
+    if(banniere) formData.append("banniere",banniere);
+try{
+        const res=await fetch("submit_offer.php",{method:"POST",body:formData});
+        if(res.ok){
+            document.getElementById("successMsg").style.display="block";
+            setTimeout(()=>{
+                formOverlay.classList.remove("show");
+                formOverlayBg.style.display="none";
+                document.getElementById("successMsg").style.display = "none";
+            }, 3000);
+            chargerData(); // Recharge les annonces pour que la nouvelle apparaisse
+        } else {
+            alert("Erreur lors de l'envoi. RÃ©essayez.");
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Erreur lors de l'envoi. RÃ©essayez.");
+    }
+};
+
+// ===== FOLLOW 24H ANIMÃ‰ =====
+(function showFollow() {
+    const followOverlay = document.getElementById("followOverlay");
+    const followOverlayBg = document.getElementById("followOverlayBg");
+    const lastFollow = localStorage.getItem("lastFollow");
+    if(!lastFollow || Date.now() - lastFollow > 24*60*60*1000){
+        if(followOverlay && followOverlayBg){
+            followOverlayBg.style.display = "block";
+            followOverlay.classList.add("show");
+        }
+        localStorage.setItem("lastFollow", Date.now());
+    }
+})();
+function closeFollow() {
+    const followOverlay = document.getElementById("followOverlay");
+    const followOverlayBg = document.getElementById("followOverlayBg");
+    if(followOverlay && followOverlayBg){
+        followOverlay.classList.remove("show");
+        followOverlayBg.style.display = "none";
+    }
+}
+
+// ===== SHARE =====
+const shareOverlay = document.getElementById("shareOverlay");
+const shareOverlayBg = document.getElementById("shareOverlayBg");
+let currentShareText = "";
+function openShare(t){
+    currentShareText = t;
+    if(shareOverlay && shareOverlayBg){
+        shareOverlayBg.style.display = "block";
+        shareOverlay.classList.add("show");
+    }
+}
+function closeShare(){
+    if(shareOverlay && shareOverlayBg){
+        shareOverlay.classList.remove("show");
+        shareOverlayBg.style.display = "none";
+    }
+}
+function share(platform){
+    const u = encodeURIComponent(location.href), t = encodeURIComponent(currentShareText);
+    switch(platform){
+        case "fb": window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`); break;
+        case "wa": window.open(`https://wa.me/?text=${t}%20-${u}`); break;
+        case "li": window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${u}`); break;
+        case "tw": window.open(`https://twitter.com/intent/tweet?url=${u}&text=${t}`); break;
+        case "copy": navigator.clipboard.writeText(location.href); break;
+    }
+    closeShare();
+}
+
+
+// ===== CONTACT BUTTON =====
+document.getElementById("contactBtn").onclick = (e) => {
+    // redirection dÃ©jÃ  gÃ©rÃ©e par href
+};
+</script>
+    <script>
+fetch("track_view.php");
+    </script>
+   <!-- BotFactory Widget - Assistant virtuel EMPLOI INFO  -->
+<script>
+  (function() {
+    var s = document.createElement('script');
+    s.src = 'https://nexus-aid-lab.lovable.app/widget.js';
+    s.setAttribute('data-bot-id', '9f6b4bbe-5be2-41a7-9108-2a7e744d8238');
+    s.setAttribute('data-theme', '#deb81f');
+    s.async = true;
+    document.head.appendChild(s);
+  })();
+</script>
+
+<!-- NEWSLETTER FOOTER CARTE + FERMETURE INTELLIGENTE -->
+
+<style>
+#newsletter-card {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 50%;
+  max-width: 600px;
+  background: #f6b604;
+  color: #1e293b;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  font-family: Arial, sans-serif;
+  z-index: 99999;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+#newsletter-card input {
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 140px;
+}
+
+#newsletter-card button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #1e293b;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#newsletter-msg {
+  width: 100%;
+  font-size: 13px;
+}
+
+/* bouton fermer */
+#close-btn {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+</style>
+
+<div id="newsletter-card">
+
+  <div id="close-btn" onclick="openCloseModal()">âœ–</div>
+
+  <div style="width:100%; font-weight:bold;">
+    ðŸ“¢ Abonne-toi pour Ãªtre au courant des offres
+  </div>
+
+  <input type="text" id="nf-name" placeholder="Nom complet (optionnel)">
+  <input type="email" id="nf-email" placeholder="Ton email" oninput="checkEmail()">
+
+  <button id="nf-btn" onclick="subscribeNewsletter()" disabled>
+    S'inscrire
+  </button>
+
+  <div id="newsletter-msg"></div>
+
+</div>
+
+<!-- MODAL CHOIX DUREE -->
+<div id="close-modal" style="display:none; position:fixed; top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100000;justify-content:center;align-items:center;">
+  <div style="background:white;padding:20px;border-radius:10px;text-align:center;width:300px;">
+    <h3>Masquer la carte</h3>
+    <p>Combien de temps veux-tu la cacher ?</p>
+
+    <button onclick="hideCard(1)">1 jour</button>
+    <button onclick="hideCard(3)">3 jours</button>
+    <button onclick="hideCard(7)">7 jours</button>
+
+    <br><br>
+    <button onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<script>
+/* ========= COOKIE ========= */
+function setCookie(name, value, days) {
+  var d = new Date();
+  d.setTime(d.getTime() + (days*24*60*60*1000));
+  document.cookie = name + "=" + value + ";path=/;expires=" + d.toUTCString();
+}
+
+function getCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0;i<ca.length;i++) {
+    var c = ca[i];
+    while(c.charAt(0)==' ') c = c.substring(1);
+    if(c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length);
+  }
+  return null;
+}
+
+/* ========= AFFICHAGE INTELLIGENT ========= */
+window.addEventListener("DOMContentLoaded", function(){
+
+  const card = document.getElementById("newsletter-card");
+
+  // si inscrit â†’ jamais afficher
+  if(getCookie("nf_subscribed") === "1"){
+    card.style.display = "none";
+    return;
+  }
+
+  // si fermÃ© temporairement â†’ vÃ©rifier expiration
+  const hiddenUntil = getCookie("nf_hidden_until");
+  if(hiddenUntil){
+    const now = new Date().getTime();
+    if(now < parseInt(hiddenUntil)){
+      card.style.display = "none";
+      return;
+    }
+  }
+
+});
+</script>
+
+<script>
+/* ========= VALIDATION EMAIL ========= */
+function checkEmail() {
+  const email = document.getElementById("nf-email").value;
+  const btn = document.getElementById("nf-btn");
+  const msg = document.getElementById("newsletter-msg");
+
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!email) {
+    btn.disabled = true;
+    msg.innerText = "";
+    return;
+  }
+
+  if (!regex.test(email)) {
+    btn.disabled = true;
+    msg.innerText = "âŒ Email invalide";
+    msg.style.color = "red";
+  } else {
+    btn.disabled = false;
+    msg.innerText = "âœ” Email valide";
+    msg.style.color = "green";
+  }
+}
+
+/* ========= INSCRIPTION ========= */
+function subscribeNewsletter() {
+
+  const email = document.getElementById("nf-email").value;
+  const name = document.getElementById("nf-name").value;
+  const card = document.getElementById("newsletter-card");
+  const msg = document.getElementById("newsletter-msg");
+
+  fetch("https://fkjxptemfpfpireliszu.supabase.co/functions/v1/widget-subscribe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    body: JSON.stringify({
+      widget_id: "f3a92e3b-529e-4031-bd0e-9525e9778ce6",
+      email: email,
+      name: name || null
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+
+    if (d.success) {
+      msg.innerText = "âœ… Merci pour votre inscription !";
+      msg.style.color = "green";
+
+      setCookie("nf_subscribed","1",365);
+
+      setTimeout(() => {
+        card.remove();
+      }, 1200);
+
+    } else {
+      msg.innerText = "âŒ Erreur";
+      msg.style.color = "red";
+    }
+
+  });
+
+}
+
+/* ========= FERMETURE ========= */
+function openCloseModal(){
+  document.getElementById("close-modal").style.display = "flex";
+}
+
+function closeModal(){
+  document.getElementById("close-modal").style.display = "none";
+}
+
+function hideCard(days){
+  const card = document.getElementById("newsletter-card");
+
+  const now = new Date().getTime();
+  const hideUntil = now + (days * 24 * 60 * 60 * 1000);
+
+  setCookie("nf_hidden_until", hideUntil, days);
+
+  card.style.display = "none";
+  closeModal();
+}
+</script>
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

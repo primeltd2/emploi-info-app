@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CatÃ©gories | EMPLOI INFO</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+  body{background:linear-gradient(135deg,#111,#3a2c00,#c9a227);color:white;min-height:100vh;padding:20px;}
+  .card{background:rgba(0,0,0,.6);padding:15px;border-radius:15px;border-left:5px solid gold;margin-bottom:20px;}
+  h1,h3{color:gold;margin-bottom:10px;text-align:center;}
+  input,button{width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:none;}
+  button{background:gold;color:black;font-weight:bold;cursor:pointer;}
+  ul{list-style:none;padding-left:0;}
+  li{background:rgba(255,215,0,0.1);padding:8px;border-radius:6px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+  .delete{background:#FF4C4C;color:white;padding:4px 8px;border:none;border-radius:6px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<h1>Gestion des catÃ©gories</h1>
+
+<div class="card">
+  <h3>Ajouter une catÃ©gorie</h3>
+  <input type="text" id="newCat" placeholder="Nom de la catÃ©gorie">
+  <button onclick="ajouterCategorie()">Ajouter</button>
+</div>
+
+<div class="card">
+  <h3>CatÃ©gories existantes</h3>
+  <ul id="listeCategories"></ul>
+</div>
+
+<script>
+function chargerCategories(){
+  fetch("categories.json").then(r=>r.json()).then(data=>{
+    const ul=document.getElementById("listeCategories");
+    ul.innerHTML="";
+    data.forEach((cat,i)=>{
+      const li=document.createElement("li");
+      li.textContent=cat;
+      const del=document.createElement("button");
+      del.textContent="Supprimer"; del.className="delete";
+      del.onclick=()=>{supprimerCategorie(i)};
+      li.appendChild(del);
+      ul.appendChild(li);
+    });
+  });
+}
+
+function ajouterCategorie(){
+  const val=document.getElementById("newCat").value.trim();
+  if(!val){alert("Nom requis"); return;}
+  fetch("categories.json").then(r=>r.json()).then(data=>{
+    data.push(val);
+    fetch("save_categories.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+      .then(()=>{document.getElementById("newCat").value="";chargerCategories();});
+  });
+}
+
+function supprimerCategorie(index){
+  fetch("categories.json").then(r=>r.json()).then(data=>{
+    data.splice(index,1);
+    fetch("save_categories.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+      .then(()=>chargerCategories());
+  });
+}
+
+chargerCategories();
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>

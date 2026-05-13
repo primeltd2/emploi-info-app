@@ -1,0 +1,103 @@
+{
+    "vues_7_jours": {
+        "2026-04-19": 4,
+        "2026-04-20": 1,
+        "2026-04-21": 0,
+        "2026-04-22": 2,
+        "2026-04-23": 6,
+        "2026-04-24": 38,
+        "2026-04-25": 20
+    },
+    "total_visites": 1344,
+    "clics_boutons": {
+        "ann_6985f39af2d67": {
+            "POSTULER": 0
+        },
+        "ann_6986185cd11d2": {
+            "POSTULER": 0,
+            "Guide pour avoir un bon CV": 0
+        },
+        "ann_698629ae1ff4c": {
+            "Pièce jointe": 0,
+            "POSTULER": 0
+        },
+        "ann_6986feb295982": {
+            "Téléphoner": 0,
+            "Envoyez un SMS": 0
+        },
+        "ann_69874aabc1981": {
+            "Envoyer SMS": 0,
+            "Téléphoner": 0,
+            "Écrivez nous sur WhatsApp": 0
+        },
+        "ann_698b1f7e3fbd7": [],
+        "ann_698b2e238cfa1": {
+            "S'inscrire": 0
+        },
+        "ann_698b6d53eedcd": [],
+        "ann_698bb8c073bb2": [],
+        "ann_698bba372785e": [],
+        "ann_698ca56b4da52": [],
+        "ann_698ca6e50aaf4": [],
+        "ann_698f69f1de597": [],
+        "ann_69909765582d5": [],
+        "ann_699098e5831a4": [],
+        "ann_6990998432a74": [],
+        "ann_69909a5770503": [],
+        "ann_6992ceef7609e": [],
+        "ann_6992cfd8908a6": [],
+        "ann_6992d05f3dd5e": [],
+        "ann_6992d16504aa2": [],
+        "ann_6993805ce4985": [],
+        "ann_699383364da51": [],
+        "ann_6994302e700d2": [],
+        "ann_699872593374c": [],
+        "ann_699873c1b7bea": [],
+        "ann_699875fa76ed2": [],
+        "ann_699877acabe2b": [],
+        "ann_699af08f0980c": [],
+        "ann_69a7211f7aa04": [],
+        "ann_69a723a2398d2": [],
+        "ann_69a72615c7b2d": [],
+        "ann_69a7268834c57": [],
+        "ann_69a8040f2fad6": [],
+        "ann_69a8044f749d2": [],
+        "ann_69a8686009205": [],
+        "ann_69a86a2fa3920": [],
+        "ann_69a86aa572715": [],
+        "ann_69a86b1e3c991": [],
+        "ann_69a86ba6d825d": [],
+        "ann_69ab4764e8c45": [],
+        "ann_69b23673156c0": [],
+        "ann_69b237467239e": [],
+        "ann_69b27970d6a6b": [],
+        "ann_69b27a6134525": [],
+        "ann_69c7758268c95": [],
+        "ann_69c77b817b8e0": [],
+        "ann_69c804a1a60b8": [],
+        "ann_69c8461ddc229": [],
+        "ann_69ca8fbb25078": [],
+        "ann_69cb8dbf4ab6a": [],
+        "ann_69cb8ec9e603e": [],
+        "ann_69ccdf7494153": [],
+        "ann_69ce26de0ac25": [],
+        "ann_69ce288660ff2": [],
+        "ann_69ce9e2db2a90": [],
+        "ann_69d13a541dd68": [],
+        "ann_69d368575e4e4": [],
+        "ann_69d368bc74bd8": [],
+        "ann_69da25eaaa376": [],
+        "ann_69da2af61a9ba": [],
+        "ann_69dd0b560c12f": [],
+        "ann_69dd0d4394010": [],
+        "ann_69dd14eb6c4a0": [],
+        "ann_69dd17b70e9ca": [],
+        "ann_69dfd32caf24a": [],
+        "ann_69dfd71b8678a": [],
+        "ann_69dfd95461259": [],
+        "ann_69dfd9f210763": [],
+        "ann_69eb394441a90": [],
+        "ann_69eb498153004": [],
+        "ann_69eb4f3bbbb4e": []
+    }
+}

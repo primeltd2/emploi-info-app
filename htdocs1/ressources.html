@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMPLOI INFO - Ressources</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a227">
+<link rel="apple-touch-icon" href="/pwa-icon-192.png">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{min-height:100vh;display:flex;flex-direction:column;background:#111;color:#fff}
+a{text-decoration:none;color:inherit}
+
+header{display:flex;align-items:center;gap:12px;padding:15px;background:rgba(0,0,0,.6)}
+header img{width:46px;height:46px;border-radius:10px}
+header h1{font-size:22px;color:gold}
+
+.container{flex:1;padding:20px}
+
+.topbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.topbar input{flex:1;padding:12px;border-radius:10px;border:none}
+
+.card{
+background:rgba(0,0,0,.6);
+border-left:6px solid gold;
+border-radius:14px;
+padding:15px;
+margin-bottom:16px;
+box-shadow:0 6px 14px rgba(0,0,0,.5);
+transition:0.3s
+}
+.card img{width:100%;border-radius:12px;margin-bottom:10px}
+.card h2{color:gold;font-size:18px;margin-bottom:6px}
+.card pre{white-space:pre-wrap;font-size:14px;line-height:1.5;margin-bottom:8px}
+.card .date{font-size:12px;opacity:.8;margin-bottom:6px}
+
+.card .btn{
+display:inline-block;
+margin:5px 5px 0 0;
+padding:10px 14px;
+border-radius:10px;
+font-weight:bold;
+color:#fff;
+cursor:pointer;
+transition:.2s
+}
+.card .btn:hover{opacity:.85;transform:scale(1.03)}
+
+.highlight{
+animation:highlightAnim 3s ease forwards;
+}
+
+@keyframes highlightAnim{
+0%{box-shadow:0 0 0px gold}
+50%{box-shadow:0 0 20px gold}
+100%{box-shadow:0 0 0px gold}
+}
+
+footer{background:rgba(0,0,0,.7);padding:30px 15px}
+.footer-main{max-width:1200px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}
+.footer-section{flex:1;min-width:220px}
+.footer-section h2,.footer-section h3{color:gold;margin-bottom:10px}
+
+.footer-socials a{
+display:inline-block;
+margin-right:8px;
+padding:6px 12px;
+border-radius:6px;
+font-weight:bold
+}
+.footer-socials .facebook{background:#4267B2}
+.footer-socials .whatsapp{background:#25D366}
+
+.footer-ia{text-align:center;margin-top:25px}
+.footer-ai-cards{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:12px;
+cursor:pointer
+}
+.footer-ai-cards div{
+background:rgba(255,255,255,.06);
+padding:10px 14px;
+border-radius:10px;
+transition:.3s
+}
+.footer-ai-cards div:hover{background:rgba(255,215,0,.2)}
+
+#contactBtn{
+position:fixed;
+top:50%;
+right:0;
+transform:translateY(-50%);
+background:gold;
+color:#000;
+width:50px;
+height:50px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+z-index:10001
+}
+
+@media(max-width:900px){
+.footer-main{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<img src="logo.png" alt="Logo">
+<h1>EMPLOI INFO</h1>
+</header>
+
+<div class="container">
+<div class="topbar">
+<input id="searchResources" placeholder="Rechercher une ressource">
+</div>
+<div id="resourcesContainer">Chargementâ€¦</div>
+</div>
+
+<footer>
+<div class="footer-main">
+<div class="footer-section">
+<h2>EMPLOI INFO</h2>
+<p>Votre plateforme fiable pour offres d'emploi, stages et formations.</p>
+</div>
+
+<div class="footer-section">
+<h3>Navigation</h3>
+<ul>
+<li><a href="index.html">Accueil</a></li>
+<li><a href="blog.html">Blog</a></li>
+<li><a href="services.html">Services</a></li>
+<li><a href="resources.html">Ressources</a></li>
+<li><a href="contact.html">Contact</a></li>
+</ul>
+</div>
+
+<div class="footer-section">
+<h3>Contact</h3>
+<p>Email : <a href="mailto:kodjaouelisee1234@gmail.com">kodjaouelisee1234@gmail.com</a></p>
+<p>TÃ©lÃ©phone : <a href="tel:+22953876853">+229 53876853</a></p>
+<div class="footer-socials">
+<a class="facebook" href="https://www.facebook.com/share/1DxuasNToY/">Facebook</a>
+<a class="whatsapp" href="https://whatsapp.com/channel/0029Vb7NqlYEwEjzSCjRon23">WhatsApp</a>
+</div>
+</div>
+</div>
+
+<div class="footer-ia">
+<h3>Ressources populaires</h3>
+<div id="footerAIContainerResources" class="footer-ai-cards"></div>
+</div>
+</footer>
+
+<a id="contactBtn" href="contact.html">ðŸ“ž</a>
+
+<script>
+let resources=[]
+
+async function chargerResources(){
+try{
+const res=await fetch("resources.json?"+Date.now())
+resources=await res.json()
+afficherResources(resources)
+highlightFromURL()
+}catch(e){console.error(e)}
+}
+
+function afficherResources(liste){
+const c=document.getElementById("resourcesContainer")
+c.innerHTML=""
+
+liste.forEach(r=>{
+r.id = r.id || crypto.randomUUID()
+const d=document.createElement("div")
+d.className="card"
+d.id = r.id
+
+const boutons = r.boutons && r.boutons.length>0
+? r.boutons.map(b=>`<a class="btn" href="${b.lien}" style="background:${b.couleur}" target="_blank">${b.texte}</a>`).join('')
+: (r.lien ? `<a class="btn" href="${r.lien}" target="_blank">DÃ©couvrir</a>` : "")
+
+d.innerHTML=`
+${r.img?`<img src="${r.img}">`:''}
+<h2>${r.titre}</h2>
+<div class="date">${new Date(r.date).toLocaleDateString()}</div>
+<pre>${r.texte}</pre>
+${boutons}
+`
+c.appendChild(d)
+})
+
+// footer ressources populaires
+const footerC=document.getElementById("footerAIContainerResources")
+footerC.innerHTML=""
+resources.slice(0,3).forEach(r=>{
+const f=document.createElement("div")
+f.textContent=r.titre
+f.onclick=()=>scrollToResource(r.id)
+footerC.appendChild(f)
+})
+}
+
+document.getElementById("searchResources").addEventListener("input",e=>{
+const val=e.target.value.toLowerCase()
+afficherResources(
+resources.filter(r =>
+r.titre.toLowerCase().includes(val) ||
+r.texte.toLowerCase().includes(val)
+)
+)
+})
+
+function scrollToResource(id){
+const el=document.getElementById(id)
+if(el){
+el.scrollIntoView({behavior:"smooth",block:"center"})
+el.classList.add("highlight")
+setTimeout(()=>el.classList.remove("highlight"),3000)
+}
+}
+
+function highlightFromURL(){
+const params=new URLSearchParams(window.location.search)
+const id=params.get("id")
+if(!id) return
+
+const el=document.getElementById(id)
+if(el){
+el.scrollIntoView({behavior:"smooth",block:"center"})
+el.classList.add("highlight")
+setTimeout(()=>el.classList.remove("highlight"),3000)
+}
+}
+
+chargerResources()
+</script>
+
+<script>
+fetch("track_view.php")
+</script>
+
+<script src="/assets/site-menu.js"></script>
+</body>
+</html>
