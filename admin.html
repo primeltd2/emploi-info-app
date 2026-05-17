@@ -1668,6 +1668,86 @@ const currentAdminPermissions = JSON.parse(localStorage.getItem("admin_permissio
 let currentCsrfToken = localStorage.getItem("admin_csrf") || "";
 const AFRICAN_COUNTRIES = ["Afrique du Sud","Algérie","Angola","Bénin","Botswana","Burkina Faso","Burundi","Cameroun","Cap-Vert","Comores","Congo","Côte d'Ivoire","Djibouti","Égypte","Érythrée","Éthiopie","Gabon","Gambie","Ghana","Guinée","Guinée-Bissau","Guinée équatoriale","Kenya","Lesotho","Liberia","Libye","Madagascar","Malawi","Mali","Maroc","Maurice","Mauritanie","Mozambique","Namibie","Niger","Nigeria","Ouganda","République centrafricaine","République démocratique du Congo","Rwanda","Sao Tomé-et-Principe","Sénégal","Seychelles","Sierra Leone","Somalie","Soudan","Soudan du Sud","Tanzanie","Tchad","Togo","Tunisie","Zambie","Zimbabwe"];
 
+function androidBridge(){
+  return window.EmploiInfoAndroid || null;
+}
+
+function remoteAdminApiConfig(){
+  const bridge = androidBridge();
+  if(!bridge || !bridge.isRemoteContentSyncEnabled || !bridge.isRemoteContentSyncEnabled()) return null;
+  const baseUrl = bridge.getApiBaseUrl ? bridge.getApiBaseUrl() : "";
+  const apiKey = bridge.getAdminApiKey ? bridge.getAdminApiKey() : "";
+  if(!baseUrl || !apiKey) return null;
+  return {baseUrl: baseUrl.replace(/\/+$/, ""), apiKey};
+}
+
+function remoteAdminFetch(path, options = {}){
+  const config = remoteAdminApiConfig();
+  if(!config) return Promise.reject(new Error("Synchronisation API indisponible"));
+  const bridge = androidBridge();
+  if(bridge && bridge.requestAdminApi){
+    return new Promise(resolve=>{
+      let nativeResult = {ok:false, status:0, body:'{"status":"error","message":"API indisponible"}'};
+      try {
+        nativeResult = JSON.parse(bridge.requestAdminApi(options.method || "GET", path, String(options.body || "")));
+      } catch(e) {
+        nativeResult = {ok:false, status:0, body:'{"status":"error","message":"Réponse Android invalide"}'};
+      }
+      resolve({
+        ok: !!nativeResult.ok,
+        status: Number(nativeResult.status || 0),
+        json: () => Promise.resolve(JSON.parse(nativeResult.body || "{}")),
+        text: () => Promise.resolve(String(nativeResult.body || ""))
+      });
+    });
+  }
+  const headers = new Headers(options.headers || {});
+  headers.set("x-api-key", config.apiKey);
+  if(options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")){
+    headers.set("Content-Type", "application/json");
+  }
+  return fetch(config.baseUrl + path, {...options, headers});
+}
+
+function readFileAsDataUrl(file){
+  return new Promise((resolve, reject)=>{
+    if(!file){ resolve(""); return; }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Lecture fichier impossible"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function apiOfferPayloadFromAdminForm(banner){
+  return {
+    title: document.getElementById("titre").value.trim(),
+    description: document.getElementById("texte").value.trim(),
+    notice: document.getElementById("notice").value,
+    category: document.getElementById("categorie").value,
+    city: document.getElementById("ville").value,
+    alignment: document.getElementById("alignement").value,
+    banner: banner || "",
+    buttons: [],
+    urgent: false,
+    published: true
+  };
+}
+
+async function publishOfferToRemoteApi(){
+  const file = document.getElementById("annonceFile").files[0];
+  const banner = await readFileAsDataUrl(file);
+  const response = await remoteAdminFetch("/admin/offers", {
+    method:"POST",
+    body:JSON.stringify(apiOfferPayloadFromAdminForm(banner))
+  });
+  const result = await response.json().catch(()=>({status:"error", message:"Réponse API invalide"}));
+  if(!response.ok || result.status !== "success"){
+    throw new Error(result.message || "Publication API impossible");
+  }
+  return result.data;
+}
+
 function hasPermission(permission){
   if(currentAdminRole === "super" && currentAdminPermissions.length === 0) return true;
   return currentAdminPermissions.includes(permission);
@@ -1957,6 +2037,19 @@ function chargerAnnonces(){
 
 function valider(id){
   if(!confirm("Valider cette annonce ?")) return;
+  if(remoteAdminApiConfig()){
+    remoteAdminFetch(`/admin/offers/${encodeURIComponent(id)}/publish`, {
+      method:"PATCH",
+      body:JSON.stringify({published:true})
+    }).then(r=>r.json().then(res=>({ok:r.ok,res})))
+      .then(({ok,res})=>{
+        if(!ok || res.status !== "success"){ alert(res.message || "Impossible de valider cette annonce"); return; }
+        chargerAnnonces();
+        chargerStats();
+      })
+      .catch(e=>alert(e.message || "Erreur lors de la validation"));
+    return;
+  }
   fetch("update_publish.php",{
     method:"POST",
     credentials:"same-origin",
@@ -1979,6 +2072,16 @@ function valider(id){
 
 function supprimer(id){
   if(!confirm("Supprimer cette annonce ?")) return;
+  if(remoteAdminApiConfig()){
+    remoteAdminFetch(`/admin/offers/${encodeURIComponent(id)}`, {method:"DELETE"})
+      .then(r=>{
+        if(!r.ok && r.status !== 204) throw new Error("Impossible de supprimer cette annonce");
+        chargerAnnonces();
+        chargerStats();
+      })
+      .catch(e=>alert(e.message || "Erreur lors de la suppression"));
+    return;
+  }
   fetch("update_publish.php",{
     method:"POST",
     credentials:"same-origin",
@@ -2194,6 +2297,22 @@ function publier(){
   const titre = document.getElementById("titre").value.trim();
   const texte = document.getElementById("texte").value.trim();
   if(!titre || !texte) { alert("Titre et description requis"); return; }
+
+  if(remoteAdminApiConfig()){
+    publishOfferToRemoteApi()
+      .then(()=>{
+        alert("Annonce publiée dans l'API et disponible pour l'application publique");
+        document.getElementById("titre").value="";
+        document.getElementById("texte").value="";
+        document.getElementById("notice").value="";
+        document.getElementById("annonceFile").value="";
+        updateApercu();
+        chargerAnnonces();
+        chargerStats();
+      })
+      .catch(e=>alert(e.message || "Erreur lors de la publication API"));
+    return;
+  }
 
   const fd = new FormData();
   fd.append("titre", titre);

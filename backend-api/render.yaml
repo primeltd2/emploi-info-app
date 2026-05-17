@@ -16,3 +16,5 @@ services:
         value: ..
       - key: APP_ORIGIN
         value: https://emploi-info.page.gd,https://app.local,null
+      - key: API_KEY
+        value: emploi-info-sync-2026

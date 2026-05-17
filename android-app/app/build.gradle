@@ -8,6 +8,10 @@ def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+def adminApiKey = providers.gradleProperty("EMPLOI_INFO_ADMIN_API_KEY")
+    .orElse(providers.environmentVariable("EMPLOI_INFO_ADMIN_API_KEY"))
+    .orElse("emploi-info-sync-2026")
+    .get()
 
 android {
     namespace "com.emploiinfo.app"
@@ -37,6 +41,7 @@ android {
             resValue "string", "app_name", "EMPLOI INFO"
             buildConfigField "String", "HOME_URL", "\"https://app.local/index.html\""
             buildConfigField "String", "API_BASE_URL", "\"https://emploi-info-api.onrender.com/api/v1\""
+            buildConfigField "String", "ADMIN_API_KEY", "\"${adminApiKey}\""
             buildConfigField "String", "REGISTER_TOKEN_URL", "\"https://emploi-info-api.onrender.com/api/v1/android/tokens\""
             buildConfigField "String", "APP_VERSION_URL", "\"https://emploi-info-api.onrender.com/api/v1/app-version?kind=public\""
             buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://github.com/primeltd2/emploi-info-app/releases/latest/download/emploi-info-autonome.apk\""
@@ -44,7 +49,8 @@ android {
             buildConfigField "String", "USER_AGENT_SUFFIX", "\"EmploiInfoAndroid\""
             buildConfigField "String", "APP_DISPLAY_NAME", "\"EMPLOI INFO\""
             buildConfigField "boolean", "ENABLE_ADS", "true"
-            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "true"
+            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "false"
+            buildConfigField "boolean", "ENABLE_REMOTE_CONTENT_SYNC", "true"
         }
         admin {
             dimension "edition"
@@ -55,6 +61,7 @@ android {
             resValue "string", "app_name", "ADMIN EMPLOI INFO"
             buildConfigField "String", "HOME_URL", "\"https://app.local/admin.html\""
             buildConfigField "String", "API_BASE_URL", "\"https://emploi-info-api.onrender.com/api/v1\""
+            buildConfigField "String", "ADMIN_API_KEY", "\"${adminApiKey}\""
             buildConfigField "String", "REGISTER_TOKEN_URL", "\"https://emploi-info-api.onrender.com/api/v1/android/tokens\""
             buildConfigField "String", "APP_VERSION_URL", "\"https://emploi-info-api.onrender.com/api/v1/app-version?kind=admin\""
             buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://github.com/primeltd2/emploi-info-app/releases/latest/download/admin-emploi-info-autonome.apk\""
@@ -62,7 +69,8 @@ android {
             buildConfigField "String", "USER_AGENT_SUFFIX", "\"AdminEmploiInfoAndroid\""
             buildConfigField "String", "APP_DISPLAY_NAME", "\"ADMIN EMPLOI INFO\""
             buildConfigField "boolean", "ENABLE_ADS", "false"
-            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "true"
+            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "false"
+            buildConfigField "boolean", "ENABLE_REMOTE_CONTENT_SYNC", "true"
         }
     }
 

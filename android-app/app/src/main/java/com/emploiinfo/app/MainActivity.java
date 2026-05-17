@@ -65,6 +65,7 @@ import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAdView;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -76,9 +77,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import org.json.JSONArray;
 
 public class MainActivity extends AppCompatActivity {
     static final String HOME_URL = BuildConfig.HOME_URL;
+    static final String API_BASE_URL = BuildConfig.API_BASE_URL;
     static final String REGISTER_TOKEN_URL = BuildConfig.REGISTER_TOKEN_URL;
     static final String APP_VERSION_URL = BuildConfig.APP_VERSION_URL;
     static final String LOCAL_APP_HOST = "app.local";
@@ -814,6 +817,9 @@ public class MainActivity extends AppCompatActivity {
             if (path == null || path.isEmpty() || "/".equals(path)) path = "/index.html";
             if (path.endsWith("/")) path = path + "index.html";
 
+            WebResourceResponse remoteResponse = loadRemoteSyncedResource(uri, path);
+            if (remoteResponse != null) return remoteResponse;
+
             String assetPath = LOCAL_SITE_ASSET_ROOT + path.replaceFirst("^/+", "");
             InputStream stream = getAssets().open(assetPath);
             String mimeType = guessMimeType(assetPath);
@@ -821,10 +827,240 @@ public class MainActivity extends AppCompatActivity {
             response.setResponseHeaders(localAssetHeaders());
             return response;
         } catch (IOException missingAsset) {
-            return null;
+            return offlineResponseForMissingLocalEndpoint(rawUrl);
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    private WebResourceResponse loadRemoteSyncedResource(Uri localUri, String path) {
+        if (!BuildConfig.ENABLE_REMOTE_CONTENT_SYNC || API_BASE_URL.isEmpty()) return null;
+        if (!"/data.json".equals(path)) return null;
+
+        String apiPath = isAdminPanelUrl(HOME_URL)
+            ? "/admin/offers?limit=100"
+            : "/offers?limit=100";
+        String body = fetchApiJson(apiPath, apiPath.startsWith("/admin/"));
+        if (body == null || body.isEmpty()) return null;
+
+        try {
+            JSONObject json = new JSONObject(body);
+            JSONArray data = json.optJSONArray("data");
+            if (data == null) return null;
+            return localTextResponse("application/json", apiOffersToLegacyJson(data).toString());
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String fetchApiJson(String path, boolean admin) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(API_BASE_URL + path + (path.contains("?") ? "&" : "?") + "t=" + System.currentTimeMillis());
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.setRequestProperty("Accept", "application/json");
+            if (admin && !BuildConfig.ADMIN_API_KEY.isEmpty()) {
+                conn.setRequestProperty("x-api-key", BuildConfig.ADMIN_API_KEY);
+            }
+            int status = conn.getResponseCode();
+            if (status < 200 || status >= 300) return null;
+            StringBuilder body = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
+                String line;
+                while ((line = reader.readLine()) != null) body.append(line);
+            }
+            return body.toString();
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    private JSONArray apiOffersToLegacyJson(JSONArray offers) {
+        JSONArray rows = new JSONArray();
+        for (int i = 0; i < offers.length(); i++) {
+            JSONObject offer = offers.optJSONObject(i);
+            if (offer == null) continue;
+            JSONObject row = new JSONObject();
+            try {
+                row.put("id", offer.optString("id"));
+                row.put("titre", offer.optString("title"));
+                row.put("texte", offer.optString("description"));
+                row.put("notice", offer.optString("notice"));
+                row.put("categorie", offer.optString("category"));
+                row.put("ville", offer.optString("city"));
+                row.put("banniere", offer.optString("banner"));
+                row.put("boutons", offer.optJSONArray("buttons") != null ? offer.optJSONArray("buttons") : new JSONArray());
+                row.put("alignement", offer.optString("alignment", "left"));
+                row.put("urgent", offer.optBoolean("urgent", false));
+                row.put("publie", offer.optBoolean("published", false));
+                row.put("date", offer.optString("date"));
+                rows.put(row);
+            } catch (Exception ignored) {
+            }
+        }
+        return rows;
+    }
+
+    private WebResourceResponse offlineResponseForMissingLocalEndpoint(String rawUrl) {
+        try {
+            Uri uri = Uri.parse(rawUrl);
+            if (!isBundledSiteHost(uri.getHost())) return null;
+
+            String path = uri.getPath();
+            if (path == null) path = "";
+            String name = path.substring(path.lastIndexOf('/') + 1);
+            if (name.isEmpty()) name = path.replaceFirst("^/+", "");
+
+            String action = uri.getQueryParameter("action");
+
+            if ("login.php".equals(name) || "admin_session.php".equals(name)) {
+                return localTextResponse("application/json", offlineAdminSessionJson());
+            }
+
+            if ("admin_user_data.php".equals(name)) {
+                return localTextResponse(
+                    "application/json",
+                    "{\"status\":\"success\",\"stats\":{\"users\":0,\"applications\":0,\"alerts_enabled\":0,\"favorites\":0},\"users\":[],\"applications\":[]}"
+                );
+            }
+
+            if ("admin_interactions.php".equals(name)) {
+                return localTextResponse("application/json", offlineAdminInteractionsJson());
+            }
+
+            if ("send_contact.php".equals(name) || "send_contact".equals(name)) {
+                return localTextResponse("application/json", offlineContactJson(action));
+            }
+
+            if ("partners.php".equals(name)) {
+                return localTextResponse("application/json", offlinePartnersJson(action));
+            }
+
+            if ("news_sources.php".equals(name)) {
+                return localTextResponse("application/json", offlineNewsSourcesJson(action));
+            }
+
+            if ("admin_invites.php".equals(name)) {
+                return localTextResponse("application/json", offlineAdminInvitesJson(action));
+            }
+
+            if ("admin_messages.php".equals(name)) {
+                return localTextResponse("application/json", offlineAdminMessagesJson());
+            }
+
+            if ("get_csrf.php".equals(name)) {
+                return localTextResponse("text/plain", "offline");
+            }
+
+            if ("news_feed.php".equals(name)) {
+                return localTextResponse("application/json", "[]");
+            }
+
+            if (name.endsWith(".php")) {
+                return localTextResponse(
+                    "application/json",
+                    "{\"status\":\"success\",\"success\":true,\"offline\":true,\"message\":\"Action locale enregistree en mode hors ligne.\"}"
+                );
+            }
+
+            return localStatusResponse(404, "Not Found", "text/plain", "");
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String offlineAdminSessionJson() {
+        return "{"
+            + "\"status\":\"success\","
+            + "\"username\":\"Administrateur hors ligne\","
+            + "\"role\":\"super\","
+            + "\"permissions\":[\"annonces\",\"publicites\",\"partners\",\"actualites\",\"comments\",\"content\",\"settings\",\"manage_admins\"],"
+            + "\"csrf\":\"offline\""
+            + "}";
+    }
+
+    private String offlineAdminInteractionsJson() {
+        return "{"
+            + "\"status\":\"success\","
+            + "\"comments\":[],"
+            + "\"reports\":[],"
+            + "\"blocks\":[],"
+            + "\"appeals\":[],"
+            + "\"settings\":{"
+            + "\"auto_moderation_enabled\":true,"
+            + "\"auto_keywords\":[],"
+            + "\"blocked_keywords\":[],"
+            + "\"suspect_keywords\":[],"
+            + "\"repeat_limit\":2"
+            + "}"
+            + "}";
+    }
+
+    private String offlineContactJson(String action) {
+        if ("admin".equals(action)) {
+            return "{\"status\":\"success\",\"messages\":[]}";
+        }
+        return "{\"status\":\"success\",\"success\":true,\"offline\":true,\"message\":\"Action contact locale effectuee.\"}";
+    }
+
+    private String offlinePartnersJson(String action) {
+        if ("admin".equals(action)) {
+            return "{\"status\":\"success\",\"partners\":[]}";
+        }
+        return "{\"status\":\"success\",\"success\":true,\"offline\":true,\"message\":\"Action partenaire locale effectuee.\"}";
+    }
+
+    private String offlineNewsSourcesJson(String action) {
+        if ("list".equals(action)) {
+            return "{\"status\":\"success\",\"sources\":[]}";
+        }
+        return "{\"status\":\"success\",\"success\":true,\"offline\":true,\"message\":\"Actualites locales conservees hors ligne.\"}";
+    }
+
+    private String offlineAdminInvitesJson(String action) {
+        if ("create".equals(action)) {
+            return "{\"status\":\"success\",\"link\":\"https://app.local/accept-admin-invite.html?offline=1\",\"invites\":[]}";
+        }
+        return "{\"status\":\"success\",\"invites\":[]}";
+    }
+
+    private String offlineAdminMessagesJson() {
+        return "{"
+            + "\"status\":\"success\","
+            + "\"current_admin\":\"Administrateur hors ligne\","
+            + "\"admins\":[{\"username\":\"Administrateur hors ligne\",\"role\":\"super\",\"online\":true}],"
+            + "\"groups\":[],"
+            + "\"dms\":[],"
+            + "\"meetings\":[]"
+            + "}";
+    }
+
+    private WebResourceResponse localTextResponse(String mimeType, String body) {
+        WebResourceResponse response = new WebResourceResponse(
+            mimeType,
+            "UTF-8",
+            new ByteArrayInputStream(body.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        );
+        response.setResponseHeaders(localAssetHeaders());
+        return response;
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private WebResourceResponse localStatusResponse(int statusCode, String reason, String mimeType, String body) {
+        WebResourceResponse response = new WebResourceResponse(
+            mimeType,
+            "UTF-8",
+            statusCode,
+            reason,
+            localAssetHeaders(),
+            new ByteArrayInputStream(body.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        );
+        return response;
     }
 
     private java.util.Map<String, String> localAssetHeaders() {
@@ -1108,6 +1344,87 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class AndroidAppBridge {
+        @JavascriptInterface
+        public String getApiBaseUrl() {
+            return BuildConfig.ENABLE_REMOTE_CONTENT_SYNC ? API_BASE_URL : "";
+        }
+
+        @JavascriptInterface
+        public String getAdminApiKey() {
+            return BuildConfig.ENABLE_REMOTE_CONTENT_SYNC ? BuildConfig.ADMIN_API_KEY : "";
+        }
+
+        @JavascriptInterface
+        public boolean isRemoteContentSyncEnabled() {
+            return BuildConfig.ENABLE_REMOTE_CONTENT_SYNC;
+        }
+
+        @JavascriptInterface
+        public String requestAdminApi(String method, String path, String body) {
+            JSONObject result = new JSONObject();
+            HttpURLConnection conn = null;
+            try {
+                if (!BuildConfig.ENABLE_REMOTE_CONTENT_SYNC || API_BASE_URL.isEmpty() || BuildConfig.ADMIN_API_KEY.isEmpty()) {
+                    result.put("ok", false);
+                    result.put("status", 0);
+                    result.put("body", "{\"status\":\"error\",\"message\":\"Synchronisation API indisponible\"}");
+                    return result.toString();
+                }
+
+                String safePath = path == null || path.isEmpty() ? "/" : path;
+                if (!safePath.startsWith("/")) safePath = "/" + safePath;
+                if (!safePath.startsWith("/admin/")) {
+                    result.put("ok", false);
+                    result.put("status", 400);
+                    result.put("body", "{\"status\":\"error\",\"message\":\"Chemin admin invalide\"}");
+                    return result.toString();
+                }
+
+                URL url = new URL(API_BASE_URL + safePath);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod(method == null || method.isEmpty() ? "GET" : method.toUpperCase(Locale.US));
+                conn.setConnectTimeout(9000);
+                conn.setReadTimeout(12000);
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestProperty("x-api-key", BuildConfig.ADMIN_API_KEY);
+
+                String payload = body == null ? "" : body;
+                if (!payload.isEmpty() && !"GET".equals(conn.getRequestMethod())) {
+                    conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                    conn.setDoOutput(true);
+                    try (OutputStream os = conn.getOutputStream()) {
+                        os.write(payload.getBytes("UTF-8"));
+                    }
+                }
+
+                int status = conn.getResponseCode();
+                InputStream stream = status >= 200 && status < 300 ? conn.getInputStream() : conn.getErrorStream();
+                StringBuilder responseBody = new StringBuilder();
+                if (stream != null) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) responseBody.append(line);
+                    }
+                }
+
+                result.put("ok", status >= 200 && status < 300);
+                result.put("status", status);
+                result.put("body", responseBody.length() > 0 ? responseBody.toString() : "{\"status\":\"success\"}");
+                return result.toString();
+            } catch (Exception error) {
+                try {
+                    result.put("ok", false);
+                    result.put("status", 0);
+                    result.put("body", "{\"status\":\"error\",\"message\":\"API indisponible. Verifiez internet ou le deploiement Render.\"}");
+                    return result.toString();
+                } catch (Exception ignored) {
+                    return "{\"ok\":false,\"status\":0,\"body\":\"{\\\"status\\\":\\\"error\\\",\\\"message\\\":\\\"API indisponible\\\"}\"}";
+                }
+            } finally {
+                if (conn != null) conn.disconnect();
+            }
+        }
+
         @JavascriptInterface
         public void setNotificationBadge(int count) {
             int safeCount = Math.max(0, count);

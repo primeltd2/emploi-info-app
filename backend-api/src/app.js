@@ -7,8 +7,8 @@ export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
-  app.use(express.json({ limit: "1mb" }));
-  app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+  app.use(express.json({ limit: "8mb" }));
+  app.use(express.urlencoded({ extended: false, limit: "8mb" }));
   app.use(securityMiddleware());
 
   app.get("/", (req, res) => {

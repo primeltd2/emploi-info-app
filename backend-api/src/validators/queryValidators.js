@@ -26,7 +26,7 @@ export const offerCreateSchema = z.object({
   notice: z.string().trim().max(1000).default(""),
   category: z.string().trim().max(80).default(""),
   city: z.string().trim().max(80).default(""),
-  banner: z.string().trim().max(500).default(""),
+  banner: z.string().trim().max(8000000).default(""),
   buttons: z.array(buttonSchema).max(10).default([]),
   alignment: z.enum(["left", "center", "right"]).default("left"),
   urgent: z.boolean().default(false),
