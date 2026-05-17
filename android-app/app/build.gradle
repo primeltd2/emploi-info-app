@@ -8,9 +8,17 @@ def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+def readDotEnvValue = { File file, String key ->
+    if (!file.exists()) return ""
+    def prefix = "${key}="
+    def line = file.readLines("UTF-8").find { it.trim().startsWith(prefix) }
+    if (!line) return ""
+    return line.substring(line.indexOf("=") + 1).trim().replaceAll(/^['"]|['"]$/, "")
+}
+
 def adminApiKey = providers.gradleProperty("EMPLOI_INFO_ADMIN_API_KEY")
     .orElse(providers.environmentVariable("EMPLOI_INFO_ADMIN_API_KEY"))
-    .orElse("")
+    .orElse(readDotEnvValue(rootProject.projectDir.parentFile.toPath().resolve("backend-api/.env").toFile(), "API_KEY"))
     .get()
 
 android {

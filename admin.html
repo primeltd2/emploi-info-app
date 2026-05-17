@@ -1685,7 +1685,7 @@ function remoteAdminFetch(path, options = {}){
   const config = remoteAdminApiConfig();
   if(!config) return Promise.reject(new Error("Synchronisation API indisponible"));
   const bridge = androidBridge();
-  if(bridge && bridge.requestAdminApi){
+  if(bridge && bridge.requestAdminApi && String(path || "").startsWith("/admin/")){
     return new Promise(resolve=>{
       let nativeResult = {ok:false, status:0, body:'{"status":"error","message":"API indisponible"}'};
       try {
@@ -1707,6 +1707,13 @@ function remoteAdminFetch(path, options = {}){
     headers.set("Content-Type", "application/json");
   }
   return fetch(config.baseUrl + path, {...options, headers});
+}
+
+function remotePublicFetch(path, options = {}){
+  const bridge = androidBridge();
+  const baseUrl = bridge && bridge.getApiBaseUrl ? bridge.getApiBaseUrl() : "";
+  if(!baseUrl) return Promise.reject(new Error("API publique indisponible"));
+  return fetch(baseUrl.replace(/\/+$/, "") + path, options);
 }
 
 function readFileAsDataUrl(file){
@@ -1767,8 +1774,12 @@ function remoteOfferToLegacyOffer(offer){
 
 async function loadAdminOffersData(){
   if(remoteAdminApiConfig()){
-    const response = await remoteAdminFetch("/admin/offers?limit=100");
-    const result = await response.json().catch(()=>({status:"error", data:[]}));
+    let response = await remoteAdminFetch("/admin/offers?limit=100");
+    let result = await response.json().catch(()=>({status:"error", data:[]}));
+    if(!response.ok || result.status !== "success"){
+      response = await remotePublicFetch("/offers?limit=100", {cache:"no-store"});
+      result = await response.json().catch(()=>({status:"error", data:[]}));
+    }
     if(!response.ok || result.status !== "success"){
       throw new Error(result.message || "Chargement API impossible");
     }
