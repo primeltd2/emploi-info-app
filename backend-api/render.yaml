@@ -15,4 +15,4 @@ services:
       - key: DATA_DIR
         value: ..
       - key: APP_ORIGIN
-        value: https://emploi-info.page.gd
+        value: https://emploi-info.page.gd,https://app.local,null

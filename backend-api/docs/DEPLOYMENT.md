@@ -13,7 +13,7 @@ Le backend est pret pour Render ou Railway, mais le compte doit etre cree au nom
 ```text
 NODE_ENV=production
 PORT=10000
-APP_ORIGIN=https://emploi-info.page.gd
+APP_ORIGIN=https://emploi-info.page.gd,https://app.local,null
 DATA_DIR=..
 API_KEY=
 ```
@@ -28,6 +28,14 @@ API_KEY=
    - Start command : `npm start`
 4. Configurer les variables d'environnement.
 5. Tester `https://.../api/v1/health`.
+
+## Application Android autonome
+
+- L'APK charge les pages embarquees avec l'origine interne `https://app.local`.
+- Render doit garder `https://app.local` dans `APP_ORIGIN`.
+- Les versions d'application sont lues via `/api/v1/app-version?kind=public` et `/api/v1/app-version?kind=admin`.
+- Les tokens Firebase Android sont envoyes vers `/api/v1/android/tokens`.
+- Les APK de mise a jour doivent etre publies dans GitHub Releases avec les noms `emploi-info-autonome.apk` et `admin-emploi-info-autonome.apk`.
 
 ## Railway
 

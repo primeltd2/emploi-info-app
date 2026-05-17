@@ -24,6 +24,17 @@ http://localhost:4000/api/v1
 - `GET /api/v1/ads`
 - `GET /api/v1/app-version?kind=public`
 - `GET /api/v1/app-version?kind=admin`
+- `POST /api/v1/android/tokens`
+
+Exemple token Android :
+
+```json
+{
+  "token": "token-firebase",
+  "platform": "android",
+  "app": "EMPLOI INFO"
+}
+```
 
 ## Routes admin preparees
 

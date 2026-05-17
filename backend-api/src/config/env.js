@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
-  APP_ORIGIN: z.string().default("http://localhost,http://127.0.0.1,https://emploi-info.page.gd"),
+  APP_ORIGIN: z.string().default("http://localhost,http://127.0.0.1,https://emploi-info.page.gd,https://app.local,null"),
   DATA_DIR: z.string().default(".."),
   API_KEY: z.string().optional().default("")
 });

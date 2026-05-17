@@ -35,15 +35,16 @@ android {
             versionName "1.4"
             manifestPlaceholders = [appScheme: "emploiinfo"]
             resValue "string", "app_name", "EMPLOI INFO"
-            buildConfigField "String", "HOME_URL", "\"https://emploi-info.page.gd/index.html\""
+            buildConfigField "String", "HOME_URL", "\"https://app.local/index.html\""
             buildConfigField "String", "API_BASE_URL", "\"https://emploi-info-api.onrender.com/api/v1\""
-            buildConfigField "String", "REGISTER_TOKEN_URL", "\"https://emploi-info.page.gd/register_android_token.php\""
-            buildConfigField "String", "APP_VERSION_URL", "\"https://emploi-info.page.gd/app_version.json\""
-            buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://emploi-info.page.gd/download_app.php\""
+            buildConfigField "String", "REGISTER_TOKEN_URL", "\"https://emploi-info-api.onrender.com/api/v1/android/tokens\""
+            buildConfigField "String", "APP_VERSION_URL", "\"https://emploi-info-api.onrender.com/api/v1/app-version?kind=public\""
+            buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://github.com/primeltd2/emploi-info-app/releases/latest/download/emploi-info-autonome.apk\""
             buildConfigField "String", "APP_SCHEME", "\"emploiinfo\""
             buildConfigField "String", "USER_AGENT_SUFFIX", "\"EmploiInfoAndroid\""
             buildConfigField "String", "APP_DISPLAY_NAME", "\"EMPLOI INFO\""
             buildConfigField "boolean", "ENABLE_ADS", "true"
+            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "true"
         }
         admin {
             dimension "edition"
@@ -52,15 +53,16 @@ android {
             versionName "1.2"
             manifestPlaceholders = [appScheme: "adminemploiinfo"]
             resValue "string", "app_name", "ADMIN EMPLOI INFO"
-            buildConfigField "String", "HOME_URL", "\"https://emploi-info.page.gd/admin.html\""
+            buildConfigField "String", "HOME_URL", "\"https://app.local/admin.html\""
             buildConfigField "String", "API_BASE_URL", "\"https://emploi-info-api.onrender.com/api/v1\""
-            buildConfigField "String", "REGISTER_TOKEN_URL", "\"https://emploi-info.page.gd/register_android_token.php\""
-            buildConfigField "String", "APP_VERSION_URL", "\"https://emploi-info.page.gd/admin_app_version.json\""
-            buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://emploi-info.page.gd/download_admin_app.php\""
+            buildConfigField "String", "REGISTER_TOKEN_URL", "\"https://emploi-info-api.onrender.com/api/v1/android/tokens\""
+            buildConfigField "String", "APP_VERSION_URL", "\"https://emploi-info-api.onrender.com/api/v1/app-version?kind=admin\""
+            buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://github.com/primeltd2/emploi-info-app/releases/latest/download/admin-emploi-info-autonome.apk\""
             buildConfigField "String", "APP_SCHEME", "\"adminemploiinfo\""
             buildConfigField "String", "USER_AGENT_SUFFIX", "\"AdminEmploiInfoAndroid\""
             buildConfigField "String", "APP_DISPLAY_NAME", "\"ADMIN EMPLOI INFO\""
             buildConfigField "boolean", "ENABLE_ADS", "false"
+            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "true"
         }
     }
 
@@ -100,3 +102,29 @@ dependencies {
     implementation "androidx.appcompat:appcompat:1.7.0"
     implementation "androidx.activity:activity:1.9.0"
 }
+
+def bundledSiteDir = file("$projectDir/src/main/assets/site")
+def siteRootDir = rootProject.projectDir.parentFile
+
+tasks.register("copyBundledSite", Copy) {
+    from(siteRootDir)
+    into(bundledSiteDir)
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+    include "*.html", "*.json", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.ico", "*.txt", "*.xml", "*.css", "*.js"
+    include "assets/**", "images/**", "uploads/**", "favi/**"
+
+    exclude ".git/**", "android-app/**", "backend-api/**", "node_modules/**", "scripts/**", "_backups/**", "downloads/**"
+    exclude "*.apk", "*.zip", "*.md", "*.php", "*.bat", "*.properties", ".htaccess"
+    exclude "admins.json", "admins.example.json", "users.json", "login_attempts.json"
+    exclude "firebase_service_account.json", "smtp_config.php", "smtp_config.example.php"
+    exclude "vapid_config.example.php", "android_tokens.json", "android_push_log.json"
+    exclude "notification_queue.json", "notification_sent.json", "notification_views.json"
+    exclude "push_subscriptions.json", "contact_messages.json", "test_cookie.txt"
+
+    doFirst {
+        delete(bundledSiteDir)
+    }
+}
+
+preBuild.dependsOn("copyBundledSite")

@@ -41,3 +41,9 @@ export const offerUpdateSchema = offerCreateSchema.partial().refine(
 export const publishSchema = z.object({
   published: z.boolean()
 });
+
+export const androidTokenSchema = z.object({
+  token: z.string().trim().min(20).max(500),
+  platform: z.string().trim().max(40).default("android"),
+  app: z.string().trim().max(80).default("emploi-info")
+});

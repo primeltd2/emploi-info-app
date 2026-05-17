@@ -105,6 +105,28 @@ export async function getAppVersion(kind = "public") {
   return readJson(file, {});
 }
 
+export async function saveAndroidToken(input) {
+  const rows = normalizeArray(await readJson(dataPaths.androidTokens));
+  const now = new Date().toISOString();
+  const token = String(input.token);
+  const index = rows.findIndex((row) => row && row.token === token);
+  const record = {
+    token,
+    platform: input.platform || "android",
+    app: input.app || "emploi-info",
+    updated_at: now
+  };
+
+  if (index >= 0) {
+    rows[index] = { ...rows[index], ...record };
+  } else {
+    rows.unshift({ ...record, created_at: now });
+  }
+
+  await writeJson(dataPaths.androidTokens, rows);
+  return { saved: true };
+}
+
 function toPublicOffer(offer) {
   return {
     id: offer.id,

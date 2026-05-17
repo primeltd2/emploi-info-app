@@ -5,6 +5,6 @@
   "force_update": false,
   "force_cache_reset_version": "2026-05-09-legal-features",
   "terms_version": "2026-05-09",
-  "apk_url": "https://emploi-info.page.gd/download_app.php",
+  "apk_url": "https://github.com/primeltd2/emploi-info-app/releases/latest/download/emploi-info-autonome.apk",
   "message": "Une nouvelle version de EMPLOI INFO est disponible. Elle renforce la securite, corrige des problemes et ameliore la fluidite de l'application."
 }

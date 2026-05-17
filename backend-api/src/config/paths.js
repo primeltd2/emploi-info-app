@@ -10,5 +10,6 @@ export const dataPaths = {
   services: path.join(env.DATA_DIR_ABSOLUTE, "services.json"),
   blog: path.join(env.DATA_DIR_ABSOLUTE, "blog.json"),
   appVersion: path.join(env.DATA_DIR_ABSOLUTE, "app_version.json"),
-  adminAppVersion: path.join(env.DATA_DIR_ABSOLUTE, "admin_app_version.json")
+  adminAppVersion: path.join(env.DATA_DIR_ABSOLUTE, "admin_app_version.json"),
+  androidTokens: path.join(env.DATA_DIR_ABSOLUTE, "android_tokens.json")
 };

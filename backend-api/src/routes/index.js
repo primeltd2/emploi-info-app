@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { adminRouter } from "./admin.js";
+import { androidTokenCreate } from "../controllers/androidController.js";
 import { health } from "../controllers/healthController.js";
 import {
   adsIndex,
@@ -17,4 +18,5 @@ router.get("/offers/:id", offersShow);
 router.get("/catalog", catalogIndex);
 router.get("/ads", adsIndex);
 router.get("/app-version", appVersionShow);
+router.post("/android/tokens", androidTokenCreate);
 router.use("/admin", adminRouter);

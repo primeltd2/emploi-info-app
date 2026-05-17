@@ -3,6 +3,6 @@
   "latest_version_name": "1.2",
   "min_required_version_code": 3,
   "force_update": false,
-  "apk_url": "https://emploi-info.page.gd/downloads/admin-emploi-info.apk",
+  "apk_url": "https://github.com/primeltd2/emploi-info-app/releases/latest/download/admin-emploi-info-autonome.apk",
   "message": "Une nouvelle version de ADMIN EMPLOI INFO est disponible. Elle renforce la securite, corrige des problemes et ameliore la fluidite du panel administrateur."
 }

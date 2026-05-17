@@ -4,9 +4,11 @@ android-app/app/google-services.json
 android-app/.gradle/
 android-app/build/
 android-app/app/build/
+android-app/app/src/main/assets/site/
 android-app/keystore.properties
 android-app/app/release/*.jks
 android-app/app/release/*.keystore
+downloads/*.apk
 smtp_config.php
 vapid_config.php
 admins.json

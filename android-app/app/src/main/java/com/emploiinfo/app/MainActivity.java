@@ -22,9 +22,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.MimeTypeMap;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -62,6 +65,8 @@ import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAdView;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -70,11 +75,15 @@ import java.net.URL;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     static final String HOME_URL = BuildConfig.HOME_URL;
     static final String REGISTER_TOKEN_URL = BuildConfig.REGISTER_TOKEN_URL;
     static final String APP_VERSION_URL = BuildConfig.APP_VERSION_URL;
+    static final String LOCAL_APP_HOST = "app.local";
+    static final String LEGACY_SITE_HOST = "emploi-info.page.gd";
+    static final String LOCAL_SITE_ASSET_ROOT = "site/";
     static final String CHANNEL_ID = "emploi_info_alerts";
     // Unités de production AdMob pour la monétisation
     static final String BANNER_AD_UNIT_ID = "ca-app-pub-7474388862913519/2132851690";
@@ -215,6 +224,19 @@ public class MainActivity extends AppCompatActivity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                WebResourceResponse localResponse = loadBundledSiteResource(url);
+                return localResponse != null ? localResponse : super.shouldInterceptRequest(view, url);
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                String url = request != null && request.getUrl() != null ? request.getUrl().toString() : null;
+                WebResourceResponse localResponse = loadBundledSiteResource(url);
+                return localResponse != null ? localResponse : super.shouldInterceptRequest(view, request);
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 return handleExternalAppUrl(view, url);
             }
@@ -262,11 +284,13 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl(startUrl);
 
         requestWebViewPermissions();
-        try {
-            FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
-        } catch (Exception ignored) {
+        if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
+            try {
+                FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
+            } catch (Exception ignored) {
+            }
+            checkForAppUpdate(false);
         }
-        checkForAppUpdate(false);
     }
 
     private String resolveFileChooserMimeType(String[] acceptTypes) {
@@ -744,11 +768,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         isActivityResumed = true;
-        try {
-            FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
-        } catch (Exception ignored) {
+        if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
+            try {
+                FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
+            } catch (Exception ignored) {
+            }
+            checkForAppUpdate(false);
         }
-        checkForAppUpdate(false);
         resetIdleAdTimer();
     }
 
@@ -778,19 +804,79 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    private WebResourceResponse loadBundledSiteResource(String rawUrl) {
+        if (rawUrl == null) return null;
+        try {
+            Uri uri = Uri.parse(rawUrl);
+            if (!isBundledSiteHost(uri.getHost())) return null;
+
+            String path = uri.getPath();
+            if (path == null || path.isEmpty() || "/".equals(path)) path = "/index.html";
+            if (path.endsWith("/")) path = path + "index.html";
+
+            String assetPath = LOCAL_SITE_ASSET_ROOT + path.replaceFirst("^/+", "");
+            InputStream stream = getAssets().open(assetPath);
+            String mimeType = guessMimeType(assetPath);
+            WebResourceResponse response = new WebResourceResponse(mimeType, "UTF-8", stream);
+            response.setResponseHeaders(localAssetHeaders());
+            return response;
+        } catch (IOException missingAsset) {
+            return null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private java.util.Map<String, String> localAssetHeaders() {
+        java.util.Map<String, String> headers = new java.util.HashMap<>();
+        headers.put("Access-Control-Allow-Origin", "*");
+        headers.put("Cache-Control", "no-cache");
+        return headers;
+    }
+
+    private String guessMimeType(String assetPath) {
+        String extension = MimeTypeMap.getFileExtensionFromUrl(assetPath);
+        if (extension != null) {
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase(Locale.US));
+            if (mimeType != null) return mimeType;
+        }
+        if (assetPath.endsWith(".json")) return "application/json";
+        if (assetPath.endsWith(".js")) return "application/javascript";
+        if (assetPath.endsWith(".css")) return "text/css";
+        return "text/html";
+    }
+
+    private boolean isBundledSiteHost(String host) {
+        return LOCAL_APP_HOST.equals(host) || LEGACY_SITE_HOST.equals(host);
+    }
+
+    private String toLocalSiteUrl(String rawUrl) {
+        if (rawUrl == null) return HOME_URL;
+        try {
+            Uri uri = Uri.parse(rawUrl);
+            if (!isBundledSiteHost(uri.getHost())) return HOME_URL;
+            Uri.Builder builder = uri.buildUpon()
+                .scheme("https")
+                .authority(LOCAL_APP_HOST);
+            return builder.build().toString();
+        } catch (Exception ignored) {
+            return HOME_URL;
+        }
+    }
+
     private String resolveStartUrl(Intent intent) {
         String url = intent != null ? intent.getStringExtra("url") : null;
         Uri data = intent != null ? intent.getData() : null;
         if (data != null) {
             if (BuildConfig.APP_SCHEME.equals(data.getScheme())) {
                 String target = data.getQueryParameter("url");
-                if (target != null && target.startsWith("https://emploi-info.page.gd/")) return target;
+                if (target != null) return toLocalSiteUrl(target);
             }
-            if ("https".equals(data.getScheme()) && "emploi-info.page.gd".equals(data.getHost())) {
-                return data.toString();
+            if ("https".equals(data.getScheme()) && isBundledSiteHost(data.getHost())) {
+                return toLocalSiteUrl(data.toString());
             }
         }
-        return (url != null && url.startsWith("https://emploi-info.page.gd/")) ? url : HOME_URL;
+        return url != null ? toLocalSiteUrl(url) : HOME_URL;
     }
 
     private boolean isAdminPanelUrl(String url) {
@@ -798,7 +884,7 @@ public class MainActivity extends AppCompatActivity {
             Uri uri = Uri.parse(url);
             String host = uri.getHost();
             String path = uri.getPath();
-            return "emploi-info.page.gd".equals(host) && path != null && path.endsWith("/admin.html");
+            return isBundledSiteHost(host) && path != null && path.endsWith("/admin.html");
         } catch (Exception ignored) {
             return false;
         }
@@ -809,7 +895,7 @@ public class MainActivity extends AppCompatActivity {
             Uri uri = Uri.parse(url);
             String host = uri.getHost();
             String path = uri.getPath();
-            return ("emploi-info.page.gd".equals(host)
+            return (isBundledSiteHost(host)
                     && path != null
                     && path.endsWith("/admin_call.php")
                     && "1".equals(uri.getQueryParameter("host")))
@@ -846,8 +932,9 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     String fallbackUrl = intent.getStringExtra("browser_fallback_url");
-                    if (fallbackUrl != null && fallbackUrl.startsWith("https://emploi-info.page.gd/")) {
-                        view.loadUrl(fallbackUrl);
+                    if (fallbackUrl != null) {
+                        String localFallbackUrl = toLocalSiteUrl(fallbackUrl);
+                        if (!HOME_URL.equals(localFallbackUrl)) view.loadUrl(localFallbackUrl);
                     }
                 }
                 return true;
@@ -855,6 +942,10 @@ public class MainActivity extends AppCompatActivity {
 
             Uri uri = Uri.parse(url);
             String scheme = uri.getScheme();
+            if ("https".equals(scheme) && LEGACY_SITE_HOST.equals(uri.getHost())) {
+                view.loadUrl(toLocalSiteUrl(url));
+                return true;
+            }
             if ("emploiinfo".equals(scheme) || "adminemploiinfo".equals(scheme)) {
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 return true;
@@ -877,6 +968,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkForAppUpdate(boolean manual) {
+        if (!BuildConfig.ENABLE_REMOTE_SITE_SERVICES || APP_VERSION_URL.isEmpty()) return;
         if (updateDialogShowing) return;
         new Thread(() -> {
             HttpURLConnection conn = null;
@@ -892,6 +984,9 @@ public class MainActivity extends AppCompatActivity {
                     while ((line = reader.readLine()) != null) body.append(line);
                 }
                 JSONObject json = new JSONObject(body.toString());
+                if (json.has("data") && json.optJSONObject("data") != null) {
+                    json = json.optJSONObject("data");
+                }
                 int latest = json.optInt("latest_version_code", 0);
                 int minRequired = json.optInt("min_required_version_code", 0);
                 int current = currentVersionCode();
@@ -991,6 +1086,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerToken(String token) {
+        if (!BuildConfig.ENABLE_REMOTE_SITE_SERVICES || REGISTER_TOKEN_URL.isEmpty()) return;
         new Thread(() -> {
             try {
                 URL url = new URL(REGISTER_TOKEN_URL);
@@ -998,7 +1094,9 @@ public class MainActivity extends AppCompatActivity {
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 conn.setDoOutput(true);
-                String body = "{\"token\":\"" + token.replace("\\", "\\\\").replace("\"", "\\\"") + "\"}";
+                String safeToken = token.replace("\\", "\\\\").replace("\"", "\\\"");
+                String safeApp = BuildConfig.APP_DISPLAY_NAME.replace("\\", "\\\\").replace("\"", "\\\"");
+                String body = "{\"token\":\"" + safeToken + "\",\"platform\":\"android\",\"app\":\"" + safeApp + "\"}";
                 try (OutputStream os = conn.getOutputStream()) {
                     os.write(body.getBytes("UTF-8"));
                 }
