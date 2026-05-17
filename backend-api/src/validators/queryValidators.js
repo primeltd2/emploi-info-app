@@ -42,6 +42,10 @@ export const publishSchema = z.object({
   published: z.boolean()
 });
 
+export const catalogListSchema = z.object({
+  items: z.array(z.string().trim().min(1).max(120)).max(500)
+});
+
 export const androidTokenSchema = z.object({
   token: z.string().trim().min(20).max(500),
   platform: z.string().trim().max(40).default("android"),

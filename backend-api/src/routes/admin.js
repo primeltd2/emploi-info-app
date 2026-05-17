@@ -5,7 +5,8 @@ import {
   adminOffersDelete,
   adminOffersIndex,
   adminOffersPublish,
-  adminOffersUpdate
+  adminOffersUpdate,
+  adminCatalogListReplace
 } from "../controllers/adminOfferController.js";
 
 export const adminRouter = Router();
@@ -16,3 +17,4 @@ adminRouter.post("/offers", adminOffersCreate);
 adminRouter.patch("/offers/:id", adminOffersUpdate);
 adminRouter.patch("/offers/:id/publish", adminOffersPublish);
 adminRouter.delete("/offers/:id", adminOffersDelete);
+adminRouter.put("/catalog/:name", adminCatalogListReplace);

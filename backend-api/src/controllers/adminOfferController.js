@@ -2,10 +2,12 @@ import {
   createOffer,
   deleteOffer,
   listAdminOffers,
+  replaceCatalogList,
   setOfferPublished,
   updateOffer
 } from "../services/catalogService.js";
 import {
+  catalogListSchema,
   idParamSchema,
   offerCreateSchema,
   offerUpdateSchema,
@@ -61,6 +63,18 @@ export async function adminOffersDelete(req, res, next) {
     const deleted = await deleteOffer(id);
     if (!deleted) return res.status(404).json({ status: "error", message: "Annonce introuvable" });
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function adminCatalogListReplace(req, res, next) {
+  try {
+    const { name } = req.params;
+    const { items } = catalogListSchema.parse(req.body);
+    const data = await replaceCatalogList(name, items);
+    if (!data) return res.status(404).json({ status: "error", message: "Catalogue introuvable" });
+    res.json({ status: "success", count: data.length, data });
   } catch (err) {
     next(err);
   }

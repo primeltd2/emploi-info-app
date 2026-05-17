@@ -1748,6 +1748,64 @@ async function publishOfferToRemoteApi(){
   return result.data;
 }
 
+function remoteOfferToLegacyOffer(offer){
+  return {
+    id: offer.id || "",
+    titre: offer.title || "",
+    texte: offer.description || "",
+    notice: offer.notice || "",
+    categorie: offer.category || "",
+    ville: offer.city || "",
+    banniere: offer.banner || "",
+    boutons: Array.isArray(offer.buttons) ? offer.buttons : [],
+    alignement: offer.alignment || "left",
+    urgent: !!offer.urgent,
+    publie: !!offer.published,
+    date: offer.date || ""
+  };
+}
+
+async function loadAdminOffersData(){
+  if(remoteAdminApiConfig()){
+    const response = await remoteAdminFetch("/admin/offers?limit=100");
+    const result = await response.json().catch(()=>({status:"error", data:[]}));
+    if(!response.ok || result.status !== "success"){
+      throw new Error(result.message || "Chargement API impossible");
+    }
+    return (Array.isArray(result.data) ? result.data : []).map(remoteOfferToLegacyOffer);
+  }
+  const response = await fetch("data.json?ts=" + Date.now(), {cache:"no-store"});
+  return response.json();
+}
+
+async function loadCatalogData(){
+  if(remoteAdminApiConfig()){
+    const response = await remoteAdminFetch("/catalog");
+    const result = await response.json().catch(()=>({status:"error", data:{}}));
+    if(!response.ok || result.status !== "success"){
+      throw new Error(result.message || "Catalogue API impossible");
+    }
+    return result.data || {};
+  }
+  const [categories, cities] = await Promise.all([
+    fetch("categories.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json()),
+    fetch("villes.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json()).catch(()=>[])
+  ]);
+  return {categories, cities};
+}
+
+async function saveRemoteCatalogList(name, items){
+  const response = await remoteAdminFetch(`/admin/catalog/${encodeURIComponent(name)}`, {
+    method:"PUT",
+    body:JSON.stringify({items})
+  });
+  const result = await response.json().catch(()=>({status:"error"}));
+  if(!response.ok || result.status !== "success"){
+    throw new Error(result.message || "Sauvegarde catalogue impossible");
+  }
+  return result.data;
+}
+
 function hasPermission(permission){
   if(currentAdminRole === "super" && currentAdminPermissions.length === 0) return true;
   return currentAdminPermissions.includes(permission);
@@ -1853,8 +1911,7 @@ function securedFetch(url, options = {}){
 }
 
 function chargerStats(){
-  fetch("data.json")
-    .then(r=>r.json())
+  loadAdminOffersData()
     .then(data=>{
       const total = data.length;
       const pub = data.filter(a=>a.publie).length;
@@ -1984,8 +2041,7 @@ function chargerUsersAdmin(){
 }
 
 function chargerAnnonces(){
-  fetch("data.json")
-    .then(r=>r.json())
+  loadAdminOffersData()
     .then(data=>{
       let pub = "", att = "";
 
@@ -2346,9 +2402,9 @@ function publier(){
 }
 
 function chargerCategories(){
-  fetch("categories.json")
-    .then(r=>r.json())
-    .then(data=>{
+  loadCatalogData()
+    .then(catalog=>{
+      const data = Array.isArray(catalog.categories) ? catalog.categories : [];
       const select = document.getElementById("categorie");
       const list = document.getElementById("catList");
 
@@ -2375,10 +2431,9 @@ function chargerCategories(){
 }
 
 function chargerVilles(){
-  fetch("villes.json?ts=" + Date.now(), {cache:"no-store"})
-    .then(r=>r.json())
-    .then(data=>{
-      const villes = Array.isArray(data) ? data : [];
+  loadCatalogData()
+    .then(catalog=>{
+      const villes = Array.isArray(catalog.cities) ? catalog.cities : [];
       const select = document.getElementById("ville");
       const list = document.getElementById("villesList");
 
@@ -2405,10 +2460,14 @@ function ajouterCategorie(){
   const nom = document.getElementById("newCat").value.trim();
   if(!nom) { alert("Nom requis"); return; }
 
-  fetch("categories.json")
-    .then(r=>r.json())
+  const source = remoteAdminApiConfig()
+    ? loadCatalogData().then(catalog=>Array.isArray(catalog.categories) ? catalog.categories : [])
+    : fetch("categories.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json());
+
+  source
     .then(data=>{
-      data.push(nom);
+      if(!data.includes(nom)) data.push(nom);
+      if(remoteAdminApiConfig()) return saveRemoteCatalogList("categories", data);
       return fetch("save_categories.php", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -2427,11 +2486,15 @@ function ajouterVille(){
   const nom = document.getElementById("newVille").value.trim();
   if(!nom) { alert("Nom requis"); return; }
 
-  fetch("villes.json?ts=" + Date.now(), {cache:"no-store"})
-    .then(r=>r.json())
+  const source = remoteAdminApiConfig()
+    ? loadCatalogData().then(catalog=>Array.isArray(catalog.cities) ? catalog.cities : [])
+    : fetch("villes.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json());
+
+  source
     .then(data=>{
       const villes = Array.isArray(data) ? data : [];
       if(!villes.includes(nom)) villes.push(nom);
+      if(remoteAdminApiConfig()) return saveRemoteCatalogList("cities", villes);
       return fetch("save_villes.php", {
         method:"POST",
         credentials:"same-origin",
@@ -2439,9 +2502,9 @@ function ajouterVille(){
         body:JSON.stringify(villes)
       });
     })
-    .then(r=>r.json())
+    .then(r=>r && typeof r.json === "function" ? r.json() : {status:"success"})
     .then(res=>{
-      if(res.status !== "success"){ alert(res.msg || "Sauvegarde impossible"); return; }
+      if(res.status && res.status !== "success"){ alert(res.msg || "Sauvegarde impossible"); return; }
       document.getElementById("newVille").value = "";
       chargerVilles();
     });
@@ -2449,11 +2512,15 @@ function ajouterVille(){
 
 function supprimerVille(i){
   if(!confirm("Supprimer cette ville ?")) return;
-  fetch("villes.json?ts=" + Date.now(), {cache:"no-store"})
-    .then(r=>r.json())
+  const source = remoteAdminApiConfig()
+    ? loadCatalogData().then(catalog=>Array.isArray(catalog.cities) ? catalog.cities : [])
+    : fetch("villes.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json());
+
+  source
     .then(data=>{
       const villes = Array.isArray(data) ? data : [];
       villes.splice(i, 1);
+      if(remoteAdminApiConfig()) return saveRemoteCatalogList("cities", villes);
       return fetch("save_villes.php", {
         method:"POST",
         credentials:"same-origin",
@@ -2466,10 +2533,15 @@ function supprimerVille(i){
 
 function supprimerCategorie(i){
   if(!confirm("Supprimer cette catégorie ?")) return;
-  fetch("categories.json")
-    .then(r=>r.json())
+
+  const source = remoteAdminApiConfig()
+    ? loadCatalogData().then(catalog=>Array.isArray(catalog.categories) ? catalog.categories : [])
+    : fetch("categories.json?ts=" + Date.now(), {cache:"no-store"}).then(r=>r.json());
+
+  source
     .then(data=>{
       data.splice(i, 1);
+      if(remoteAdminApiConfig()) return saveRemoteCatalogList("categories", data);
       return fetch("save_categories.php", {
         method:"POST",
         headers:{"Content-Type":"application/json"},

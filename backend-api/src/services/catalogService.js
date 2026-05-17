@@ -96,6 +96,23 @@ export async function getCatalog() {
   };
 }
 
+export async function replaceCatalogList(name, items) {
+  const allowed = {
+    categories: dataPaths.categories,
+    cities: dataPaths.cities
+  };
+  const filePath = allowed[name];
+  if (!filePath) return null;
+
+  const normalized = [...new Set(
+    normalizeArray(items)
+      .map((item) => String(item).trim())
+      .filter(Boolean)
+  )];
+  await writeJson(filePath, normalized);
+  return normalized;
+}
+
 export async function getAds() {
   return normalizeArray(await readJson(dataPaths.ads));
 }
