@@ -18,6 +18,10 @@ DATA_DIR=..
 API_KEY=
 ```
 
+`API_KEY` doit etre une valeur longue et privee, configuree directement dans Render.
+Ne pas la commiter dans Git. L'application admin Android doit etre compilee avec la meme valeur via
+`EMPLOI_INFO_ADMIN_API_KEY`.
+
 ## Render
 
 1. Creer un compte Render au nom du proprietaire.
@@ -28,6 +32,20 @@ API_KEY=
    - Start command : `npm start`
 4. Configurer les variables d'environnement.
 5. Tester `https://.../api/v1/health`.
+
+Pour connecter l'admin a l'application publique :
+
+1. Dans Render, definir `API_KEY` avec une cle secrete.
+2. Compiler l'APK admin avec la meme cle :
+
+```powershell
+$env:EMPLOI_INFO_ADMIN_API_KEY="votre-cle-secrete"
+.\gradlew.bat assembleAdminRelease
+```
+
+3. Compiler l'APK public normalement. Il lit les annonces publiees via `/api/v1/offers`.
+4. Quand l'admin publie une annonce, elle est envoyee vers `/api/v1/admin/offers`.
+5. L'app publique recharge `data.json` depuis l'API et voit les annonces publiees sans dependre du site web.
 
 ## Application Android autonome
 

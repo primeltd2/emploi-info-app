@@ -1322,7 +1322,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerToken(String token) {
-        if (!BuildConfig.ENABLE_REMOTE_SITE_SERVICES || REGISTER_TOKEN_URL.isEmpty()) return;
+        if (!BuildConfig.ENABLE_REMOTE_CONTENT_SYNC || REGISTER_TOKEN_URL.isEmpty()) return;
         new Thread(() -> {
             try {
                 URL url = new URL(REGISTER_TOKEN_URL);

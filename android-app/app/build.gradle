@@ -10,7 +10,7 @@ if (keystorePropertiesFile.exists()) {
 }
 def adminApiKey = providers.gradleProperty("EMPLOI_INFO_ADMIN_API_KEY")
     .orElse(providers.environmentVariable("EMPLOI_INFO_ADMIN_API_KEY"))
-    .orElse("emploi-info-sync-2026")
+    .orElse("")
     .get()
 
 android {
