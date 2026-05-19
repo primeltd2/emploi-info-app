@@ -11,6 +11,7 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   APP_ORIGIN: z.string().default("http://localhost,http://127.0.0.1,https://emploi-info.page.gd,https://app.local,null"),
   DATA_DIR: z.string().default(".."),
+  SEED_DATA_DIR: z.string().default(".."),
   API_KEY: z.string().optional().default(""),
   FIREBASE_SERVICE_ACCOUNT_JSON: z.string().optional().default(""),
   FIREBASE_PROJECT_ID: z.string().optional().default(""),
@@ -25,5 +26,6 @@ export const env = {
   ...parsed,
   API_ROOT: apiRoot,
   DATA_DIR_ABSOLUTE: path.resolve(apiRoot, parsed.DATA_DIR),
+  SEED_DATA_DIR_ABSOLUTE: path.resolve(apiRoot, parsed.SEED_DATA_DIR),
   APP_ORIGINS: parsed.APP_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean)
 };

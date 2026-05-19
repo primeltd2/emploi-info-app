@@ -1,18 +1,24 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { seedDataFile } from "../config/storage.js";
 
 const cache = new Map();
 
 export async function readJson(filePath, fallback = []) {
   const stat = await fs.stat(filePath).catch(() => null);
-  if (!stat) return fallback;
+  if (!stat) {
+    await seedDataFile(filePath);
+  }
+
+  const nextStat = stat || await fs.stat(filePath).catch(() => null);
+  if (!nextStat) return fallback;
 
   const cached = cache.get(filePath);
-  if (cached && cached.mtimeMs === stat.mtimeMs) return cached.value;
+  if (cached && cached.mtimeMs === nextStat.mtimeMs) return cached.value;
 
   const raw = await fs.readFile(filePath, "utf8");
   const value = raw.trim() === "" ? fallback : JSON.parse(raw);
-  cache.set(filePath, { mtimeMs: stat.mtimeMs, value });
+  cache.set(filePath, { mtimeMs: nextStat.mtimeMs, value });
   return value;
 }
 

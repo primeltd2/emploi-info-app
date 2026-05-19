@@ -7,12 +7,18 @@ services:
     buildCommand: npm install
     startCommand: npm start
     autoDeploy: false
+    disk:
+      name: emploi-info-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: DATA_DIR
+        value: /var/data/emploi-info
+      - key: SEED_DATA_DIR
         value: ..
       - key: APP_ORIGIN
         value: https://emploi-info.page.gd,https://app.local,null
