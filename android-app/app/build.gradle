@@ -43,8 +43,8 @@ android {
         publicApp {
             dimension "edition"
             applicationId "com.emploiinfo.app"
-            versionCode 6
-            versionName "1.5"
+            versionCode 7
+            versionName "1.6"
             manifestPlaceholders = [appScheme: "emploiinfo"]
             resValue "string", "app_name", "EMPLOI INFO"
             buildConfigField "String", "HOME_URL", "\"https://app.local/index.html\""
@@ -63,8 +63,8 @@ android {
         admin {
             dimension "edition"
             applicationId "com.emploiinfo.admin"
-            versionCode 4
-            versionName "1.3"
+            versionCode 5
+            versionName "1.4"
             manifestPlaceholders = [appScheme: "adminemploiinfo"]
             resValue "string", "app_name", "ADMIN EMPLOI INFO"
             buildConfigField "String", "HOME_URL", "\"https://app.local/admin.html\""

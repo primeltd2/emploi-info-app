@@ -138,12 +138,15 @@ export async function sendAndroidOfferNotification(offer, sendNumber = 1) {
         body,
         url,
         offer_id: offerId,
+        item_type: "annonce",
+        comment_url: "/interactions/comment",
         send_number: String(sendNumber),
         type: "annonce"
       },
       android: {
         priority: "HIGH",
-        collapse_key: offerId ? `offer_${offerId}_${sendNumber}` : `emploi_info_offer_${sendNumber}`
+        collapse_key: offerId ? `offer_${offerId}_${sendNumber}` : `emploi_info_offer_${sendNumber}`,
+        direct_boot_ok: true
       }
     });
     report.push({ token: `${token.slice(0, 12)}...`, result });

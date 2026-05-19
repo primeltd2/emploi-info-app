@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.RemoteInput;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -83,6 +84,32 @@ public class EmploiFirebaseMessagingService extends FirebaseMessagingService {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
+        int notificationId = offerId != null && !offerId.trim().isEmpty() ?
+             offerId.hashCode()
+            : (url != null ? url.hashCode() : (int) System.currentTimeMillis());
+
+        Intent commentIntent = new Intent(this, NotificationActionReceiver.class);
+        commentIntent.setAction(NotificationActionReceiver.ACTION_COMMENT);
+        commentIntent.putExtra("offer_id", offerId);
+        commentIntent.putExtra("notification_id", notificationId);
+
+        PendingIntent commentPendingIntent = PendingIntent.getBroadcast(
+            this,
+            notificationId + 31,
+            commentIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE
+        );
+
+        RemoteInput remoteInput = new RemoteInput.Builder(NotificationActionReceiver.KEY_COMMENT_TEXT)
+            .setLabel("Votre commentaire")
+            .build();
+
+        NotificationCompat.Action commentAction = new NotificationCompat.Action.Builder(
+            android.R.drawable.ic_menu_send,
+            "Commenter",
+            commentPendingIntent
+        ).addRemoteInput(remoteInput).setAllowGeneratedReplies(true).build();
+
         Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/raw/emploi_info_notification");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, MainActivity.CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -90,15 +117,17 @@ public class EmploiFirebaseMessagingService extends FirebaseMessagingService {
             .setContentText(body)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_LIGHTS)
             .setAutoCancel(true)
             .setNumber(Math.max(1, unreadCount))
             .setSound(soundUri)
-            .setContentIntent(pendingIntent);
+            .setContentIntent(pendingIntent)
+            .addAction(android.R.drawable.ic_menu_view, "Voir", pendingIntent)
+            .addAction(commentAction);
 
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        int notificationId = offerId != null && !offerId.trim().isEmpty() ?
-             offerId.hashCode()
-            : (url != null ? url.hashCode() : (int) System.currentTimeMillis());
         if (manager != null) {
             manager.notify(notificationId, builder.build());
             if (unreadCount > 1) {

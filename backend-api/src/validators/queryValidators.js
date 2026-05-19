@@ -73,3 +73,11 @@ export const androidTokenSchema = z.object({
   platform: z.string().trim().max(40).default("android"),
   app: z.string().trim().max(80).default("emploi-info")
 });
+
+export const commentCreateSchema = z.object({
+  item_type: z.string().trim().max(40).default("annonce"),
+  item_id: z.string().trim().min(1).max(120),
+  text: z.string().trim().min(1).max(1200),
+  visitor_id: z.string().trim().max(180).optional(),
+  username: z.string().trim().max(40).optional()
+});

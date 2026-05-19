@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     static final String LOCAL_APP_HOST = "app.local";
     static final String LEGACY_SITE_HOST = "emploi-info.page.gd";
     static final String LOCAL_SITE_ASSET_ROOT = "site/";
-    static final String CHANNEL_ID = "emploi_info_alerts";
+    static final String CHANNEL_ID = "emploi_info_alerts_v2";
     // Unités de production AdMob pour la monétisation
     static final String BANNER_AD_UNIT_ID = "ca-app-pub-7474388862913519/2132851690";
     static final String INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-7474388862913519/2816437463";
