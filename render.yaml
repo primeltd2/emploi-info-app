@@ -9,7 +9,7 @@ services:
     autoDeploy: false
     disk:
       name: emploi-info-data
-      mountPath: /var/data
+      mountPath: /opt/render/project/src/persistent-data
       sizeGB: 1
     envVars:
       - key: NODE_ENV
@@ -17,7 +17,7 @@ services:
       - key: PORT
         value: 10000
       - key: DATA_DIR
-        value: /var/data/emploi-info
+        value: /opt/render/project/src/persistent-data/emploi-info
       - key: SEED_DATA_DIR
         value: ..
       - key: APP_ORIGIN
