@@ -276,23 +276,25 @@ function renderPublicite(pub){
 
   shareOverlay.onclick = closeShare;
 
+  const appShareUrl = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.wrap(location.href) : location.href;
+  const appShareText = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.shareText(location.href) : appShareUrl;
   document.getElementById("shareFB").onclick = () => { 
-    window.open('https://www.facebook.com/sharer/sharer.php?u=' + location.href); 
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(appShareUrl)); 
     closeShare.click(); 
   };
   
   document.getElementById("shareWA").onclick = () => { 
-    window.open('https://wa.me/?text=' + encodeURIComponent(location.href)); 
+    window.open('https://wa.me/?text=' + encodeURIComponent(appShareText)); 
     closeShare.click(); 
   };
   
   document.getElementById("shareTwitter").onclick = () => { 
-    window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(location.href)); 
+    window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(appShareUrl)); 
     closeShare.click(); 
   };
   
   document.getElementById("copyLink").onclick = () => { 
-    navigator.clipboard.writeText(location.href).then(() => alert("Lien copié !"));
+    navigator.clipboard.writeText(appShareText).then(() => alert("Lien application copié !"));
     closeShare.click(); 
   };
 }

@@ -23,8 +23,9 @@ function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function share(title){
   const url=location.href;
   const appUrl = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.wrap(url) : url;
-  if(navigator.share) navigator.share({title,url:appUrl}).catch(()=>{});
-  else navigator.clipboard?.writeText(appUrl).then(()=>alert("Lien application copié"));
+  const text = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.shareText(url) : appUrl;
+  if(navigator.share) navigator.share({title,text,url:appUrl}).catch(()=>{});
+  else navigator.clipboard?.writeText(text).then(()=>alert("Lien application copié"));
 }
 function mediaList(item,type){return (Array.isArray(item.media)?item.media:[]).filter(m=>m.type===type)}
 function textBlocksFromContent(text){

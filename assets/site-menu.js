@@ -25,8 +25,13 @@
 
   window.EmploiInfoAppLink = window.EmploiInfoAppLink || {
     wrap(url){
-      const target = new URL(url || location.href, location.origin);
-      return "/open-app.html?url=" + encodeURIComponent(target.href);
+      const target = new URL(url || location.href, "https://app.local");
+      target.protocol = "https:";
+      target.hostname = "app.local";
+      return "emploiinfo://open?url=" + encodeURIComponent(target.href);
+    },
+    shareText(url){
+      return this.wrap(url) + "\n\nSi l'application n'est pas installee, telechargez-la ici : https://apkpure.com/p/com.emploiinfo.app";
     }
   };
 

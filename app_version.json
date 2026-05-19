@@ -1,10 +1,10 @@
 {
-  "latest_version_code": 7,
-  "latest_version_name": "1.6",
-  "min_required_version_code": 7,
+  "latest_version_code": 8,
+  "latest_version_name": "1.7",
+  "min_required_version_code": 8,
   "force_update": false,
   "force_cache_reset_version": "2026-05-09-legal-features",
   "terms_version": "2026-05-09",
-  "apk_url": "https://github.com/primeltd2/emploi-info-app/releases/latest/download/emploi-info-autonome.apk",
-  "message": "Une nouvelle version de EMPLOI INFO est disponible. Elle renforce les notifications avec son, affichage prioritaire, bouton Voir et commentaire direct depuis la notification."
+  "apk_url": "https://apkpure.com/p/com.emploiinfo.app",
+  "message": "Une nouvelle version de EMPLOI INFO est disponible. Elle ouvre les liens partages dans l'application et guide les utilisateurs vers le telechargement officiel APKPure."
 }

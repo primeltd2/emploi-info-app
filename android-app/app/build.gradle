@@ -43,8 +43,8 @@ android {
         publicApp {
             dimension "edition"
             applicationId "com.emploiinfo.app"
-            versionCode 7
-            versionName "1.6"
+            versionCode 8
+            versionName "1.7"
             manifestPlaceholders = [appScheme: "emploiinfo"]
             resValue "string", "app_name", "EMPLOI INFO"
             buildConfigField "String", "HOME_URL", "\"https://app.local/index.html\""
@@ -52,19 +52,19 @@ android {
             buildConfigField "String", "ADMIN_API_KEY", "\"${adminApiKey}\""
             buildConfigField "String", "REGISTER_TOKEN_URL", "\"https://emploi-info-api.onrender.com/api/v1/android/tokens\""
             buildConfigField "String", "APP_VERSION_URL", "\"https://emploi-info-api.onrender.com/api/v1/app-version?kind=public\""
-            buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://github.com/primeltd2/emploi-info-app/releases/latest/download/emploi-info-autonome.apk\""
+            buildConfigField "String", "APK_DOWNLOAD_URL", "\"https://apkpure.com/p/com.emploiinfo.app\""
             buildConfigField "String", "APP_SCHEME", "\"emploiinfo\""
             buildConfigField "String", "USER_AGENT_SUFFIX", "\"EmploiInfoAndroid\""
             buildConfigField "String", "APP_DISPLAY_NAME", "\"EMPLOI INFO\""
             buildConfigField "boolean", "ENABLE_ADS", "true"
-            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "false"
+            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "true"
             buildConfigField "boolean", "ENABLE_REMOTE_CONTENT_SYNC", "true"
         }
         admin {
             dimension "edition"
             applicationId "com.emploiinfo.admin"
-            versionCode 5
-            versionName "1.4"
+            versionCode 6
+            versionName "1.5"
             manifestPlaceholders = [appScheme: "adminemploiinfo"]
             resValue "string", "app_name", "ADMIN EMPLOI INFO"
             buildConfigField "String", "HOME_URL", "\"https://app.local/admin.html\""
@@ -77,7 +77,7 @@ android {
             buildConfigField "String", "USER_AGENT_SUFFIX", "\"AdminEmploiInfoAndroid\""
             buildConfigField "String", "APP_DISPLAY_NAME", "\"ADMIN EMPLOI INFO\""
             buildConfigField "boolean", "ENABLE_ADS", "false"
-            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "false"
+            buildConfigField "boolean", "ENABLE_REMOTE_SITE_SERVICES", "true"
             buildConfigField "boolean", "ENABLE_REMOTE_CONTENT_SYNC", "true"
         }
     }

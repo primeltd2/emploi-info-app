@@ -55,7 +55,7 @@ a,button{display:flex;align-items:center;justify-content:center;gap:8px;text-ali
   <h1>Installez l'application EMPLOI INFO</h1>
   <p>EMPLOI INFO n'est pas sur Play Store. Pour acceder au contenu, telechargez directement l'APK Android, installez-le, puis cette page ouvrira l'application automatiquement.</p>
   <div class="actions">
-    <a class="primary" id="downloadApk" href="downloads/emploi-info.apk" download="EMPLOI-INFO.apk" rel="noopener">Telecharger et installer l'APK Android</a>
+    <a class="primary" id="downloadApk" href="https://apkpure.com/p/com.emploiinfo.app" rel="noopener">Telecharger et installer l'APK Android</a>
     <button class="primary" id="openApp" type="button">Ouvrir l'application</button>
     <button class="primary" id="installPwa" type="button">Installer l'application EMPLOI INFO</button>
   </div>
@@ -85,7 +85,7 @@ const target = new URL(rawTarget, location.origin);
 const path = target.pathname + target.search + target.hash;
 const packageName = "com.emploiinfo.app";
 const appScheme = "emploiinfo";
-const apkDownloadUrl = new URL("downloads/emploi-info.apk", location.href).href;
+const apkDownloadUrl = "https://apkpure.com/p/com.emploiinfo.app";
 const appUrl = appScheme + "://open?url=" + encodeURIComponent(target.href);
 const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 const isNative = navigator.userAgent.includes("EmploiInfoAndroid");

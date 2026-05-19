@@ -27,8 +27,10 @@ function price(f){
   return `<div class="price">${esc(f.prix||f.prix_normal||"Payant")}</div>`;
 }
 function share(title){
-  if(navigator.share) navigator.share({title,url:location.href}).catch(()=>{});
-  else navigator.clipboard?.writeText(location.href).then(()=>alert("Lien copié"));
+  const appUrl = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.wrap(location.href) : location.href;
+  const text = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.shareText(location.href) : appUrl;
+  if(navigator.share) navigator.share({title,text,url:appUrl}).catch(()=>{});
+  else navigator.clipboard?.writeText(text).then(()=>alert("Lien application copié"));
 }
 fetch("formations.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(list=>{
   const f=(Array.isArray(list)?list:[]).find(x=>x.id===id);

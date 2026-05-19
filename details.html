@@ -872,11 +872,12 @@ function renderAnnonce(a){
   shareOverlay.onclick = closeShare;
 
   const appShareUrl = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.wrap(location.href) : location.href;
+  const appShareText = window.EmploiInfoAppLink ? window.EmploiInfoAppLink.shareText(location.href) : appShareUrl;
   document.getElementById("shareFB").onclick = () => { window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
-  document.getElementById("shareWA").onclick = () => { window.open('https://wa.me/?text='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
+  document.getElementById("shareWA").onclick = () => { window.open('https://wa.me/?text='+encodeURIComponent(appShareText)); closeShare.onclick(); };
   document.getElementById("shareLinkedIn").onclick = () => { window.open('https://www.linkedin.com/shareArticle?url='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
   document.getElementById("shareTwitter").onclick = () => { window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(appShareUrl)); closeShare.onclick(); };
-  document.getElementById("copyLink").onclick = () => { navigator.clipboard.writeText(appShareUrl).then(()=>alert("Lien application copié !")); closeShare.onclick(); };
+  document.getElementById("copyLink").onclick = () => { navigator.clipboard.writeText(appShareText).then(()=>alert("Lien application copié !")); closeShare.onclick(); };
 }
 
 // rendu offres récentes
