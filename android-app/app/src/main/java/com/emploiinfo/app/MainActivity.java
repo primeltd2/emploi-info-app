@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
     static final long IDLE_AD_DELAY_MS = 60000;
     static final long MIN_AD_INTERVAL_MS = 300000;
     static final long MIN_APP_OPEN_INTERVAL_MS = 14400000;
+    static final long OFFERS_AUTO_REFRESH_MS = 30000;
 
     private static final int REQUEST_WEBVIEW_PERMISSIONS = 1003;
 
@@ -123,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean isActivityResumed;
     private boolean updateDialogShowing;
     private boolean pageHadError;
+    private volatile boolean offerStreamRunning;
+    private Thread offerStreamThread;
+    private final Runnable offersAutoRefreshRunnable = this::refreshDynamicOffers;
     private long lastInterstitialShownAt;
     private long lastAppOpenShownAt;
     private final Runnable idleAdRunnable = this::showInterstitialAfterIdle;
@@ -130,6 +134,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!BuildConfig.APP_DISPLAY_NAME.toLowerCase(Locale.US).contains("admin")) {
+            Intent nativeIntent = new Intent(this, NativeOffersActivity.class);
+            nativeIntent.putExtras(getIntent());
+            startActivity(nativeIntent);
+            finish();
+            return;
+        }
         try {
             createNotificationChannel();
             requestNotificationPermission();
@@ -170,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
@@ -181,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         }
         CookieManager.getInstance().setAcceptCookie(true);
+        webView.clearCache(true);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.addJavascriptInterface(new AndroidAppBridge(), "EmploiInfoAndroid");
         mobileUserAgent = settings.getUserAgentString() + " " + BuildConfig.USER_AGENT_SUFFIX;
@@ -292,6 +305,8 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
             } catch (Exception ignored) {
             }
+            startOfferRealtimeStream();
+            scheduleOffersAutoRefresh();
         }
         if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
             checkForAppUpdate(false);
@@ -778,6 +793,9 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
             } catch (Exception ignored) {
             }
+            refreshDynamicOffers();
+            startOfferRealtimeStream();
+            scheduleOffersAutoRefresh();
         }
         if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
             checkForAppUpdate(false);
@@ -788,6 +806,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         idleHandler.removeCallbacks(idleAdRunnable);
+        idleHandler.removeCallbacks(offersAutoRefreshRunnable);
         isActivityResumed = false;
         super.onPause();
     }
@@ -806,6 +825,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         idleHandler.removeCallbacks(idleAdRunnable);
+        idleHandler.removeCallbacks(offersAutoRefreshRunnable);
+        stopOfferRealtimeStream();
         if (bannerAdView != null) bannerAdView.destroy();
         if (nativeAd != null) nativeAd.destroy();
         super.onDestroy();
@@ -854,6 +875,72 @@ public class MainActivity extends AppCompatActivity {
             return localTextResponse("application/json", apiOffersToLegacyJson(data).toString());
         } catch (Exception ignored) {
             return null;
+        }
+    }
+
+    private void scheduleOffersAutoRefresh() {
+        idleHandler.removeCallbacks(offersAutoRefreshRunnable);
+        if (isActivityResumed && BuildConfig.ENABLE_REMOTE_CONTENT_SYNC) {
+            idleHandler.postDelayed(offersAutoRefreshRunnable, OFFERS_AUTO_REFRESH_MS);
+        }
+    }
+
+    private void refreshDynamicOffers() {
+        if (webView == null || !BuildConfig.ENABLE_REMOTE_CONTENT_SYNC) return;
+        runOnUiThread(() -> {
+            try {
+                webView.evaluateJavascript(
+                    "try{localStorage.removeItem('data.json');sessionStorage.clear();if(location.pathname.endsWith('/index.html')||location.pathname.endsWith('/annonces.html')||location.pathname.endsWith('/admin.html'))location.reload();}catch(e){location.reload();}",
+                    null
+                );
+            } catch (Exception ignored) {
+                webView.reload();
+            }
+        });
+        scheduleOffersAutoRefresh();
+    }
+
+    private void startOfferRealtimeStream() {
+        if (offerStreamRunning || API_BASE_URL.isEmpty()) return;
+        offerStreamRunning = true;
+        offerStreamThread = new Thread(() -> {
+            while (offerStreamRunning) {
+                HttpURLConnection conn = null;
+                try {
+                    URL url = new URL(API_BASE_URL + "/offers/stream");
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setConnectTimeout(8000);
+                    conn.setReadTimeout(0);
+                    conn.setRequestProperty("Accept", "text/event-stream");
+                    if (conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
+                            String line;
+                            while (offerStreamRunning && (line = reader.readLine()) != null) {
+                                if (line.startsWith("event: offer")) refreshDynamicOffers();
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                    }
+                } finally {
+                    if (conn != null) conn.disconnect();
+                }
+            }
+        }, "emploi-info-offer-stream");
+        offerStreamThread.setDaemon(true);
+        offerStreamThread.start();
+    }
+
+    private void stopOfferRealtimeStream() {
+        offerStreamRunning = false;
+        if (offerStreamThread != null) {
+            offerStreamThread.interrupt();
+            offerStreamThread = null;
         }
     }
 

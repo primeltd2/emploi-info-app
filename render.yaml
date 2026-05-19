@@ -4,22 +4,22 @@ services:
     runtime: node
     plan: free
     rootDir: backend-api
-    buildCommand: npm install
+    buildCommand: npm install && npm run db:migrate
     startCommand: npm start
     autoDeploy: false
-    disk:
-      name: emploi-info-data
-      mountPath: /opt/render/project/src/persistent-data
-      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
-      - key: DATA_DIR
-        value: /opt/render/project/src/persistent-data/emploi-info
       - key: SEED_DATA_DIR
         value: ..
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: DATABASE_POOL_MAX
+        value: 20
       - key: APP_ORIGIN
         value: https://emploi-info.page.gd,https://app.local,null
       - key: API_KEY

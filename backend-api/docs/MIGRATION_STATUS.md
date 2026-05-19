@@ -1,6 +1,6 @@
 # EMPLOI INFO - Avancement migration
 
-Date : 2026-05-12
+Date : 2026-05-19
 
 ## Termine maintenant
 
@@ -27,14 +27,15 @@ Securite et stabilite :
 - Rate limit global.
 - Validation Zod.
 - Gestion centralisee des erreurs.
-- Cache leger des JSON par date de modification.
-- Ecriture JSON atomique pour les futures actions admin.
+- PostgreSQL cloud via `DATABASE_URL` pour les annonces, catalogues, tokens Android et notifications.
+- JSON conserves seulement comme source d'import/mode local de secours.
 - Routes admin verrouillees par `API_KEY`.
 
 Routes disponibles :
 
 - `GET /api/v1/health`
 - `GET /api/v1/offers`
+- `GET /api/v1/offers/stream`
 - `GET /api/v1/offers/:id`
 - `GET /api/v1/catalog`
 - `GET /api/v1/ads`
@@ -62,26 +63,27 @@ Service Render cree :
 - URL : `https://emploi-info-api.onrender.com`
 - Endpoint attendu : `https://emploi-info-api.onrender.com/api/v1/health`
 
-### Etape 4 - Preparation migration donnees
+### Etape 4 - Migration donnees PostgreSQL
 
-L'API lit actuellement les fichiers JSON existants sans les modifier.
-Cela permet une migration progressive sans perte de donnees et sans casser PHP.
+Schema SQL ajoute dans `db/schema.sql`.
+Scripts ajoutes :
 
-Prochaine action donnees :
+- `npm run db:migrate`
+- `npm run db:import-json`
 
-1. choisir Firestore, MongoDB Atlas ou MySQL ;
-2. creer scripts d'import depuis JSON ;
-3. basculer d'abord les lectures API ;
-4. basculer ensuite les ecritures admin.
+En production, Render doit definir `DATABASE_URL`; les lectures/ecritures admin utilisent alors PostgreSQL au lieu des fichiers statiques.
 
 ### Etape 5 - Base application mobile
 
-Android garde l'ecran actuel pour ne rien casser, mais la base API native est ajoutee :
+Android garde l'ecran actuel pour ne rien casser, mais il ne sert plus les annonces depuis les JSON embarques :
 
 - `BuildConfig.API_BASE_URL`
 - `ApiClient.java`
+- interception `data.json` vers `/api/v1/offers`
+- refresh automatique sans cache
+- flux `/api/v1/offers/stream` pour apparition immediate des nouvelles annonces
 
-Le prochain ecran natif a migrer en priorite est la liste des annonces.
+Le prochain ecran a migrer pour une autonomie native totale est la liste UI Android sans WebView.
 
 ## Verifications
 

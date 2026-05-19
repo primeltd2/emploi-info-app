@@ -1,7 +1,17 @@
 import crypto from "node:crypto";
 import { env } from "../config/env.js";
+import { databaseEnabled } from "../config/database.js";
 import { dataPaths } from "../config/paths.js";
 import { readJson, writeJson } from "../repositories/jsonRepository.js";
+import {
+  dueReminderRows,
+  listAndroidTokenRows,
+  markNotificationSentRow,
+  markReminderSent,
+  queueReminderRow,
+  removeAndroidTokens,
+  wasNotificationSentRow
+} from "../repositories/postgresRepository.js";
 
 let cachedAccessToken = null;
 
@@ -103,19 +113,26 @@ async function sendFcmMessage(message) {
 
 export async function wasOfferNotificationSent(offerId) {
   if (!offerId) return true;
+  if (databaseEnabled) return wasNotificationSentRow(offerId);
   const sent = await readJson(dataPaths.notificationSent, {});
   return Boolean(sent[offerId]?.sent);
 }
 
 async function markOfferNotificationSent(offerId, context = {}) {
   if (!offerId) return;
+  if (databaseEnabled) {
+    await markNotificationSentRow(offerId, context);
+    return;
+  }
   const sent = await readJson(dataPaths.notificationSent, {});
   sent[offerId] = { sent: true, sent_at: new Date().toISOString(), ...context };
   await writeJson(dataPaths.notificationSent, sent);
 }
 
 export async function sendAndroidOfferNotification(offer, sendNumber = 1) {
-  const tokens = normalizeArray(await readJson(dataPaths.androidTokens));
+  const tokens = databaseEnabled
+    ? normalizeArray(await listAndroidTokenRows())
+    : normalizeArray(await readJson(dataPaths.androidTokens));
   const offerId = String(offer?.id || "");
   if (!tokens.length) return { status: "no_android_tokens", count: 0, report: [] };
   if (sendNumber <= 1 && await wasOfferNotificationSent(offerId)) {
@@ -126,6 +143,7 @@ export async function sendAndroidOfferNotification(offer, sendNumber = 1) {
   const body = notificationBody(offer);
   const url = offerUrl(offer);
   const kept = [];
+  const invalidTokens = [];
   const report = [];
 
   for (const row of tokens) {
@@ -146,7 +164,16 @@ export async function sendAndroidOfferNotification(offer, sendNumber = 1) {
       android: {
         priority: "HIGH",
         collapse_key: offerId ? `offer_${offerId}_${sendNumber}` : `emploi_info_offer_${sendNumber}`,
-        direct_boot_ok: true
+        direct_boot_ok: true,
+        notification: {
+          channel_id: "emploi_info_alerts_v2",
+          sound: "emploi_info_notification",
+          default_vibrate_timings: true,
+          default_light_settings: true,
+          notification_priority: "PRIORITY_HIGH",
+          visibility: "PUBLIC",
+          click_action: "OPEN_OFFER"
+        }
       }
     });
     report.push({ token: `${token.slice(0, 12)}...`, result });
@@ -158,9 +185,14 @@ export async function sendAndroidOfferNotification(offer, sendNumber = 1) {
       responseText.includes("INVALID_ARGUMENT")
     );
     if (!invalid) kept.push(row);
+    if (invalid) invalidTokens.push(token);
   }
 
-  await writeJson(dataPaths.androidTokens, kept);
+  if (databaseEnabled) {
+    await removeAndroidTokens(invalidTokens);
+  } else {
+    await writeJson(dataPaths.androidTokens, kept);
+  }
   if (sendNumber <= 1) await markOfferNotificationSent(offerId, { android_count: report.length });
   return { status: "sent_android", count: report.length, report };
 }
@@ -168,6 +200,10 @@ export async function sendAndroidOfferNotification(offer, sendNumber = 1) {
 export async function queueOfferReminder(offer, delaySeconds) {
   const offerId = String(offer?.id || "");
   if (!offerId) return;
+  if (databaseEnabled) {
+    await queueReminderRow(offer, delaySeconds);
+    return;
+  }
   const queue = normalizeArray(await readJson(dataPaths.notificationReminders));
   const nextQueue = queue.filter((row) => row.offer_id !== offerId || row.sent);
   nextQueue.push({
@@ -181,6 +217,16 @@ export async function queueOfferReminder(offer, delaySeconds) {
 }
 
 export async function processDueOfferReminders() {
+  if (databaseEnabled) {
+    const rows = await dueReminderRows();
+    const sent = [];
+    for (const row of rows) {
+      const result = await sendAndroidOfferNotification(row.offer, 2);
+      await markReminderSent(row.id, { status: result.status, count: result.count });
+      sent.push(row.offer_id);
+    }
+    return sent;
+  }
   const queue = normalizeArray(await readJson(dataPaths.notificationReminders));
   const now = Date.now();
   let changed = false;

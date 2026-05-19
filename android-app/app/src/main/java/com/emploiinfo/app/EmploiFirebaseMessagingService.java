@@ -75,6 +75,7 @@ public class EmploiFirebaseMessagingService extends FirebaseMessagingService {
 
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("url", url != null ? url : MainActivity.HOME_URL);
+        intent.putExtra("offer_id", offerId);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -120,6 +121,7 @@ public class EmploiFirebaseMessagingService extends FirebaseMessagingService {
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setDefaults(NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_LIGHTS)
+            .setFullScreenIntent(pendingIntent, true)
             .setAutoCancel(true)
             .setNumber(Math.max(1, unreadCount))
             .setSound(soundUri)
@@ -137,6 +139,7 @@ public class EmploiFirebaseMessagingService extends FirebaseMessagingService {
                     .setContentText(unreadCount + " nouvelles notifications")
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(unreadCount + " nouvelles notifications EMPLOI INFO"))
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setDefaults(NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_LIGHTS)
                     .setAutoCancel(true)
                     .setNumber(unreadCount)
                     .setContentIntent(pendingIntent);

@@ -14,7 +14,9 @@ Le backend est pret pour Render ou Railway, mais le compte doit etre cree au nom
 NODE_ENV=production
 PORT=10000
 APP_ORIGIN=https://emploi-info.page.gd,https://app.local,null
-DATA_DIR=..
+DATABASE_URL=postgres://...
+DATABASE_SSL=true
+DATABASE_POOL_MAX=20
 API_KEY=
 ```
 
@@ -31,7 +33,9 @@ Ne pas la commiter dans Git. L'application admin Android doit etre compilee avec
    - Build command : `npm install`
    - Start command : `npm start`
 4. Configurer les variables d'environnement.
-5. Tester `https://.../api/v1/health`.
+5. Ajouter une base PostgreSQL Render et connecter `DATABASE_URL`.
+6. Lancer une fois `npm run db:import-json` depuis un shell Render ou local avec `DATABASE_URL` pour importer les anciennes annonces.
+7. Tester `https://.../api/v1/health` puis `https://.../api/v1/offers`.
 
 Pour connecter l'admin a l'application publique :
 
@@ -65,10 +69,6 @@ $env:EMPLOI_INFO_ADMIN_API_KEY="votre-cle-secrete"
 
 ## Important donnees
 
-Aujourd'hui l'API lit les JSON depuis le dossier parent. Pour un deploiement cloud reel, il faudra soit :
-
-- synchroniser/importer les JSON dans une base de donnees ;
-- soit embarquer temporairement les JSON en lecture seule ;
-- soit garder une etape intermediaire avec un stockage persistant.
-
-La solution recommandee pour la suite est Firestore ou MongoDB Atlas afin d'eviter les pertes et les conflits d'ecriture.
+Le stockage de production est PostgreSQL via `DATABASE_URL`.
+Les JSON historiques servent uniquement de source d'import avec `npm run db:import-json`.
+Les annonces publiees sont exposees sans cache HTTP sur `/api/v1/offers` et le flux temps reel est disponible sur `/api/v1/offers/stream`.

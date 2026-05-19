@@ -12,6 +12,7 @@ export const dataPaths = {
   blog: path.join(env.DATA_DIR_ABSOLUTE, "blog.json"),
   appVersion: path.join(env.DATA_DIR_ABSOLUTE, "app_version.json"),
   adminAppVersion: path.join(env.DATA_DIR_ABSOLUTE, "admin_app_version.json"),
+  params: path.join(env.DATA_DIR_ABSOLUTE, "params.json"),
   androidTokens: path.join(env.DATA_DIR_ABSOLUTE, "android_tokens.json"),
   notificationSent: path.join(env.DATA_DIR_ABSOLUTE, "notification_sent.json"),
   notificationReminders: path.join(env.DATA_DIR_ABSOLUTE, "notification_reminders.json"),
