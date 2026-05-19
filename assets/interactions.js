@@ -97,11 +97,11 @@
 
   function renderComment(comment, replies){
     const tag = comment.tag && comment.tag.id
-       `<a class="publication-tag" href="${comment.tag.type === "publicite" ? "publicite-details.html" : "details.html"}?id=${encodeURIComponent(comment.tag.id)}">#${escapeHtml(comment.tag.title || comment.tag.id)}</a>`
+      ? `<a class="publication-tag" href="${comment.tag.type === "publicite" ? "publicite-details.html" : "details.html"}?id=${encodeURIComponent(comment.tag.id)}">#${escapeHtml(comment.tag.title || comment.tag.id)}</a>`
       : "";
     const media = comment.media
-       (comment.media_type === "video"
-         `<video class="comment-media" controls preload="metadata"><source src="${escapeHtml(comment.media)}"></video>`
+      ? (comment.media_type === "video"
+        ? `<video class="comment-media" controls preload="metadata"><source src="${escapeHtml(comment.media)}"></video>`
         : `<img class="comment-media" src="${escapeHtml(comment.media)}" alt="Pièce jointe">`)
       : "";
     const link = comment.link ? `<a class="comment-link" href="${escapeHtml(comment.link)}" target="_blank" rel="noopener">${escapeHtml(comment.link)}</a>` : "";
