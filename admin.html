@@ -1791,7 +1791,7 @@ async function loadAdminOffersData(){
 
 async function loadCatalogData(){
   if(remoteAdminApiConfig()){
-    const response = await remoteAdminFetch("/catalog");
+    const response = await remoteAdminFetch("/admin/catalog");
     const result = await response.json().catch(()=>({status:"error", data:{}}));
     if(!response.ok || result.status !== "success"){
       throw new Error(result.message || "Catalogue API impossible");
@@ -2751,6 +2751,51 @@ function saveContentSection(section){
 
   if(!titre || !texte){ alert("Titre et contenu requis"); return; }
 
+  if(remoteAdminApiConfig()){
+    readFileAsDataUrl(img)
+      .then(imgData=>remoteAdminFetch(`/admin/content/${encodeURIComponent(section)}`, {
+        method:"POST",
+        body:JSON.stringify({
+          titre,
+          texte,
+          categorie,
+          lieu,
+          prix,
+          pricing_type: pricingType,
+          prix_normal: prixNormal,
+          prix_promo: prixPromo,
+          promo_mode: promoMode,
+          promo_until: promoUntil,
+          promo_places: promoPlaces,
+          date_debut: dateDebut,
+          lien,
+          img: imgData,
+          boutons: buildSectionButtons(lien)
+        })
+      }))
+      .then(r=>r.json().then(res=>({ok:r.ok,res})))
+      .then(({ok,res})=>{
+        if(!ok || res.status !== "success"){ alert(res.message || "Erreur de sauvegarde API"); return; }
+        ["Titre","Texte","Categorie","Lieu","Prix","PrixNormal","PrixPromo","PromoUntil","PromoPlaces","DateDebut","Lien"].forEach(s=>{
+          const el = sectionField(section, s);
+          if(el) el.value = "";
+        });
+        if(section === "formations"){
+          const typeEl = sectionField(section, "PricingType");
+          const modeEl = sectionField(section, "PromoMode");
+          if(typeEl) typeEl.value = "gratuit";
+          if(modeEl) modeEl.value = "temps";
+          toggleFormationPricing();
+        }
+        const imgEl = sectionField(section, "Img");
+        if(imgEl) imgEl.value = "";
+        loadContentSection(section);
+        alert("Publication ajoutée");
+      })
+      .catch(()=>alert("Erreur lors de la sauvegarde API"));
+    return;
+  }
+
   const fd = new FormData();
   fd.append("section", section);
   fd.append("titre", titre);
@@ -2793,28 +2838,54 @@ function saveContentSection(section){
 }
 
 function loadContentSection(section){
+  if(remoteAdminApiConfig()){
+    remoteAdminFetch(`/admin/content/${encodeURIComponent(section)}`)
+      .then(r=>r.json().then(res=>({ok:r.ok,res})))
+      .then(({ok,res})=>{
+        if(!ok || res.status !== "success") throw new Error(res.message || "Chargement API impossible");
+        renderContentSectionList(section, Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(e=>{
+        const list = document.getElementById(section + "AdminList");
+        if(list) list.innerHTML = `<li><span>Erreur chargement API : ${escapeHtml(e.message || "indisponible")}</span></li>`;
+      });
+    return;
+  }
   fetch(sectionFiles[section] + "?ts=" + Date.now(), {cache:"no-store"})
     .then(r=>r.json())
     .then(items=>{
-      const list = document.getElementById(section + "AdminList");
-      const data = Array.isArray(items) ? items : [];
-      list.innerHTML = data.map(item=>`
-        <li class="section-admin-item">
-          <div class="section-admin-body">
-            <strong>${escapeHtml(item.titre || "Sans titre")}</strong>
-            ${item.categorie ? `<span>${escapeHtml(item.categorie)}</span>` : ""}
-            ${section === "formations" ? renderFormationAdminPrice(item) : ""}
-            ${item.texte ? `<p>${escapeHtml(item.texte).slice(0, 220)}${String(item.texte).length > 220 ? "..." : ""}</p>` : ""}
-            ${renderSectionAdminMedia(item)}
-          </div>
-          <button onclick="deleteContentSectionItem('${section}','${escapeHtml(item.id || "")}')">Supprimer</button>
-        </li>
-      `).join("") || `<li><span>Aucune publication</span></li>`;
+      renderContentSectionList(section, Array.isArray(items) ? items : []);
     });
+}
+
+function renderContentSectionList(section, data){
+  const list = document.getElementById(section + "AdminList");
+  if(!list) return;
+  list.innerHTML = data.map(item=>`
+    <li class="section-admin-item">
+      <div class="section-admin-body">
+        <strong>${escapeHtml(item.titre || "Sans titre")}</strong>
+        ${item.categorie ? `<span>${escapeHtml(item.categorie)}</span>` : ""}
+        ${section === "formations" ? renderFormationAdminPrice(item) : ""}
+        ${item.texte ? `<p>${escapeHtml(item.texte).slice(0, 220)}${String(item.texte).length > 220 ? "..." : ""}</p>` : ""}
+        ${renderSectionAdminMedia(item)}
+      </div>
+      <button onclick="deleteContentSectionItem('${section}','${escapeHtml(item.id || "")}')">Supprimer</button>
+    </li>
+  `).join("") || `<li><span>Aucune publication</span></li>`;
 }
 
 function deleteContentSectionItem(section, id){
   if(!id || !confirm("Supprimer cette publication ?")) return;
+  if(remoteAdminApiConfig()){
+    remoteAdminFetch(`/admin/content/${encodeURIComponent(section)}/${encodeURIComponent(id)}`, {method:"DELETE"})
+      .then(r=>{
+        if(!r.ok && r.status !== 204) throw new Error("Suppression API impossible");
+        loadContentSection(section);
+      })
+      .catch(e=>alert(e.message || "Suppression API impossible"));
+    return;
+  }
   securedFetch("delete_section_item.php", {
     method:"POST",
     headers:{"Content-Type":"application/json"},

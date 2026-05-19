@@ -11,7 +11,11 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   APP_ORIGIN: z.string().default("http://localhost,http://127.0.0.1,https://emploi-info.page.gd,https://app.local,null"),
   DATA_DIR: z.string().default(".."),
-  API_KEY: z.string().optional().default("")
+  API_KEY: z.string().optional().default(""),
+  FIREBASE_SERVICE_ACCOUNT_JSON: z.string().optional().default(""),
+  FIREBASE_PROJECT_ID: z.string().optional().default(""),
+  FIREBASE_CLIENT_EMAIL: z.string().optional().default(""),
+  FIREBASE_PRIVATE_KEY: z.string().optional().default("")
 });
 
 const parsed = schema.parse(process.env);

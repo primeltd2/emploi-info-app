@@ -287,11 +287,13 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl(startUrl);
 
         requestWebViewPermissions();
-        if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
+        if (BuildConfig.ENABLE_REMOTE_CONTENT_SYNC) {
             try {
                 FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
             } catch (Exception ignored) {
             }
+        }
+        if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
             checkForAppUpdate(false);
         }
     }
@@ -771,11 +773,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         isActivityResumed = true;
-        if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
+        if (BuildConfig.ENABLE_REMOTE_CONTENT_SYNC) {
             try {
                 FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::registerToken);
             } catch (Exception ignored) {
             }
+        }
+        if (BuildConfig.ENABLE_REMOTE_SITE_SERVICES) {
             checkForAppUpdate(false);
         }
         resetIdleAdTimer();

@@ -2,6 +2,9 @@ import express from "express";
 import { router } from "./routes/index.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 import { securityMiddleware } from "./middlewares/security.js";
+import { startReminderWorker } from "./services/notificationService.js";
+
+let reminderWorkerStarted = false;
 
 export function createApp() {
   const app = express();
@@ -23,6 +26,11 @@ export function createApp() {
   app.use("/api/v1", router);
   app.use(notFoundHandler);
   app.use(errorHandler);
+
+  if (!reminderWorkerStarted) {
+    reminderWorkerStarted = true;
+    startReminderWorker();
+  }
 
   return app;
 }

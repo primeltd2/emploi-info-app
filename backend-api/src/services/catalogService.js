@@ -1,5 +1,10 @@
 import { dataPaths } from "../config/paths.js";
 import { readJson, writeJson } from "../repositories/jsonRepository.js";
+import {
+  queueOfferReminder,
+  sendAndroidOfferNotification,
+  wasOfferNotificationSent
+} from "./notificationService.js";
 
 function normalizeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -49,6 +54,7 @@ export async function createOffer(input) {
 
   rows.unshift(offer);
   await writeJson(dataPaths.offers, rows);
+  if (visibleOffer(offer)) await notifyPublishedOffer(offer);
   return toPublicOffer(offer);
 }
 
@@ -66,7 +72,15 @@ export async function updateOffer(id, input) {
 }
 
 export async function setOfferPublished(id, published) {
-  return updateOffer(id, { published });
+  const beforeRows = normalizeArray(await readJson(dataPaths.offers));
+  const before = beforeRows.find((row) => String(row.id) === String(id));
+  const offer = await updateOffer(id, { published });
+  if (offer && published && !visibleOffer(before)) {
+    const rows = normalizeArray(await readJson(dataPaths.offers));
+    const rawOffer = rows.find((row) => String(row.id) === String(id));
+    if (rawOffer) await notifyPublishedOffer(rawOffer);
+  }
+  return offer;
 }
 
 export async function deleteOffer(id) {
@@ -79,12 +93,13 @@ export async function deleteOffer(id) {
 }
 
 export async function getCatalog() {
-  const [categories, cities, resources, services, blog] = await Promise.all([
+  const [categories, cities, resources, services, blog, formations] = await Promise.all([
     readJson(dataPaths.categories),
     readJson(dataPaths.cities),
     readJson(dataPaths.resources),
     readJson(dataPaths.services),
-    readJson(dataPaths.blog)
+    readJson(dataPaths.blog),
+    readJson(dataPaths.formations)
   ]);
 
   return {
@@ -92,7 +107,8 @@ export async function getCatalog() {
     cities: normalizeArray(cities),
     resources: normalizeArray(resources),
     services: normalizeArray(services),
-    blog: normalizeArray(blog)
+    blog: normalizeArray(blog),
+    formations: normalizeArray(formations)
   };
 }
 
@@ -142,6 +158,53 @@ export async function saveAndroidToken(input) {
 
   await writeJson(dataPaths.androidTokens, rows);
   return { saved: true };
+}
+
+export async function listContentSection(section) {
+  const filePath = sectionFilePath(section);
+  if (!filePath) return null;
+  return normalizeArray(await readJson(filePath));
+}
+
+export async function createContentSectionItem(section, input) {
+  const filePath = sectionFilePath(section);
+  if (!filePath) return null;
+  const rows = normalizeArray(await readJson(filePath));
+  const item = {
+    ...input,
+    id: `sec_${Date.now().toString(16)}${Math.random().toString(16).slice(2, 7)}`,
+    date: new Date().toISOString()
+  };
+  rows.unshift(item);
+  await writeJson(filePath, rows);
+  return item;
+}
+
+export async function deleteContentSectionItem(section, id) {
+  const filePath = sectionFilePath(section);
+  if (!filePath) return null;
+  const rows = normalizeArray(await readJson(filePath));
+  const nextRows = rows.filter((row) => String(row.id) !== String(id));
+  if (nextRows.length === rows.length) return false;
+  await writeJson(filePath, nextRows);
+  return true;
+}
+
+function sectionFilePath(section) {
+  const allowed = {
+    blog: dataPaths.blog,
+    resources: dataPaths.resources,
+    services: dataPaths.services,
+    formations: dataPaths.formations
+  };
+  return allowed[section] || null;
+}
+
+async function notifyPublishedOffer(offer) {
+  const id = String(offer?.id || "");
+  if (!id || await wasOfferNotificationSent(id)) return;
+  await sendAndroidOfferNotification(offer, 1);
+  await queueOfferReminder(offer, 4 * 60 * 60);
 }
 
 function toPublicOffer(offer) {
